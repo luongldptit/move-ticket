@@ -1,0 +1,28 @@
+spring:
+  profiles:
+    active: dev
+
+  application:
+    name: movie-ticket-backend
+
+  jackson:
+    time-zone: Asia/Ho_Chi_Minh
+    date-format: yyyy-MM-dd'T'HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:movie-ticket-super-secret-key-change-in-production-must-be-256-bits}
+  expiration: ${JWT_EXPIRATION:86400000}   # 24 hours in ms
+
+# Logging
+logging:
+  level:
+    com.movieticket: DEBUG
+    org.springframework.security: INFO

@@ -1,0 +1,20 @@
+package com.movieticket.dto.response;
+
+import lombok.Builder;
+import lombok.Data;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@Data
+@Builder
+public class MovieResponse {
+    private Long id;
+    private String title;
+    private Integer duration;
+    private LocalDate releaseDate;
+    private String posterUrl;
+    private String ageRating;
+    private String status;
+    private List<String> genres;
+}

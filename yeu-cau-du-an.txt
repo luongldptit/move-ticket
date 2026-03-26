@@ -1,0 +1,169 @@
+================================================================
+TÀI LIỆU YÊU CẦU DỰ ÁN
+HỆ THỐNG ĐẶT VÉ XEM PHIM TRỰC TUYẾN
+================================================================
+Phiên bản: 1.0
+Ngày tạo: 26/03/2026
+Sinh viên thực hiện: [Tên sinh viên]
+GVHD: [Tên giáo viên hướng dẫn]
+Môn học: Lập trình
+
+----------------------------------------------------------------
+1. TỔNG QUAN DỰ ÁN
+----------------------------------------------------------------
+Tên hệ thống  : Movie Ticket Booking System
+Mục tiêu      : Xây dựng ứng dụng web cho phép khách hàng đặt
+                vé xem phim trực tuyến, chọn ghế theo sơ đồ
+                phòng chiếu, và quản lý toàn bộ hoạt động rạp phim.
+Tech stack    : Java Spring Boot (Backend) + ReactJS (Frontend)
+                + MySQL (Database)
+Kiến trúc     : REST API (Backend) - SPA (Frontend)
+
+----------------------------------------------------------------
+2. ACTOR VÀ VAI TRÒ
+----------------------------------------------------------------
+[ACTOR 1] KHÁCH VÃNG LAI (Guest)
+- Xem danh sách phim đang chiếu / sắp chiếu
+- Xem thông tin chi tiết phim (trailer, mô tả, thể loại, diễn viên)
+- Xem lịch chiếu theo phim / theo ngày
+- Cần đăng nhập để đặt vé
+
+[ACTOR 2] KHÁCH HÀNG ĐÃ ĐĂNG KÝ (Customer)
+- Toàn bộ quyền của Guest
+- Đăng ký / Đăng nhập tài khoản
+- Chọn suất chiếu, phòng chiếu
+- Xem sơ đồ ghế và chọn ghế (ghế thường / ghế VIP)
+- Đặt vé và thanh toán trực tuyến (mock)
+- Nhận mã vé / QR code xác nhận
+- Xem lịch sử đặt vé
+- Hủy vé (trước giờ chiếu theo chính sách)
+- Quản lý thông tin cá nhân
+
+[ACTOR 3] NHÂN VIÊN RẠP (Staff)
+- Toàn bộ quyền của Customer
+- Tra cứu và xác nhận vé tại quầy
+- Xem danh sách khách hàng đặt vé theo suất chiếu
+- Hỗ trợ khách hàng đặt vé tại quầy
+
+[ACTOR 4] QUẢN TRỊ VIÊN (Admin)
+- Toàn bộ quyền của Staff
+- Quản lý phim (thêm / sửa / xóa)
+- Quản lý rạp, phòng chiếu, sơ đồ ghế
+- Quản lý lịch chiếu (suất chiếu)
+- Quản lý tài khoản người dùng
+- Xem báo cáo doanh thu, thống kê
+- Quản lý khuyến mãi / mã giảm giá
+
+----------------------------------------------------------------
+3. TÍNH NĂNG CHÍNH (FUNCTIONAL REQUIREMENTS)
+----------------------------------------------------------------
+
+[F01] QUẢN LÝ PHIM
+- Thêm phim mới: tên, mô tả, thể loại, đạo diễn, diễn viên,
+  thời lượng, ngày khởi chiếu, poster, trailer URL, xếp hạng độ tuổi
+- Cập nhật thông tin phim
+- Xóa / ẩn phim
+- Phân loại: Đang chiếu / Sắp chiếu / Ngừng chiếu
+- Hỗ trợ nhiều thể loại: Hành động, Hài, Tình cảm, Kinh dị, Hoạt hình...
+
+[F02] QUẢN LÝ RẠP VÀ PHÒNG CHIẾU
+- Quản lý thông tin rạp (tên, địa chỉ, số điện thoại)
+- Quản lý phòng chiếu (tên phòng, loại phòng: 2D/3D/IMAX)
+- Thiết lập sơ đồ ghế cho từng phòng
+  + Số hàng, số ghế mỗi hàng
+  + Phân loại ghế: Thường / VIP / Couple
+  + Đánh số ghế tự động theo hàng (A1, A2, B1, B2...)
+
+[F03] QUẢN LÝ LỊCH CHIẾU (SUẤT CHIẾU)
+- Tạo suất chiếu: phim + phòng + ngày + giờ bắt đầu
+- Giá vé theo suất (ngày thường / cuối tuần / lễ)
+- Không cho phép tạo suất chiếu bị trùng phòng / giờ
+
+[F04] ĐẶT VÉ
+- Chọn phim → chọn ngày → chọn suất chiếu
+- Hiển thị sơ đồ ghế trực quan (realtime trạng thái ghế)
+  + Màu xanh: Ghế trống (có thể chọn)
+  + Màu đỏ: Ghế đã đặt (không thể chọn)
+  + Màu vàng: Ghế đang được giữ (trong 10 phút)
+  + Màu tím: Ghế VIP
+- Chọn tối đa 8 ghế mỗi lần đặt
+- Tính tổng tiền tự động
+- Áp dụng mã giảm giá (nếu có)
+- Xác nhận đặt vé → thanh toán (mock VNPAY / MoMo)
+- Sinh mã vé + QR code sau khi đặt thành công
+
+[F05] THANH TOÁN (MOCK)
+- Hiển thị tóm tắt đơn hàng
+- Chọn phương thức: VNPAY / MoMo / Thẻ ngân hàng
+- Giả lập thanh toán thành công / thất bại
+- Gửi email xác nhận (nếu cấu hình SMTP)
+
+[F06] QUẢN LÝ TÀI KHOẢN
+- Đăng ký: email, mật khẩu, họ tên, số điện thoại
+- Đăng nhập bằng email + mật khẩu
+- Đổi mật khẩu, cập nhật thông tin cá nhân
+- Phân quyền: ROLE_CUSTOMER / ROLE_STAFF / ROLE_ADMIN
+
+[F07] LỊCH SỬ VÀ TRA CỨU VÉ
+- Khách hàng xem lịch sử đặt vé của mình
+- Tra cứu vé theo mã vé / QR code
+- Hủy vé: chỉ được hủy trước giờ chiếu ít nhất 2 giờ
+
+[F08] BÁO CÁO VÀ THỐNG KÊ (ADMIN)
+- Doanh thu theo ngày / tháng / năm
+- Phim có doanh thu cao nhất
+- Suất chiếu có tỷ lệ lấp đầy cao nhất
+- Số lượng vé bán theo thể loại phim
+
+[F09] KHUYẾN MÃI
+- Tạo mã giảm giá (% hoặc số tiền cố định)
+- Giới hạn số lần dùng, thời gian hiệu lực
+- Áp dụng khi thanh toán
+
+----------------------------------------------------------------
+4. YÊU CẦU PHI CHỨC NĂNG (NON-FUNCTIONAL REQUIREMENTS)
+----------------------------------------------------------------
+- Bảo mật: Mã hóa mật khẩu bằng BCrypt, xác thực JWT Token
+- Responsive: Giao diện hoạt động tốt trên Desktop và Mobile
+- Validation: Kiểm tra dữ liệu đầu vào ở cả Frontend lẫn Backend
+- Error handling: Thông báo lỗi rõ ràng, thân thiện người dùng
+
+----------------------------------------------------------------
+5. CÔNG NGHỆ SỬ DỤNG
+----------------------------------------------------------------
+BACKEND:
+- Java 21 + Spring Boot 3.x
+- Spring Security + JWT (xác thực & phân quyền)
+- Spring Data JPA + Hibernate (ORM)
+- MySQL 8.x (database)
+- Maven (build tool)
+- Lombok (giảm boilerplate code)
+
+FRONTEND:
+- ReactJS 18.x (UI framework)
+- React Router DOM (điều hướng trang)
+- Axios (gọi REST API)
+- Redux Toolkit (quản lý state)
+- Tailwind CSS (styling)
+- React Toastify (thông báo)
+
+TOOLS & ENVIRONMENT:
+- IntelliJ IDEA / VS Code
+- Postman (test API)
+- MySQL Workbench (quản lý database)
+- Git + GitHub (quản lý source code)
+- Node.js 18+ (chạy frontend)
+
+----------------------------------------------------------------
+6. PHẠM VI KHÔNG THỰC HIỆN (OUT OF SCOPE)
+----------------------------------------------------------------
+- Tích hợp cổng thanh toán thật (chỉ mock)
+- App mobile (chỉ web)
+- Đặt vé combo bắp nước
+- Chương trình tích điểm thành viên
+- Tích hợp hệ thống gửi SMS
+
+
+================================================================
+END OF DOCUMENT
+================================================================
