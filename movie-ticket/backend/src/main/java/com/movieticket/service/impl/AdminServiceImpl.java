@@ -1,5 +1,6 @@
 package com.movieticket.service.impl;
 
+import com.movieticket.dto.request.CreateUserRequest;
 import com.movieticket.dto.request.PromotionRequest;
 import com.movieticket.dto.request.UserRoleRequest;
 import com.movieticket.dto.request.UserStatusRequest;
@@ -16,6 +17,7 @@ import com.movieticket.service.AdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +35,7 @@ public class AdminServiceImpl implements AdminService {
     private final BookingRepository bookingRepository;
     private final PaymentRepository paymentRepository;
     private final BookingSeatRepository bookingSeatRepository;
+    private final PasswordEncoder passwordEncoder;
 
     // ============ USER MANAGEMENT ============
 
@@ -45,6 +48,27 @@ public class AdminServiceImpl implements AdminService {
         return PageResponse.<UserResponse>builder()
                 .content(content).totalElements(page.getTotalElements())
                 .totalPages(page.getTotalPages()).currentPage(page.getNumber()).pageSize(page.getSize()).build();
+    }
+
+    @Override
+    @Transactional
+    public UserResponse createUser(CreateUserRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new ConflictException("Email đã được sử dụng");
+        }
+        User.Role role = User.Role.CUSTOMER;
+        if (request.getRole() != null && !request.getRole().isBlank()) {
+            role = User.Role.valueOf(request.getRole());
+        }
+        User user = User.builder()
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .fullName(request.getFullName())
+                .phone(request.getPhone())
+                .role(role)
+                .isActive(true)
+                .build();
+        return mapUserToResponse(userRepository.save(user));
     }
 
     @Override
@@ -158,18 +182,38 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Object getTopMovies(LocalDate from, LocalDate to, Integer limit) {
-        // Query bookings grouped by movie in date range
-        return bookingRepository.findAll().stream()
+        var grouped = bookingRepository.findAll().stream()
                 .filter(b -> b.getStatus().name().equals("CONFIRMED"))
-                .collect(Collectors.groupingBy(
-                        b -> b.getShowtime().getMovie().getTitle(),
-                        Collectors.counting()))
-                .entrySet().stream()
-                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .collect(Collectors.groupingBy(b -> b.getShowtime().getMovie()));
+
+        var sorted = grouped.entrySet().stream()
+                .sorted((a, b) -> Integer.compare(b.getValue().size(), a.getValue().size()))
                 .limit(limit != null ? limit : 10)
-                .map(e -> Map.of("title", e.getKey(), "bookings", e.getValue()))
                 .collect(Collectors.toList());
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (int i = 0; i < sorted.size(); i++) {
+            var entry = sorted.get(i);
+            var movie = entry.getKey();
+            var bookings = entry.getValue();
+            BigDecimal totalRevenue = bookings.stream()
+                    .map(b -> b.getFinalAmount() != null ? b.getFinalAmount() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            long totalShowtimes = bookings.stream()
+                    .map(b -> b.getShowtime().getId()).distinct().count();
+            Map<String, Object> row = new HashMap<>();
+            row.put("rank", i + 1);
+            row.put("movieId", movie.getId());
+            row.put("movieTitle", movie.getTitle());
+            row.put("posterUrl", movie.getPosterUrl());
+            row.put("totalTicketsSold", (long) bookings.size());
+            row.put("totalShowtimes", totalShowtimes);
+            row.put("totalRevenue", totalRevenue);
+            result.add(row);
+        }
+        return result;
     }
 
     @Override

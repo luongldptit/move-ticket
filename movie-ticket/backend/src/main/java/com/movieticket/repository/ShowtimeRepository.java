@@ -48,7 +48,7 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, Long> {
     List<Showtime> findWithFilters(@Param("movieId") Long movieId,
                                    @Param("cinemaId") Integer cinemaId,
                                    @Param("roomId") Integer roomId,
-                                   @Param("status") Showtime.ShowtimeStatus status);
+                                   @Param("status") Showtime.Status status);
 
     boolean existsByMovieIdAndRoomId(Long movieId, Integer roomId);
 }

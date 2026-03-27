@@ -51,7 +51,7 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.success(bookingService.getBookingById(id, user.getUsername())));
     }
 
-    @PostMapping("/{id}/cancel")
+    @PutMapping("/{id}/cancel")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> cancelBooking(
             @PathVariable Long id,

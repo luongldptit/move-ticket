@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,21 +27,10 @@ public class MovieServiceImpl implements MovieService {
     private final BookingSeatRepository bookingSeatRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public PageResponse<MovieResponse> getMovies(String status, Integer genreId, String keyword, Pageable pageable) {
-        Page<Movie> moviePage;
-        if (keyword != null && !keyword.isBlank()) {
-            moviePage = movieRepository.findByTitleContainingIgnoreCaseOrderByCreatedAtDesc(keyword, pageable);
-        } else if (status != null && genreId != null) {
-            moviePage = movieRepository.findByStatusAndGenreId(
-                    Movie.MovieStatus.valueOf(status), genreId, pageable);
-        } else if (status != null) {
-            moviePage = movieRepository.findByStatusOrderByReleaseDateDesc(
-                    Movie.MovieStatus.valueOf(status), pageable);
-        } else if (genreId != null) {
-            moviePage = movieRepository.findByGenreId(genreId, pageable);
-        } else {
-            moviePage = movieRepository.findAll(pageable);
-        }
+        Movie.Status statusEnum = (status != null && !status.isBlank()) ? Movie.Status.valueOf(status) : null;
+        Page<Movie> moviePage = movieRepository.findWithFilters(statusEnum, keyword, genreId, pageable);
         List<MovieResponse> content = moviePage.getContent().stream()
                 .map(this::mapToMovieResponse).collect(Collectors.toList());
         return PageResponse.<MovieResponse>builder()
@@ -54,18 +43,21 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<MovieResponse> getNowShowing() {
-        return movieRepository.findByStatus(Movie.MovieStatus.NOW_SHOWING).stream()
-                .map(this::mapToMovieResponse).collect(Collectors.toList());
+        return movieRepository.findByStatus(Movie.Status.NOW_SHOWING, Pageable.unpaged())
+                .getContent().stream().map(this::mapToMovieResponse).collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<MovieResponse> getComingSoon() {
-        return movieRepository.findByStatus(Movie.MovieStatus.COMING_SOON).stream()
-                .map(this::mapToMovieResponse).collect(Collectors.toList());
+        return movieRepository.findByStatus(Movie.Status.COMING_SOON, Pageable.unpaged())
+                .getContent().stream().map(this::mapToMovieResponse).collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public MovieDetailResponse getMovieById(Long id) {
         Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phim với id: " + id));
@@ -73,6 +65,7 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ShowtimeResponse> getShowtimesByMovie(Long movieId, LocalDate date, Integer cinemaId) {
         movieRepository.findById(movieId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phim với id: " + movieId));
@@ -111,7 +104,7 @@ public class MovieServiceImpl implements MovieService {
     public void deleteMovie(Long id) {
         Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phim với id: " + id));
-        movie.setStatus(Movie.MovieStatus.STOPPED);
+        movie.setStatus(Movie.Status.STOPPED);
         movieRepository.save(movie);
     }
 
@@ -125,11 +118,10 @@ public class MovieServiceImpl implements MovieService {
         if (request.getPosterUrl() != null) movie.setPosterUrl(request.getPosterUrl());
         if (request.getTrailerUrl() != null) movie.setTrailerUrl(request.getTrailerUrl());
         if (request.getAgeRating() != null) movie.setAgeRating(Movie.AgeRating.valueOf(request.getAgeRating()));
-        if (request.getStatus() != null) movie.setStatus(Movie.MovieStatus.valueOf(request.getStatus()));
+        if (request.getStatus() != null) movie.setStatus(Movie.Status.valueOf(request.getStatus()));
 
         if (request.getGenreIds() != null) {
-            List<Genre> genres = genreRepository.findAllById(request.getGenreIds());
-            movie.setGenres(genres);
+            movie.setGenres(new HashSet<>(genreRepository.findAllById(request.getGenreIds())));
         }
     }
 
@@ -139,9 +131,13 @@ public class MovieServiceImpl implements MovieService {
         return MovieResponse.builder()
                 .id(movie.getId())
                 .title(movie.getTitle())
+                .description(movie.getDescription())
+                .director(movie.getDirector())
+                .castMembers(movie.getCastMembers())
                 .duration(movie.getDuration())
                 .releaseDate(movie.getReleaseDate())
                 .posterUrl(movie.getPosterUrl())
+                .trailerUrl(movie.getTrailerUrl())
                 .ageRating(movie.getAgeRating() != null ? movie.getAgeRating().name() : "P")
                 .status(movie.getStatus().name())
                 .genres(genreNames)
@@ -175,7 +171,7 @@ public class MovieServiceImpl implements MovieService {
         CinemaResponse cinemaResponse = CinemaResponse.builder()
                 .id(cinema.getId()).name(cinema.getName()).address(cinema.getAddress()).build();
         RoomResponse roomResponse = RoomResponse.builder()
-                .id(room.getId()).name(room.getName()).type(room.getType().name())
+                .id(room.getId()).name(room.getName()).type(room.getType().toDisplayName())
                 .totalSeats(room.getTotalSeats()).build();
         return ShowtimeResponse.builder()
                 .id(st.getId())

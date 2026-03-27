@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/rooms")
 @RequiredArgsConstructor
@@ -20,6 +22,12 @@ public class RoomController {
 
     private final RoomService roomService;
     private final SeatService seatService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<RoomResponse>>> getAllRooms(
+            @RequestParam(required = false) Integer cinemaId) {
+        return ResponseEntity.ok(ApiResponse.success(roomService.getAllRooms(cinemaId)));
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<RoomResponse>> getRoomById(@PathVariable Integer id) {

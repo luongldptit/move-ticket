@@ -12,7 +12,29 @@ import java.util.List;
 @NoArgsConstructor @AllArgsConstructor
 public class Room {
 
-    public enum RoomType { TYPE_2D, TYPE_3D, IMAX }
+    public enum RoomType {
+        TYPE_2D, TYPE_3D, IMAX;
+
+        public String toDisplayName() {
+            return switch (this) {
+                case TYPE_2D -> "2D";
+                case TYPE_3D -> "3D";
+                case IMAX    -> "IMAX";
+            };
+        }
+
+        public static RoomType fromDisplayName(String value) {
+            if (value == null) return TYPE_2D;
+            return switch (value.toUpperCase()) {
+                case "2D"     -> TYPE_2D;
+                case "3D"     -> TYPE_3D;
+                case "IMAX"   -> IMAX;
+                case "TYPE_2D"-> TYPE_2D;
+                case "TYPE_3D"-> TYPE_3D;
+                default -> throw new IllegalArgumentException("Loại phòng không hợp lệ: " + value);
+            };
+        }
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

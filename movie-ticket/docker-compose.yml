@@ -1,0 +1,20 @@
+services:
+  backend:
+    build: ./backend
+    container_name: movieticket-be
+    ports:
+      - "8809:8080"
+    volumes:
+      - ./backend/data:/app/data
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: movieticket-fe
+    ports:
+      - "5273:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

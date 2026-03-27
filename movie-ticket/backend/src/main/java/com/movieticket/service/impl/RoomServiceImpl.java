@@ -23,6 +23,24 @@ public class RoomServiceImpl implements RoomService {
     private final SeatRepository seatRepository;
 
     @Override
+    @Transactional(readOnly = true)
+    public List<RoomResponse> getAllRooms(Integer cinemaId) {
+        List<Room> rooms = cinemaId != null
+                ? roomRepository.findByCinemaId(cinemaId)
+                : roomRepository.findAll();
+        return rooms.stream().map(room -> {
+            Cinema cinema = room.getCinema();
+            CinemaResponse cinemaResponse = CinemaResponse.builder()
+                    .id(cinema.getId()).name(cinema.getName()).build();
+            return RoomResponse.builder()
+                    .id(room.getId()).name(room.getName()).type(room.getType().toDisplayName())
+                    .totalSeats(room.getTotalSeats()).isActive(room.isActive())
+                    .cinema(cinemaResponse).build();
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public RoomResponse getRoomById(Integer id) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phòng chiếu với id: " + id));
@@ -30,7 +48,7 @@ public class RoomServiceImpl implements RoomService {
         CinemaResponse cinemaResponse = CinemaResponse.builder()
                 .id(cinema.getId()).name(cinema.getName()).build();
         return RoomResponse.builder()
-                .id(room.getId()).name(room.getName()).type(room.getType().name())
+                .id(room.getId()).name(room.getName()).type(room.getType().toDisplayName())
                 .totalSeats(room.getTotalSeats()).isActive(room.isActive())
                 .cinema(cinemaResponse).build();
     }
@@ -46,13 +64,13 @@ public class RoomServiceImpl implements RoomService {
         Room room = Room.builder()
                 .cinema(cinema)
                 .name(request.getName())
-                .type(Room.RoomType.valueOf(request.getType()))
+                .type(Room.RoomType.fromDisplayName(request.getType()))
                 .totalSeats(request.getTotalSeats() != null ? request.getTotalSeats() : 0)
                 .isActive(true)
                 .build();
         room = roomRepository.save(room);
         return RoomResponse.builder()
-                .id(room.getId()).name(room.getName()).type(room.getType().name())
+                .id(room.getId()).name(room.getName()).type(room.getType().toDisplayName())
                 .totalSeats(room.getTotalSeats()).isActive(true).build();
     }
 
@@ -62,10 +80,10 @@ public class RoomServiceImpl implements RoomService {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phòng chiếu với id: " + id));
         if (request.getName() != null) room.setName(request.getName());
-        if (request.getType() != null) room.setType(Room.RoomType.valueOf(request.getType()));
+        if (request.getType() != null) room.setType(Room.RoomType.fromDisplayName(request.getType()));
         if (request.getIsActive() != null) room.setActive(request.getIsActive());
         return RoomResponse.builder()
-                .id(room.getId()).name(room.getName()).type(room.getType().name())
+                .id(room.getId()).name(room.getName()).type(room.getType().toDisplayName())
                 .totalSeats(room.getTotalSeats()).isActive(room.isActive()).build();
     }
 

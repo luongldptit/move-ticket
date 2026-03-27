@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,42 +35,55 @@ public class PaymentServiceImpl implements PaymentService {
             throw new BusinessException("Booking không ở trạng thái có thể thanh toán");
         }
 
-        Payment payment = Payment.builder()
-                .booking(booking)
-                .method(Payment.PaymentMethod.valueOf(request.getMethod()))
-                .amount(booking.getFinalAmount())
-                .status(Payment.PaymentStatus.PENDING)
-                .build();
+        // Reuse existing payment if already created (retry scenario)
+        Optional<Payment> existing = paymentRepository.findByBookingId(booking.getId());
+        Payment payment;
+        if (existing.isPresent()) {
+            payment = existing.get();
+            if (payment.getStatus() == Payment.Status.SUCCESS) {
+                throw new BusinessException("Booking đã được thanh toán thành công");
+            }
+            payment.setMethod(Payment.Method.valueOf(request.getMethod()));
+            payment.setAmount(booking.getFinalAmount());
+            payment.setStatus(Payment.Status.PENDING);
+            payment.setTransactionId(null);
+            payment.setPaidAt(null);
+        } else {
+            payment = Payment.builder()
+                    .booking(booking)
+                    .method(Payment.Method.valueOf(request.getMethod()))
+                    .amount(booking.getFinalAmount())
+                    .status(Payment.Status.PENDING)
+                    .build();
+        }
         payment = paymentRepository.save(payment);
 
-        // Simulate payment URL for non-cash methods
-        String paymentUrl = null;
-        if (payment.getMethod() != Payment.PaymentMethod.CASH) {
-            paymentUrl = "https://payment.example.com/pay?paymentId=" + payment.getId()
-                    + "&amount=" + payment.getAmount();
-        }
+        String paymentUrl = "https://payment.example.com/pay?paymentId=" + payment.getId()
+                + "&amount=" + payment.getAmount();
         return mapToResponse(payment, paymentUrl);
     }
 
     @Override
     @Transactional
-    public BookingCallbackResponse handleCallback(PaymentCallbackRequest request) {
+    public PaymentService.BookingCallbackResponse handleCallback(PaymentCallbackRequest request) {
         Payment payment = paymentRepository.findById(request.getPaymentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy payment"));
         Booking booking = payment.getBooking();
 
         if ("SUCCESS".equalsIgnoreCase(request.getStatus())) {
-            payment.setStatus(Payment.PaymentStatus.SUCCESS);
+            payment.setStatus(Payment.Status.SUCCESS);
             payment.setTransactionId(request.getTransactionId());
             payment.setPaidAt(LocalDateTime.now());
             booking.setStatus(Booking.BookingStatus.CONFIRMED);
+            booking.setQrCode("QR-" + booking.getBookingCode() + "-" + System.currentTimeMillis());
         } else {
-            payment.setStatus(Payment.PaymentStatus.FAILED);
+            payment.setStatus(Payment.Status.FAILED);
+            booking.setStatus(Booking.BookingStatus.EXPIRED);
         }
         paymentRepository.save(payment);
         bookingRepository.save(booking);
 
-        return new BookingCallbackResponse(
+        return new PaymentService.BookingCallbackResponse(
                 booking.getBookingCode(),
                 booking.getStatus().name(),
                 booking.getQrCode()
@@ -77,6 +91,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PaymentResponse getPaymentByBookingId(Long bookingId, String email) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy booking"));

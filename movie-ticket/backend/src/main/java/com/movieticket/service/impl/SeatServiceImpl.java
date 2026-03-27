@@ -37,7 +37,7 @@ public class SeatServiceImpl implements SeatService {
                 if (!seatRepository.existsByRoomIdAndSeatCode(request.getRoomId(), seatCode)) {
                     Seat seat = Seat.builder()
                             .room(room)
-                            .rowLabel(rowConfig.getRowLabel().charAt(0))
+                            .rowLabel(rowConfig.getRowLabel())
                             .seatNumber(i)
                             .seatCode(seatCode)
                             .type(Seat.SeatType.valueOf(rowConfig.getType()))
@@ -68,6 +68,7 @@ public class SeatServiceImpl implements SeatService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SeatMapResponse getSeatStatusByShowtime(Long showtimeId) {
         Showtime showtime = showtimeRepository.findById(showtimeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy suất chiếu: " + showtimeId));

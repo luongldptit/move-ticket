@@ -37,6 +37,12 @@ public class AdminController {
                         PageRequest.of(page, size, Sort.by("createdAt").descending()))));
     }
 
+    @PostMapping("/users")
+    public ResponseEntity<ApiResponse<UserResponse>> createUser(@Valid @RequestBody CreateUserRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Tạo tài khoản thành công", adminService.createUser(request)));
+    }
+
     @PatchMapping("/users/{id}/role")
     public ResponseEntity<ApiResponse<UserResponse>> updateUserRole(
             @PathVariable Long id, @Valid @RequestBody UserRoleRequest request) {

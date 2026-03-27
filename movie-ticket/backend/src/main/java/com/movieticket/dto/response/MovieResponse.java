@@ -11,9 +11,13 @@ import java.util.List;
 public class MovieResponse {
     private Long id;
     private String title;
+    private String description;
+    private String director;
+    private String castMembers;
     private Integer duration;
     private LocalDate releaseDate;
     private String posterUrl;
+    private String trailerUrl;
     private String ageRating;
     private String status;
     private List<String> genres;

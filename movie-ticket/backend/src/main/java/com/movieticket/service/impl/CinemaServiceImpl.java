@@ -84,7 +84,7 @@ public class CinemaServiceImpl implements CinemaService {
         return RoomResponse.builder()
                 .id(room.getId())
                 .name(room.getName())
-                .type(room.getType().name())
+                .type(room.getType().toDisplayName())
                 .totalSeats(room.getTotalSeats())
                 .isActive(room.isActive())
                 .build();

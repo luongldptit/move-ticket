@@ -27,14 +27,16 @@ public class ShowtimeServiceImpl implements ShowtimeService {
     private final SeatRepository seatRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<ShowtimeResponse> getShowtimes(Long movieId, Integer cinemaId, Integer roomId, LocalDate date, String status) {
-        Showtime.ShowtimeStatus statusEnum = status != null ? Showtime.ShowtimeStatus.valueOf(status) : null;
+        Showtime.Status statusEnum = status != null ? Showtime.Status.valueOf(status) : null;
         return showtimeRepository.findWithFilters(movieId, cinemaId, roomId, statusEnum)
                 .stream().filter(st -> date == null || st.getStartTime().toLocalDate().equals(date))
                 .map(this::mapToResponse).collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ShowtimeResponse getShowtimeById(Long id) {
         Showtime showtime = showtimeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy suất chiếu với id: " + id));
@@ -62,7 +64,7 @@ public class ShowtimeServiceImpl implements ShowtimeService {
                 .priceStandard(request.getPriceStandard())
                 .priceVip(request.getPriceVip())
                 .priceCouple(request.getPriceCouple())
-                .status(Showtime.ShowtimeStatus.SCHEDULED)
+                .status(Showtime.Status.SCHEDULED)
                 .build();
         return mapToResponse(showtimeRepository.save(showtime));
     }
@@ -75,7 +77,7 @@ public class ShowtimeServiceImpl implements ShowtimeService {
         if (request.getPriceStandard() != null) showtime.setPriceStandard(request.getPriceStandard());
         if (request.getPriceVip() != null) showtime.setPriceVip(request.getPriceVip());
         if (request.getPriceCouple() != null) showtime.setPriceCouple(request.getPriceCouple());
-        if (request.getStatus() != null) showtime.setStatus(Showtime.ShowtimeStatus.valueOf(request.getStatus()));
+        if (request.getStatus() != null) showtime.setStatus(Showtime.Status.valueOf(request.getStatus()));
         return mapToResponse(showtimeRepository.save(showtime));
     }
 
@@ -102,7 +104,7 @@ public class ShowtimeServiceImpl implements ShowtimeService {
                         .id(st.getMovie().getId()).title(st.getMovie().getTitle())
                         .duration(st.getMovie().getDuration()).build())
                 .room(RoomResponse.builder()
-                        .id(room.getId()).name(room.getName()).type(room.getType().name())
+                        .id(room.getId()).name(room.getName()).type(room.getType().toDisplayName())
                         .totalSeats(totalSeats).build())
                 .cinema(CinemaResponse.builder()
                         .id(cinema.getId()).name(cinema.getName()).address(cinema.getAddress()).build())

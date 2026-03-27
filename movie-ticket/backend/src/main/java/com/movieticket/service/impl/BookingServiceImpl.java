@@ -37,7 +37,7 @@ public class BookingServiceImpl implements BookingService {
         Showtime showtime = showtimeRepository.findById(request.getShowtimeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Suất chiếu không tồn tại"));
 
-        if (showtime.getStatus() != Showtime.ShowtimeStatus.SCHEDULED) {
+        if (showtime.getStatus() != Showtime.Status.SCHEDULED) {
             throw new BusinessException("Suất chiếu không còn sẵn để đặt vé");
         }
 
@@ -105,6 +105,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResponse<BookingResponse> getMyBookings(String email, String status, Pageable pageable) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Tài khoản không tồn tại"));
@@ -127,6 +128,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BookingDetailResponse getBookingById(Long id, String email) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy booking"));
@@ -152,6 +154,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BookingDetailResponse verifyBookingByCode(String code) {
         Booking booking = bookingRepository.findByBookingCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Mã đặt vé không tồn tại"));
@@ -159,6 +162,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BookingResponse> getBookingsByShowtime(Long showtimeId) {
         return bookingRepository.findByShowtimeIdAndStatusIn(showtimeId,
                         List.of(Booking.BookingStatus.PENDING, Booking.BookingStatus.CONFIRMED)).stream()
@@ -229,9 +233,20 @@ public class BookingServiceImpl implements BookingService {
                 .cinemaName(st.getRoom().getCinema().getName())
                 .build();
 
+        BookingDetailResponse.PaymentInfo paymentInfo = null;
+        Payment payment = booking.getPayment();
+        if (payment != null) {
+            paymentInfo = BookingDetailResponse.PaymentInfo.builder()
+                    .method(payment.getMethod().name())
+                    .status(payment.getStatus().name())
+                    .paidAt(payment.getPaidAt())
+                    .build();
+        }
+
         return BookingDetailResponse.builder()
                 .id(booking.getId())
                 .bookingCode(booking.getBookingCode())
+                .qrCode(booking.getQrCode())
                 .user(userResponse)
                 .showtime(showtimeInfo)
                 .seats(seatInfos)
@@ -239,6 +254,7 @@ public class BookingServiceImpl implements BookingService {
                 .discountAmount(booking.getDiscountAmount())
                 .finalAmount(booking.getFinalAmount())
                 .status(booking.getStatus().name())
+                .payment(paymentInfo)
                 .createdAt(booking.getCreatedAt())
                 .build();
     }

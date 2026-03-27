@@ -1,5 +1,6 @@
 package com.movieticket.service;
 
+import com.movieticket.dto.request.CreateUserRequest;
 import com.movieticket.dto.request.PromotionRequest;
 import com.movieticket.dto.request.UserRoleRequest;
 import com.movieticket.dto.request.UserStatusRequest;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 public interface AdminService {
     PageResponse<UserResponse> getUsers(String keyword, String role, Boolean isActive, Pageable pageable);
+    UserResponse createUser(CreateUserRequest request);
     UserResponse updateUserRole(Long id, UserRoleRequest request);
     void updateUserStatus(Long id, UserStatusRequest request);
 
