@@ -40,6 +40,9 @@ public class BookingServiceImpl implements BookingService {
         if (showtime.getStatus() != Showtime.Status.SCHEDULED) {
             throw new BusinessException("Suất chiếu không còn sẵn để đặt vé");
         }
+        if (!showtime.getStartTime().isAfter(java.time.LocalDateTime.now())) {
+            throw new BusinessException("Suất chiếu này đã bắt đầu hoặc kết thúc, không thể đặt vé");
+        }
 
         // Validate seats
         Set<Long> alreadyBooked = bookingSeatRepository.findBookedSeatIdsByShowtimeId(showtime.getId());
