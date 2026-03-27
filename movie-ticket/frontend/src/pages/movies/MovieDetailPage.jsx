@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { movieApi } from '../../api/movieApi'
 import { cinemaApi } from '../../api/cinemaApi'
@@ -21,6 +21,16 @@ export default function MovieDetailPage() {
   const [selectedCinema, setSelectedCinema] = useState('')
   const [loading, setLoading] = useState(true)
   const [stLoading, setStLoading] = useState(false)
+  const [showTrailer, setShowTrailer] = useState(false)
+
+  const getYoutubeEmbedUrl = useCallback((url) => {
+    if (!url) return null
+    // https://youtu.be/ID  hoặc  https://www.youtube.com/watch?v=ID
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/)
+    if (match) return `https://www.youtube.com/embed/${match[1]}?autoplay=1`
+    // Nếu đã là embed URL hoặc URL khác, trả về nguyên
+    return url
+  }, [])
 
   const days = getNextNDays(7)
 
@@ -136,12 +146,15 @@ export default function MovieDetailPage() {
 
               {/* Trailer */}
               {movie.trailerUrl && (
-                <a href={movie.trailerUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 mt-4 bg-dark-800 hover:bg-dark-700 border border-dark-600 text-white py-2 px-4 rounded-xl transition-colors text-sm">
-                  <svg className="w-4 h-4 text-primary-400" fill="currentColor" viewBox="0 0 20 20">
+                <button
+                  onClick={() => setShowTrailer(true)}
+                  className="inline-flex items-center gap-2 mt-4 bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-xl transition-colors text-sm font-medium"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M10 0a10 10 0 100 20A10 10 0 0010 0zm-2 14.5v-9l6 4.5-6 4.5z"/>
                   </svg>
                   Xem trailer
-                </a>
+                </button>
               )}
             </div>
           </div>
@@ -216,6 +229,35 @@ export default function MovieDetailPage() {
               </div>
             ))
           )}
+        </div>
+      )}
+
+      {/* Trailer Modal */}
+      {showTrailer && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4"
+          onClick={() => setShowTrailer(false)}
+        >
+          <div
+            className="relative w-full max-w-3xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowTrailer(false)}
+              className="absolute -top-10 right-0 text-white/70 hover:text-white text-sm flex items-center gap-1"
+            >
+              ✕ Đóng
+            </button>
+            <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl" style={{ paddingTop: '56.25%' }}>
+              <iframe
+                className="absolute inset-0 w-full h-full"
+                src={getYoutubeEmbedUrl(movie.trailerUrl)}
+                title={`Trailer - ${movie.title}`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>
