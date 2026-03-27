@@ -7,6 +7,7 @@ import com.movieticket.dto.request.UserStatusRequest;
 import com.movieticket.dto.response.PageResponse;
 import com.movieticket.dto.response.PromotionResponse;
 import com.movieticket.dto.response.UserResponse;
+import com.movieticket.entity.Booking;
 import com.movieticket.entity.Promotion;
 import com.movieticket.entity.User;
 import com.movieticket.exception.BusinessException;
@@ -35,6 +36,7 @@ public class AdminServiceImpl implements AdminService {
     private final BookingRepository bookingRepository;
     private final PaymentRepository paymentRepository;
     private final BookingSeatRepository bookingSeatRepository;
+    private final ShowtimeRepository showtimeRepository;
     private final PasswordEncoder passwordEncoder;
 
     // ============ USER MANAGEMENT ============
@@ -178,18 +180,35 @@ public class AdminServiceImpl implements AdminService {
             return item;
         }).collect(Collectors.toList());
         result.put("breakdown", breakdown);
+
+        long totalBookings = bookingRepository.countConfirmedByDateRange(from, to);
+        result.put("totalBookings", totalBookings);
         return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Object getTopMovies(LocalDate from, LocalDate to, Integer limit) {
+        // Lọc booking CONFIRMED trong khoảng ngày
         var grouped = bookingRepository.findAll().stream()
-                .filter(b -> b.getStatus().name().equals("CONFIRMED"))
+                .filter(b -> b.getStatus() == Booking.BookingStatus.CONFIRMED)
+                .filter(b -> {
+                    LocalDate d = b.getCreatedAt().toLocalDate();
+                    return (from == null || !d.isBefore(from)) && (to == null || !d.isAfter(to));
+                })
                 .collect(Collectors.groupingBy(b -> b.getShowtime().getMovie()));
 
+        // Sắp xếp theo tổng doanh thu giảm dần
         var sorted = grouped.entrySet().stream()
-                .sorted((a, b) -> Integer.compare(b.getValue().size(), a.getValue().size()))
+                .sorted((a, b) -> {
+                    BigDecimal ra = a.getValue().stream()
+                            .map(bk -> bk.getFinalAmount() != null ? bk.getFinalAmount() : BigDecimal.ZERO)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    BigDecimal rb = b.getValue().stream()
+                            .map(bk -> bk.getFinalAmount() != null ? bk.getFinalAmount() : BigDecimal.ZERO)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    return rb.compareTo(ra);
+                })
                 .limit(limit != null ? limit : 10)
                 .collect(Collectors.toList());
 
@@ -198,17 +217,23 @@ public class AdminServiceImpl implements AdminService {
             var entry = sorted.get(i);
             var movie = entry.getKey();
             var bookings = entry.getValue();
+
             BigDecimal totalRevenue = bookings.stream()
                     .map(b -> b.getFinalAmount() != null ? b.getFinalAmount() : BigDecimal.ZERO)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             long totalShowtimes = bookings.stream()
                     .map(b -> b.getShowtime().getId()).distinct().count();
+            // Đếm tổng số ghế (vé) thực tế
+            long totalTicketsSold = bookings.stream()
+                    .mapToLong(b -> bookingSeatRepository.findByBookingId(b.getId()).size())
+                    .sum();
+
             Map<String, Object> row = new HashMap<>();
             row.put("rank", i + 1);
             row.put("movieId", movie.getId());
             row.put("movieTitle", movie.getTitle());
             row.put("posterUrl", movie.getPosterUrl());
-            row.put("totalTicketsSold", (long) bookings.size());
+            row.put("totalTicketsSold", totalTicketsSold);
             row.put("totalShowtimes", totalShowtimes);
             row.put("totalRevenue", totalRevenue);
             result.add(row);
@@ -217,13 +242,36 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<String, Object> getOccupancyReport(LocalDate from, LocalDate to, Integer cinemaId) {
+        List<Showtime> showtimes = showtimeRepository.findByDateRangeAndCinema(from, to, cinemaId);
+
+        if (showtimes.isEmpty()) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("averageOccupancyRate", 0.0);
+            result.put("totalShowtimes", 0);
+            result.put("from", from);
+            result.put("to", to);
+            return result;
+        }
+
+        double totalRate = 0.0;
+        int counted = 0;
+        for (Showtime st : showtimes) {
+            int totalSeats = st.getRoom().getTotalSeats();
+            if (totalSeats <= 0) continue;
+            long bookedSeats = bookingRepository.countActiveByShowtimeId(st.getId());
+            totalRate += (bookedSeats * 100.0 / totalSeats);
+            counted++;
+        }
+
+        double averageOccupancyRate = counted > 0 ? totalRate / counted : 0.0;
+
         Map<String, Object> result = new HashMap<>();
+        result.put("averageOccupancyRate", Math.round(averageOccupancyRate * 10.0) / 10.0);
+        result.put("totalShowtimes", showtimes.size());
         result.put("from", from);
         result.put("to", to);
-        result.put("cinemaId", cinemaId);
-        // Placeholder - can be enhanced with specific queries
-        result.put("message", "Occupancy report calculated");
         return result;
     }
 

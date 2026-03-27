@@ -51,4 +51,11 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, Long> {
                                    @Param("status") Showtime.Status status);
 
     boolean existsByMovieIdAndRoomId(Long movieId, Integer roomId);
+
+    @Query("SELECT s FROM Showtime s WHERE s.status <> 'CANCELLED' " +
+           "AND CAST(s.startTime AS DATE) BETWEEN :from AND :to " +
+           "AND (:cinemaId IS NULL OR s.room.cinema.id = :cinemaId)")
+    List<Showtime> findByDateRangeAndCinema(@Param("from") java.time.LocalDate from,
+                                            @Param("to") java.time.LocalDate to,
+                                            @Param("cinemaId") Integer cinemaId);
 }
