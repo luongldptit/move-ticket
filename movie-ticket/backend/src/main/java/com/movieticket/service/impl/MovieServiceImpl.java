@@ -77,7 +77,10 @@ public class MovieServiceImpl implements MovieService {
         } else {
             showtimes = showtimeRepository.findByMovieIdOrderByStartTimeAsc(movieId);
         }
-        return showtimes.stream().map(this::mapToShowtimeResponse).collect(Collectors.toList());
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        return showtimes.stream()
+                .filter(st -> st.getStartTime().isAfter(now))
+                .map(this::mapToShowtimeResponse).collect(Collectors.toList());
     }
 
     @Override
