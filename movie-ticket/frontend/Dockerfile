@@ -3,8 +3,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-# Để trống VITE_API_BASE_URL để axios dùng relative URL → nginx proxy sang BE
-RUN VITE_API_BASE_URL="" npm run build
+ARG VITE_API_BASE_URL=http://5.181.217.137:8809
+RUN VITE_API_BASE_URL=$VITE_API_BASE_URL npm run build
 
 FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html

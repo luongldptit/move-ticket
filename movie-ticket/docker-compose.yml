@@ -8,10 +8,14 @@ services:
       - ./backend/data:/app/data
     environment:
       - SPRING_PROFILES_ACTIVE=dev
+      - CORS_ALLOWED_ORIGINS=http://5.181.217.137:5273,http://localhost:5173,http://localhost:3000
     restart: unless-stopped
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: http://5.181.217.137:8809
     container_name: movieticket-fe
     ports:
       - "5273:80"
