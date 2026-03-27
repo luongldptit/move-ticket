@@ -67,8 +67,11 @@ export default function MovieDetailPage() {
   const rating = AGE_RATING[movie.ageRating] || { label: movie.ageRating, color: 'bg-dark-600', title: '' }
   const status = MOVIE_STATUS[movie.status] || {}
 
-  // Group showtimes by cinema
+  const now = new Date()
+
+  // Group showtimes by cinema, chỉ lấy suất chưa bắt đầu
   const grouped = showtimes.reduce((acc, st) => {
+    if (new Date(st.startTime) <= now) return acc
     const key = st.cinema?.name || 'Rạp'
     if (!acc[key]) acc[key] = []
     acc[key].push(st)
@@ -214,21 +217,17 @@ export default function MovieDetailPage() {
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  {sts.map(st => {
-                    const isPast = new Date(st.startTime) <= new Date()
-                    if (isPast) return null
-                    return (
-                      <button
-                        key={st.id}
-                        onClick={() => handleBookShowtime(st)}
-                        className="border border-dark-600 hover:border-primary-500 bg-dark-800/50 hover:bg-primary-600/10 rounded-xl p-3 text-left transition-all group"
-                      >
-                        <div className="text-white font-semibold text-base group-hover:text-primary-400">{formatTime(st.startTime)}</div>
-                        <div className="text-dark-400 text-xs mt-0.5">{st.room?.type} · {st.room?.name}</div>
-                        <div className="text-dark-400 text-xs mt-1">từ {formatPrice(st.priceStandard)}</div>
-                      </button>
-                    )
-                  })}
+                  {sts.map(st => (
+                    <button
+                      key={st.id}
+                      onClick={() => handleBookShowtime(st)}
+                      className="border border-dark-600 hover:border-primary-500 bg-dark-800/50 hover:bg-primary-600/10 rounded-xl p-3 text-left transition-all group"
+                    >
+                      <div className="text-white font-semibold text-base group-hover:text-primary-400">{formatTime(st.startTime)}</div>
+                      <div className="text-dark-400 text-xs mt-0.5">{st.room?.type} · {st.room?.name}</div>
+                      <div className="text-dark-400 text-xs mt-1">từ {formatPrice(st.priceStandard)}</div>
+                    </button>
+                  ))}
                 </div>
               </div>
             ))
