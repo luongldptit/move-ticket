@@ -26,6 +26,7 @@ export default function ManageShowtimesPage() {
   const [cinemaId, setCinemaId] = useState('')
   const [filterMovieId, setFilterMovieId] = useState('')
   const [filterDate, setFilterDate] = useState('')
+  const [filterStatus, setFilterStatus] = useState('')
   const [page, setPage] = useState(0)
 
   useEffect(() => {
@@ -40,12 +41,12 @@ export default function ManageShowtimesPage() {
 
   const load = () => {
     setLoading(true)
-    showtimeApi.getShowtimes({ movieId: filterMovieId || undefined, cinemaId: cinemaId || undefined, date: filterDate || undefined, page, size: 10 })
+    showtimeApi.getShowtimes({ movieId: filterMovieId || undefined, cinemaId: cinemaId || undefined, date: filterDate || undefined, status: filterStatus || undefined, page, size: 10 })
       .then(r => setShowtimes(r.data.data || []))
       .catch(console.error).finally(() => setLoading(false))
   }
 
-  useEffect(load, [filterMovieId, cinemaId, filterDate, page])
+  useEffect(load, [filterMovieId, cinemaId, filterDate, filterStatus, page])
 
   const handleSave = async (e) => {
     e.preventDefault()
@@ -81,6 +82,10 @@ export default function ManageShowtimesPage() {
           {cinemas.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
         <input type="date" className="input-field w-auto" value={filterDate} onChange={e => setFilterDate(e.target.value)} />
+        <select className="input-field w-auto" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+          <option value="">Tất cả trạng thái</option>
+          {Object.entries(SHOWTIME_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+        </select>
       </div>
 
       <div className="card overflow-hidden">

@@ -103,6 +103,19 @@ public class ShowtimeServiceImpl implements ShowtimeService {
         int bookedSeats = (int) bookingRepository.countActiveByShowtimeId(st.getId());
         int totalSeats = room.getTotalSeats();
 
+        // Tự động tính trạng thái dựa theo thời gian thực
+        LocalDateTime now = LocalDateTime.now();
+        String effectiveStatus;
+        if (st.getStatus() == Showtime.Status.CANCELLED) {
+            effectiveStatus = "CANCELLED";
+        } else if (st.getEndTime().isBefore(now)) {
+            effectiveStatus = "FINISHED";
+        } else if (st.getStartTime().isBefore(now)) {
+            effectiveStatus = "ONGOING";
+        } else {
+            effectiveStatus = "SCHEDULED";
+        }
+
         return ShowtimeResponse.builder()
                 .id(st.getId())
                 .movie(MovieResponse.builder()
@@ -118,7 +131,7 @@ public class ShowtimeServiceImpl implements ShowtimeService {
                 .priceStandard(st.getPriceStandard())
                 .priceVip(st.getPriceVip())
                 .priceCouple(st.getPriceCouple())
-                .status(st.getStatus().name())
+                .status(effectiveStatus)
                 .availableSeats(totalSeats - bookedSeats)
                 .totalSeats(totalSeats)
                 .build();
