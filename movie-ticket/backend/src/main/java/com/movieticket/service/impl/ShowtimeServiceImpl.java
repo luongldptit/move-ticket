@@ -31,12 +31,9 @@ public class ShowtimeServiceImpl implements ShowtimeService {
     @Transactional(readOnly = true)
     public List<ShowtimeResponse> getShowtimes(Long movieId, Integer cinemaId, Integer roomId, LocalDate date, String status) {
         Showtime.Status statusEnum = status != null ? Showtime.Status.valueOf(status) : null;
-        LocalDateTime now = LocalDateTime.now();
         return showtimeRepository.findWithFilters(movieId, cinemaId, roomId, statusEnum)
                 .stream()
                 .filter(st -> date == null || st.getStartTime().toLocalDate().equals(date))
-                // Nếu không filter theo status (public view) thì ẩn suất đã qua
-                .filter(st -> status != null || st.getStartTime().isAfter(now))
                 .map(this::mapToResponse).collect(Collectors.toList());
     }
 
