@@ -9,6 +9,7 @@ import com.movieticket.dto.response.PromotionResponse;
 import com.movieticket.dto.response.UserResponse;
 import com.movieticket.entity.Booking;
 import com.movieticket.entity.Promotion;
+import com.movieticket.entity.Showtime;
 import com.movieticket.entity.User;
 import com.movieticket.exception.BusinessException;
 import com.movieticket.exception.ConflictException;
