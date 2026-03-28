@@ -7,17 +7,19 @@ import com.movieticket.exception.BusinessException;
 import com.movieticket.exception.ResourceNotFoundException;
 import com.movieticket.repository.*;
 import com.movieticket.service.BookingService;
+import com.movieticket.service.EmailService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
@@ -28,6 +30,7 @@ public class BookingServiceImpl implements BookingService {
     private final ShowtimeRepository showtimeRepository;
     private final SeatRepository seatRepository;
     private final PromotionRepository promotionRepository;
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -103,7 +106,8 @@ public class BookingServiceImpl implements BookingService {
                     .booking(booking).seat(seat).price(price).build());
         }
         bookingSeatRepository.saveAll(bookingSeats);
-
+        //send mail
+        sendBookingEmail(user, showtime, seats, finalAmount);
         return buildBookingResponse(booking, seats, showtime);
     }
 
@@ -260,5 +264,25 @@ public class BookingServiceImpl implements BookingService {
                 .payment(paymentInfo)
                 .createdAt(booking.getCreatedAt())
                 .build();
+    }
+
+    private void sendBookingEmail(User user, Showtime showtime, List<Seat> seats, BigDecimal finalAmount) {
+        log.info("sendBookingEmail start  user:{}, showtime:{}, seats:{}, finalAmount:{}", user, showtime, seats, finalAmount);
+        String movieTitle = showtime.getMovie().getTitle();
+
+        String seatCodes = seats.stream()
+                .map(Seat::getSeatCode)
+                .collect(Collectors.joining(", "));
+
+        emailService.sendBookingSuccessEmail(
+//                "ltung7436@gmail.com",
+                user.getEmail(), //hard code tạm thời
+                user.getFullName(),
+                movieTitle,
+                showtime.getStartTime(),
+                seatCodes,
+                finalAmount
+        );
+        log.info("sendBookingEmail end email");
     }
 }

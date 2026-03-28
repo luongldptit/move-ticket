@@ -107,3 +107,38 @@ Caused by: org.h2.jdbc.JdbcSQLInvalidAuthorizationSpecException: Wrong user name
 	at org.h2.message.DbException.getJdbcSQLException(DbException.java:522)
 	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
 	... 103 more
+2026-03-28 13:54:02.339353+07:00 jdbc[14]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "SELECT * FROM BOOKINGS BOOKINGS \000d\000a[*]SELECT * FROM showtime"; SQL statement:
+SELECT * FROM BOOKINGS BOOKINGS 
+SELECT * FROM showtime [42000-224]
+2026-03-28 13:54:02.345696+07:00 jdbc[14]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "SEAT" not found; SQL statement:
+SELECT * FROM seat [42102-224]
+2026-03-28 13:54:02.349668+07:00 jdbc[14]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "MOVIE" not found; SQL statement:
+SELECT * FROM movie [42102-224]
+2026-03-28 13:54:05.795016+07:00 jdbc[14]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "SELECT * FROM BOOKINGS BOOKINGS \000d\000a[*]SELECT * FROM showtime"; SQL statement:
+SELECT * FROM BOOKINGS BOOKINGS 
+SELECT * FROM showtime [42000-224]
+2026-03-28 13:54:05.798014+07:00 jdbc[14]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "SEAT" not found; SQL statement:
+SELECT * FROM seat [42102-224]
+2026-03-28 13:54:05.799013+07:00 jdbc[14]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "MOVIE" not found; SQL statement:
+SELECT * FROM movie [42102-224]
+2026-03-28 13:54:20.676071+07:00 jdbc[14]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "SEAT" not found; SQL statement:
+SELECT * FROM seat [42102-224]
+2026-03-28 13:54:20.677069+07:00 jdbc[14]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "MOVIE" not found; SQL statement:
+SELECT * FROM movie [42102-224]
+2026-03-28 13:54:24.731950+07:00 jdbc[14]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "SEAT" not found; SQL statement:
+SELECT * FROM seat [42102-224]
+2026-03-28 13:54:24.733896+07:00 jdbc[14]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "MOVIE" not found; SQL statement:
+SELECT * FROM movie [42102-224]
+2026-03-28 13:54:30.218001+07:00 jdbc[14]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "MOVIE" not found; SQL statement:
+SELECT * FROM movie [42102-224]
