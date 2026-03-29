@@ -1,7 +1,17 @@
 spring:
   profiles:
     active: dev
-
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
   application:
     name: movie-ticket-backend
 
@@ -30,3 +40,4 @@ logging:
   level:
     com.movieticket: DEBUG
     org.springframework.security: INFO
+
