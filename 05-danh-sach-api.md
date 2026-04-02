@@ -3,7 +3,7 @@
 
 > **Backend:** Java Spring Boot 3.x | **Auth:** JWT Bearer Token | **Format:** JSON | **Phiên bản:** 1.0 | **Ngày:** 26/03/2026
 
----
+----
 
 ## QUY ƯỚC CHUNG
 
