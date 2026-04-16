@@ -148,28 +148,32 @@ function SpotlightCard({ movie }) {
         <motion.div
           whileHover={{ y: -3 }}
           transition={spring}
-          className="relative rounded-2xl overflow-hidden border border-dark-700/60 bg-dark-900"
-          style={{ display: 'grid', gridTemplateColumns: '200px 1fr' }}
+          className="relative rounded-2xl overflow-hidden border border-dark-700/60 bg-dark-900 flex flex-col sm:flex-row"
         >
-          <div className="relative overflow-hidden" style={{ maxHeight: 260 }}>
+          {/* Poster — fixed 160px wide on sm+, full width on mobile */}
+          <div className="relative overflow-hidden flex-shrink-0 w-full sm:w-40 md:w-48" style={{ height: 220 }}>
             <motion.img
               src={movie.posterUrl || 'https://placehold.co/200x300/1e293b/94a3b8?text=No+Poster'}
               alt={movie.title}
               className="w-full h-full object-cover"
-              style={{ aspectRatio: '2/3' }}
               whileHover={{ scale: 1.06 }}
               transition={{ duration: 0.5 }}
             />
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(to right, transparent 60%, rgba(2,6,23,0.95) 100%)',
+            {/* right-to-center fade on sm+ */}
+            <div className="hidden sm:block absolute inset-0" style={{
+              background: 'linear-gradient(to right, transparent 55%, rgba(2,6,23,0.95) 100%)',
+            }} />
+            {/* bottom fade on mobile */}
+            <div className="block sm:hidden absolute inset-0" style={{
+              background: 'linear-gradient(to bottom, transparent 55%, rgba(2,6,23,0.95) 100%)',
             }} />
           </div>
-          <div className="p-6 flex flex-col justify-center relative">
-            <div style={{
-              position: 'absolute', left: 0, top: 0, bottom: 0, width: 80,
+
+          {/* Info */}
+          <div className="flex-1 p-5 sm:p-6 flex flex-col justify-center relative min-w-0">
+            {/* left bleed from poster on sm+ */}
+            <div className="hidden sm:block absolute left-0 top-0 bottom-0 w-16 pointer-events-none" style={{
               background: 'linear-gradient(to right, rgba(2,6,23,0.95), transparent)',
-              pointerEvents: 'none',
             }} />
             <div className="flex items-center gap-2 mb-3 flex-wrap">
               <span className="text-xs font-bold text-primary-400 bg-primary-500/10 border border-primary-500/20 px-2 py-0.5 rounded-full">
@@ -178,7 +182,7 @@ function SpotlightCard({ movie }) {
               <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${status.color}`}>{status.label}</span>
               <span className={`${rating.color} text-white text-xs font-bold px-2 py-0.5 rounded`}>{rating.label}</span>
             </div>
-            <h3 className="text-xl font-bold text-white mb-2 group-hover:text-primary-300 transition-colors line-clamp-2">
+            <h3 className="text-lg sm:text-xl font-bold text-white mb-2 group-hover:text-primary-300 transition-colors line-clamp-2">
               {movie.title}
             </h3>
             {movie.genres?.length > 0 && (
@@ -191,9 +195,9 @@ function SpotlightCard({ movie }) {
               </div>
             )}
             {movie.description && (
-              <p className="text-dark-400 text-sm leading-relaxed line-clamp-2 mb-4">{movie.description}</p>
+              <p className="text-dark-400 text-sm leading-relaxed line-clamp-2 mb-3">{movie.description}</p>
             )}
-            <div className="flex items-center gap-4 text-sm text-dark-400 mb-4">
+            <div className="flex items-center gap-4 text-sm text-dark-400 mb-4 flex-wrap">
               <span>{movie.duration} phút</span>
               {movie.director && (
                 <span>Đạo diễn: <span className="text-dark-300">{movie.director}</span></span>
