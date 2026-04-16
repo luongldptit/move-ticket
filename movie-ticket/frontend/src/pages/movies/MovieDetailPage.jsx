@@ -11,6 +11,37 @@ import { AGE_RATING, MOVIE_STATUS, formatDate, formatTime, formatPrice, getNextN
 import { fadeUp, fadeLeft, fadeRight, scaleIn, staggerContainer, staggerItem, spring, easeOut } from '../../utils/motion'
 import { toast } from 'react-toastify'
 
+/* ─── Hero Cinematic Background ─── */
+function HeroDetailBackground({ movie }) {
+  const videoId = movie?.trailerUrl?.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/)?.[1]
+
+  if (videoId) {
+    return (
+      <div className="absolute inset-0 z-0 overflow-hidden bg-[#020617] pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 w-[110vw] h-[110vh] min-w-[177vh] min-h-[56.25vw]"
+             style={{ transform: 'translate(-50%, -50%)', opacity: 0.35 }}>
+          <iframe
+            className="w-full h-full rounded-none"
+            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&showinfo=0&rel=0&modestbranding=1&disablekb=1`}
+            title="Background Trailer"
+            allow="autoplay; encrypted-media"
+            style={{ border: 'none' }}
+          />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020617]/40 via-[#020617]/70 to-[#020617]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="absolute inset-0 z-0 bg-[#020617] pointer-events-none">
+      <img src={movie?.posterUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" style={{ filter: 'blur(30px)' }} />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/50 to-[#020617]/90" />
+    </div>
+  )
+}
+
 export default function MovieDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -104,66 +135,69 @@ export default function MovieDetailPage() {
   return (
     <motion.div
       className="min-h-screen pt-20"
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}
+      style={{ background: '#020617' }}
     >
       {/* Hero / Banner */}
-      <div className="relative">
-        {/* Blurred backdrop */}
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-20 blur-2xl scale-110"
-          style={{ backgroundImage: `url(${movie.posterUrl || ''})` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-dark-950/60 via-dark-950/80 to-dark-950" />
+      <div className="relative border-b border-dark-800/50">
+        <HeroDetailBackground movie={movie} />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex flex-col md:flex-row gap-8">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="flex flex-col md:flex-row gap-8 lg:gap-16 items-center md:items-start">
             {/* Poster */}
             <motion.div
-              className="flex-shrink-0 w-48 md:w-64 mx-auto md:mx-0"
+              className="flex-shrink-0 w-56 md:w-72 relative group perspective-[1000px] mb-6 md:mb-0"
               variants={fadeLeft} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.1 }}
             >
               <motion.img
                 src={movie.posterUrl || 'https://placehold.co/256x384/1e293b/94a3b8?text=No+Poster'}
                 alt={movie.title}
-                className="w-full rounded-2xl"
-                style={{ boxShadow: '0 25px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05)' }}
-                whileHover={{ scale: 1.03 }}
+                className="w-full rounded-2xl relative z-10 border border-white/10"
+                style={{ boxShadow: '0 30px 60px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.05)' }}
+                whileHover={{ scale: 1.04, rotateY: 4, rotateX: 4 }}
                 transition={spring}
               />
+              {/* Magic outer glow */}
+              <div className="absolute inset-0 bg-primary-600/40 blur-[60px] rounded-full scale-100 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             </motion.div>
 
             {/* Info */}
             <motion.div
-              className="flex-1"
+              className="flex-1 text-center md:text-left"
               variants={fadeRight} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.18 }}
             >
-              <div className="flex items-center gap-3 flex-wrap mb-3">
-                <span className={`${rating.color} text-white text-sm font-bold px-3 py-1 rounded-lg`} title={rating.title}>
+              <div className="flex items-center justify-center md:justify-start gap-3 flex-wrap mb-4">
+                <span className={`${rating.color} text-white font-black text-xs px-3 py-1.5 rounded-lg uppercase tracking-wider backdrop-blur-md shadow-lg border border-white/10`} title={rating.title}>
                   {rating.label}
                 </span>
-                <span className={`badge-status ${status.color}`}>{status.label}</span>
+                <span className={`text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-lg border ${movie.status === 'NOW_SHOWING' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'}`}>
+                  {status.label}
+                </span>
               </div>
 
-              <h1 className="text-3xl md:text-4xl font-black text-white mb-4">{movie.title}</h1>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 tracking-tight drop-shadow-xl"
+                  style={{ textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+                {movie.title}
+              </h1>
 
-              <div className="flex flex-wrap gap-2 mb-4">
+              <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-6">
                 {(movie.genres || []).map(g => (
-                  <span key={g.id} className="bg-dark-700 border border-dark-600 text-dark-200 text-sm px-3 py-1 rounded-full">
+                  <span key={g.id} className="bg-dark-800/80 backdrop-blur-md border border-dark-600/50 text-dark-200 text-xs font-semibold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-sm">
                     {g.name}
                   </span>
                 ))}
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
                 {[
                   { icon: '⏱', label: 'Thời lượng', val: `${movie.duration} phút` },
                   { icon: '🎬', label: 'Đạo diễn', val: movie.director || '—' },
                   { icon: '📅', label: 'Khởi chiếu', val: movie.releaseDate ? formatDate(movie.releaseDate) : '—' },
                 ].map(({ icon, label, val }) => (
-                  <div key={label} className="bg-dark-800/60 rounded-xl p-3">
-                    <div className="text-lg mb-1">{icon}</div>
-                    <div className="text-dark-400 text-xs">{label}</div>
-                    <div className="text-white text-sm font-medium mt-0.5">{val}</div>
+                  <div key={label} className="bg-dark-900/60 backdrop-blur-md border border-dark-700/50 rounded-2xl p-4 shadow-xl">
+                    <div className="text-2xl mb-1.5 opacity-90">{icon}</div>
+                    <div className="text-dark-400 text-xs font-medium uppercase tracking-wider mb-1">{label}</div>
+                    <div className="text-white text-sm font-bold">{val}</div>
                   </div>
                 ))}
               </div>
@@ -210,32 +244,35 @@ export default function MovieDetailPage() {
           <h2 className="text-2xl font-bold text-white mb-6">Lịch Chiếu</h2>
 
           {/* Date picker */}
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-6">
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-4 mb-6 pt-2">
             {days.map(d => {
               const hasShows = daysWithShowtimes.has(d)
               const isSelected = selectedDate === d
               return (
-                <button
+                <motion.button
                   key={d}
                   onClick={() => setSelectedDate(d)}
-                  className={`flex-shrink-0 flex flex-col items-center px-4 py-2.5 rounded-xl text-sm font-medium transition-colors border ${
+                  whileHover={{ y: -4 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`flex-shrink-0 flex flex-col items-center px-5 py-3 rounded-2xl text-sm font-semibold transition-all border shadow-lg ${
                     isSelected
-                      ? 'bg-primary-600 border-primary-500 text-white'
+                      ? 'bg-gradient-to-br from-primary-600 to-rose-600 border-primary-400 text-white shadow-primary-500/30'
                       : hasShows
-                        ? 'bg-dark-900 border-dark-600 text-dark-200 hover:border-primary-500/50 hover:text-white'
-                        : 'bg-dark-900 border-dark-800 text-dark-500 hover:border-dark-600 hover:text-dark-300'
+                        ? 'bg-dark-800/80 border-dark-600 text-dark-200 hover:border-primary-500/50 hover:text-white'
+                        : 'bg-dark-900/50 border-dark-800 text-dark-600 hover:border-dark-700 hover:text-dark-400'
                   }`}
+                  style={{ backdropFilter: 'blur(8px)' }}
                 >
-                  <span>{formatDayLabel(d)}</span>
+                  <span className="mb-1">{formatDayLabel(d)}</span>
                   {/* Dot indicator */}
-                  <span className={`mt-1.5 w-1.5 h-1.5 rounded-full transition-colors ${
+                  <span className={`w-1.5 h-1.5 rounded-full transition-colors ${
                     isSelected
-                      ? 'bg-white/70'
+                      ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]'
                       : hasShows
-                        ? 'bg-green-400'
+                        ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]'
                         : 'bg-transparent'
                   }`} />
-                </button>
+                </motion.button>
               )
             })}
           </div>
