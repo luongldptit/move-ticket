@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -44,17 +44,22 @@ export default function BookingConfirmPage() {
   const dispatch  = useDispatch()
   const { selectedSeats, currentShowtime } = useSelector(s => s.booking)
 
-  const [promoCode, setPromoCode] = useState('')
+  const [promoCode, setPromoCode]     = useState('')
   const [promoResult, setPromoResult] = useState(null)
   const [promoLoading, setPromoLoading] = useState(false)
-  const [payMethod, setPayMethod] = useState('VNPAY')
-  const [loading, setLoading] = useState(false)
+  const [payMethod, setPayMethod]     = useState('VNPAY')
+  const [loading, setLoading]         = useState(false)
   const [promoFocused, setPromoFocused] = useState(false)
 
-  if (!currentShowtime || selectedSeats.length === 0) {
-    navigate('/movies')
-    return null
-  }
+  // ✅ Fix: navigate trong useEffect, không gọi trong render
+  useEffect(() => {
+    if (!currentShowtime || selectedSeats.length === 0) {
+      navigate('/movies')
+    }
+  }, [currentShowtime, selectedSeats.length, navigate])
+
+  // Chờ redirect nếu thiếu dữ liệu
+  if (!currentShowtime || selectedSeats.length === 0) return null
 
   const subtotal    = selectedSeats.reduce((sum, s) => sum + (s.price || 0), 0)
   const discount    = promoResult?.discountAmount || 0
