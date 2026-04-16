@@ -5,6 +5,7 @@ import {
   fetchReviews,
   fetchMyReview,
   deleteReview,
+  clearMyReviews,
 } from '../../store/slices/reviewSlice'
 import ReviewItem from './ReviewItem'
 import ReviewForm from './ReviewForm'
@@ -30,9 +31,12 @@ export default function ReviewList({ movieId }) {
   }, [dispatch, movieId, page])
 
   // Fetch my review — only when logged in
+  // Clear myReviews when user logs out so stale data doesn't filter public list
   useEffect(() => {
     if (isAuthenticated) {
       dispatch(fetchMyReview(movieId))
+    } else {
+      dispatch(clearMyReviews())
     }
   }, [dispatch, movieId, isAuthenticated])
 
@@ -56,8 +60,11 @@ export default function ReviewList({ movieId }) {
     ? (reviewData.content.reduce((s, r) => s + r.rating, 0) / reviewData.content.length).toFixed(1)
     : null
 
-  // Reviews from other users (exclude my own to avoid duplicate display)
-  const otherReviews = reviewData?.content?.filter(r => r.id !== myCurrentReview?.id) || []
+  // Only exclude my review from the list when actually authenticated
+  // (prevents stale cached review from hiding itself after logout)
+  const otherReviews = (reviewData?.content || []).filter(
+    r => !isAuthenticated || r.id !== myCurrentReview?.id
+  )
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

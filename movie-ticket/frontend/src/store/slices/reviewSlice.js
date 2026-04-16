@@ -71,6 +71,7 @@ const reviewSlice = createSlice({
   },
   reducers: {
     clearReviewError: (state) => { state.error = null },
+    clearMyReviews: (state) => { state.myReview = {} },
   },
   extraReducers: (builder) => {
     builder
@@ -134,5 +135,5 @@ const reviewSlice = createSlice({
   },
 })
 
-export const { clearReviewError } = reviewSlice.actions
+export const { clearReviewError, clearMyReviews } = reviewSlice.actions
 export default reviewSlice.reducer
