@@ -473,7 +473,9 @@ export default function HomePage() {
 
   if (loading) return <PageLoader />
 
-  const featuredMovie = nowShowing[0] || null
+  // Lấy phim đầu tiên có trailer, nếu ko có trailer thì phim có ảnh, nếu không có gì thì bỏ qua tìm phim tiếp theo
+  const featuredMovie = nowShowing.find(m => m.trailerUrl || m.posterUrl) || null
+
 
   return (
     <motion.div
