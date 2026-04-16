@@ -23,6 +23,7 @@ export default function MovieDetailPage() {
   const [loading, setLoading] = useState(true)
   const [stLoading, setStLoading] = useState(false)
   const [showTrailer, setShowTrailer] = useState(false)
+  const [daysWithShowtimes, setDaysWithShowtimes] = useState(new Set())
 
   const getYoutubeEmbedUrl = useCallback((url) => {
     if (!url) return null
@@ -41,6 +42,25 @@ export default function MovieDetailPage() {
       .catch(() => navigate('/movies'))
       .finally(() => setLoading(false))
     cinemaApi.getCinemas().then(r => setCinemas(r.data.data || []))
+  }, [id])
+
+  // Fetch availability for all 7 days in parallel to show indicators
+  useEffect(() => {
+    const now = new Date()
+    Promise.allSettled(
+      days.map(d => movieApi.getMovieShowtimes(id, { date: d }))
+    ).then(results => {
+      const hasShowtime = new Set()
+      results.forEach((result, i) => {
+        if (result.status === 'fulfilled') {
+          const data = result.value.data.data || []
+          // Only count upcoming showtimes
+          const upcoming = data.filter(st => new Date(st.startTime) > now)
+          if (upcoming.length > 0) hasShowtime.add(days[i])
+        }
+      })
+      setDaysWithShowtimes(hasShowtime)
+    })
   }, [id])
 
   useEffect(() => {
@@ -170,21 +190,35 @@ export default function MovieDetailPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <h2 className="text-2xl font-bold text-white mb-6">Lịch Chiếu</h2>
 
-          {/* Date pick */}
+          {/* Date picker */}
           <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-6">
-            {days.map(d => (
-              <button
-                key={d}
-                onClick={() => setSelectedDate(d)}
-                className={`flex-shrink-0 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors border ${
-                  selectedDate === d
-                    ? 'bg-primary-600 border-primary-500 text-white'
-                    : 'bg-dark-900 border-dark-700 text-dark-300 hover:border-primary-500/50 hover:text-white'
-                }`}
-              >
-                {formatDayLabel(d)}
-              </button>
-            ))}
+            {days.map(d => {
+              const hasShows = daysWithShowtimes.has(d)
+              const isSelected = selectedDate === d
+              return (
+                <button
+                  key={d}
+                  onClick={() => setSelectedDate(d)}
+                  className={`flex-shrink-0 flex flex-col items-center px-4 py-2.5 rounded-xl text-sm font-medium transition-colors border ${
+                    isSelected
+                      ? 'bg-primary-600 border-primary-500 text-white'
+                      : hasShows
+                        ? 'bg-dark-900 border-dark-600 text-dark-200 hover:border-primary-500/50 hover:text-white'
+                        : 'bg-dark-900 border-dark-800 text-dark-500 hover:border-dark-600 hover:text-dark-300'
+                  }`}
+                >
+                  <span>{formatDayLabel(d)}</span>
+                  {/* Dot indicator */}
+                  <span className={`mt-1.5 w-1.5 h-1.5 rounded-full transition-colors ${
+                    isSelected
+                      ? 'bg-white/70'
+                      : hasShows
+                        ? 'bg-green-400'
+                        : 'bg-transparent'
+                  }`} />
+                </button>
+              )
+            })}
           </div>
 
           {/* Cinema filter */}
