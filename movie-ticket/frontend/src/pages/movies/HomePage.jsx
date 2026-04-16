@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from 'framer-motion'
+import { motion, useMotionValue, useTransform, useSpring, useMotionTemplate, AnimatePresence } from 'framer-motion'
 import { movieApi } from '../../api/movieApi'
 import { PageLoader } from '../../components/common/Spinner'
 import { MOVIE_STATUS, AGE_RATING, formatDate } from '../../utils/helpers'
@@ -60,6 +60,7 @@ function TiltPoster({ movie }) {
   const rotateY = useSpring(useTransform(x, [-1, 1], [-12, 12]), { stiffness: 200, damping: 20 })
   const glowX = useTransform(x, [-1, 1], ['0%', '100%'])
   const glowY = useTransform(y, [-1, 1], ['0%', '100%'])
+  const glowBackground = useMotionTemplate`radial-gradient(circle at ${glowX} ${glowY}, rgba(255,255,255,0.14) 0%, transparent 60%)`
 
   const handleMove = (e) => {
     if (!ref.current) return
@@ -94,7 +95,7 @@ function TiltPoster({ movie }) {
         <motion.div
           style={{
             position: 'absolute', inset: 0, pointerEvents: 'none',
-            background: `radial-gradient(circle at ${glowX} ${glowY}, rgba(255,255,255,0.14) 0%, transparent 60%)`,
+            background: glowBackground,
           }}
         />
         {/* Bottom gradient */}
