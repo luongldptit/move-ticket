@@ -2,39 +2,149 @@ import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { movieApi } from '../../api/movieApi'
 import Pagination from '../../components/common/Pagination'
-import { PageLoader } from '../../components/common/Spinner'
 import { MOVIE_STATUS, AGE_RATING, formatDate } from '../../utils/helpers'
+import { KEYFRAMES, staggerStyle } from '../../utils/animations'
 
-function MovieCard({ movie }) {
+/* ───── Skeleton card ───── */
+function SkeletonCard() {
+  return (
+    <div style={{
+      background: 'rgba(30,41,59,0.8)',
+      border: '1px solid rgba(51,65,85,0.6)',
+      borderRadius: 16,
+      padding: 12,
+      display: 'flex', gap: 16,
+      overflow: 'hidden',
+      position: 'relative',
+    }}>
+      <div style={{ width: 80, borderRadius: 10, aspectRatio: '2/3', flexShrink: 0,
+        background: 'linear-gradient(90deg, #1e293b 0%, #334155 50%, #1e293b 100%)',
+        backgroundSize: '200% 100%',
+        animation: 'shimmerSlide 1.5s ease-in-out infinite',
+      }} />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ height: 14, width: '80%', borderRadius: 6,
+          background: 'linear-gradient(90deg, #1e293b 0%, #334155 50%, #1e293b 100%)',
+          backgroundSize: '200% 100%',
+          animation: 'shimmerSlide 1.5s ease-in-out infinite 0.1s',
+        }} />
+        <div style={{ height: 14, width: '55%', borderRadius: 6,
+          background: 'linear-gradient(90deg, #1e293b 0%, #334155 50%, #1e293b 100%)',
+          backgroundSize: '200% 100%',
+          animation: 'shimmerSlide 1.5s ease-in-out infinite 0.2s',
+        }} />
+        <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+          {[40, 55, 48].map((w, i) => (
+            <div key={i} style={{ height: 20, width: w, borderRadius: 6,
+              background: 'linear-gradient(90deg, #1e293b 0%, #334155 50%, #1e293b 100%)',
+              backgroundSize: '200% 100%',
+              animation: `shimmerSlide 1.5s ease-in-out infinite ${0.1 * i}s`,
+            }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ───── Movie card ───── */
+function MovieCard({ movie, index = 0 }) {
+  const [hovered, setHovered] = useState(false)
   const status = MOVIE_STATUS[movie.status] || {}
   const rating = AGE_RATING[movie.ageRating] || { label: movie.ageRating, color: 'bg-dark-600' }
 
   return (
-    <Link to={`/movies/${movie.id}`} className="card-hover group flex gap-4 p-3">
-      <div className="relative w-20 flex-shrink-0 rounded-xl overflow-hidden">
-        <img
-          src={movie.posterUrl || 'https://placehold.co/80x120/1e293b/94a3b8?text=?'}
-          alt={movie.title}
-          className="w-full aspect-[2/3] object-cover group-hover:scale-105 transition-transform duration-500"
-        />
-        <div className={`absolute top-1 left-1 ${rating.color} text-white text-[10px] font-bold px-1.5 py-0.5 rounded`}>
-          {rating.label}
+    <Link
+      to={`/movies/${movie.id}`}
+      style={{ textDecoration: 'none', display: 'block', ...staggerStyle(index) }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div style={{
+        background: hovered ? 'rgba(30,41,59,0.95)' : 'rgba(15,23,42,0.8)',
+        border: hovered ? '1px solid rgba(244,63,94,0.4)' : '1px solid rgba(51,65,85,0.5)',
+        borderRadius: 16,
+        padding: 12,
+        display: 'flex', gap: 14,
+        transition: 'all 0.3s ease',
+        transform: hovered ? 'translateY(-3px)' : 'none',
+        boxShadow: hovered ? '0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(244,63,94,0.15)' : '0 2px 8px rgba(0,0,0,0.3)',
+        cursor: 'pointer', overflow: 'hidden',
+      }}>
+        {/* Poster */}
+        <div style={{ width: 80, flexShrink: 0, borderRadius: 10, overflow: 'hidden', position: 'relative', aspectRatio: '2/3' }}>
+          <img
+            src={movie.posterUrl || 'https://placehold.co/80x120/1e293b/94a3b8?text=?'}
+            alt={movie.title}
+            style={{
+              width: '100%', height: '100%', objectFit: 'cover',
+              transform: hovered ? 'scale(1.08)' : 'scale(1)',
+              transition: 'transform 0.5s ease',
+            }}
+          />
+          <div style={{
+            position: 'absolute', top: 4, left: 4,
+            background: 'rgba(0,0,0,0.8)',
+            borderRadius: 4, padding: '2px 6px',
+            fontSize: 10, fontWeight: 700, color: '#fff',
+          }}>
+            {rating.label}
+          </div>
         </div>
-      </div>
-      <div className="flex-1 min-w-0">
-        <h3 className="font-semibold text-white text-sm line-clamp-2 group-hover:text-primary-400 transition-colors">{movie.title}</h3>
-        <div className={`badge-status mt-1.5 ${status.color}`}>{status.label}</div>
-        <div className="flex flex-wrap gap-1 mt-2">
-          {(movie.genres || []).slice(0, 3).map((g, i) => (
-            <span key={i} className="text-xs bg-dark-800 text-dark-300 px-2 py-0.5 rounded">
-              {typeof g === 'string' ? g : g.name}
+
+        {/* Info */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h3 style={{
+            fontWeight: 700, color: hovered ? '#fb7185' : '#fff',
+            fontSize: 14, lineHeight: 1.4,
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+            transition: 'color 0.2s',
+            margin: 0,
+          }}>
+            {movie.title}
+          </h3>
+
+          {/* Status badge */}
+          <div style={{ marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <span style={{
+              fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 999,
+              background: movie.status === 'NOW_SHOWING' ? 'rgba(34,197,94,0.15)' : 'rgba(251,191,36,0.15)',
+              color: movie.status === 'NOW_SHOWING' ? '#4ade80' : '#fbbf24',
+              border: `1px solid ${movie.status === 'NOW_SHOWING' ? 'rgba(34,197,94,0.3)' : 'rgba(251,191,36,0.3)'}`,
+            }}>
+              {status.label}
             </span>
-          ))}
+          </div>
+
+          {/* Genres */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+            {(movie.genres || []).slice(0, 3).map((g, i) => (
+              <span key={i} style={{
+                fontSize: 11, padding: '2px 8px', borderRadius: 6,
+                background: 'rgba(51,65,85,0.8)',
+                color: hovered ? '#cbd5e1' : '#94a3b8',
+                transition: 'color 0.2s',
+              }}>
+                {typeof g === 'string' ? g : g.name}
+              </span>
+            ))}
+          </div>
+
+          {/* Meta */}
+          <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: 12, color: '#64748b' }}>
+            <span>⏱ {movie.duration} phút</span>
+            {movie.releaseDate && <span>📅 {formatDate(movie.releaseDate)}</span>}
+          </div>
         </div>
-        <div className="flex items-center gap-3 mt-2 text-xs text-dark-400">
-          <span>⏱ {movie.duration} phút</span>
-          {movie.releaseDate && <span>📅 {formatDate(movie.releaseDate)}</span>}
-        </div>
+
+        {/* Arrow indicator */}
+        <div style={{
+          alignSelf: 'center', flexShrink: 0,
+          color: '#fb7185', fontSize: 18, fontWeight: 300,
+          opacity: hovered ? 1 : 0,
+          transform: hovered ? 'translateX(0)' : 'translateX(-8px)',
+          transition: 'all 0.25s ease',
+        }}>›</div>
       </div>
     </Link>
   )
@@ -46,15 +156,16 @@ export default function MovieListPage() {
   const [genres, setGenres] = useState([])
   const [totalPages, setTotalPages] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
 
   const status = searchParams.get('status') || ''
   const genreId = searchParams.get('genreId') || ''
   const keyword = searchParams.get('keyword') || ''
   const page = parseInt(searchParams.get('page') || '0')
-
   const [searchInput, setSearchInput] = useState(keyword)
 
   useEffect(() => {
+    setTimeout(() => setMounted(true), 80)
     movieApi.getGenres().then(r => setGenres(r.data.data || [])).catch(() => {})
   }, [])
 
@@ -81,79 +192,155 @@ export default function MovieListPage() {
   }
 
   const statusTabs = [
-    { value: '', label: 'Tất cả' },
-    { value: 'NOW_SHOWING', label: 'Đang chiếu' },
-    { value: 'COMING_SOON', label: 'Sắp chiếu' },
+    { value: '', label: '🎬 Tất cả' },
+    { value: 'NOW_SHOWING', label: '▶ Đang chiếu' },
+    { value: 'COMING_SOON', label: '🗓 Sắp chiếu' },
   ]
 
   return (
-    <div className="min-h-screen pt-24 pb-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div style={{ minHeight: '100vh', paddingTop: 96, paddingBottom: 64, background: '#020617' }}>
+      <style>{KEYFRAMES}</style>
+
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
+
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-1">Phim</h1>
-          <p className="text-dark-400">Khám phá các bộ phim đang chiếu và sắp ra mắt</p>
+        <div style={{
+          marginBottom: 32,
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? 'none' : 'translateY(-20px)',
+          transition: 'all 0.6s ease',
+        }}>
+          <h1 style={{ fontSize: 32, fontWeight: 900, color: '#fff', margin: 0, lineHeight: 1.2 }}>
+            Danh sách{' '}
+            <span style={{
+              background: 'linear-gradient(135deg, #fb7185, #a855f7)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            }}>Phim</span>
+          </h1>
+          <p style={{ color: '#64748b', marginTop: 6, margin: 0 }}>
+            Khám phá các bộ phim đang chiếu và sắp ra mắt
+          </p>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+        {/* Filter bar */}
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 32,
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? 'none' : 'translateY(16px)',
+          transition: 'all 0.6s ease 0.1s',
+        }}>
           {/* Status tabs */}
-          <div className="flex gap-1 bg-dark-900 rounded-xl p-1 border border-dark-700">
+          <div style={{
+            display: 'flex', gap: 4,
+            background: 'rgba(15,23,42,0.9)',
+            border: '1px solid rgba(51,65,85,0.8)',
+            borderRadius: 14, padding: 4,
+            backdropFilter: 'blur(10px)',
+          }}>
             {statusTabs.map(t => (
               <button
                 key={t.value}
                 onClick={() => setParam('status', t.value)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  status === t.value
-                    ? 'bg-primary-600 text-white'
-                    : 'text-dark-300 hover:text-white'
-                }`}
+                style={{
+                  padding: '8px 18px', borderRadius: 10,
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none',
+                  background: status === t.value
+                    ? 'linear-gradient(135deg, #e11d48, #be123c)'
+                    : 'transparent',
+                  color: status === t.value ? '#fff' : '#94a3b8',
+                  transition: 'all 0.2s',
+                  boxShadow: status === t.value ? '0 4px 12px rgba(225,29,72,0.4)' : 'none',
+                }}
               >
                 {t.label}
               </button>
             ))}
           </div>
 
-          {/* Genre */}
+          {/* Genre select */}
           <select
             value={genreId}
             onChange={e => setParam('genreId', e.target.value)}
-            className="input-field w-auto"
+            style={{
+              background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(51,65,85,0.8)',
+              borderRadius: 12, padding: '8px 16px', color: '#cbd5e1', fontSize: 13,
+              cursor: 'pointer', backdropFilter: 'blur(10px)', outline: 'none',
+            }}
           >
-            <option value="">Tất cả thể loại</option>
+            <option value="">🎭 Tất cả thể loại</option>
             {genres.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
           </select>
 
           {/* Search */}
-          <form onSubmit={handleSearch} className="flex gap-2 flex-1">
-            <input
-              type="text"
-              placeholder="Tìm kiếm phim..."
-              className="input-field flex-1"
-              value={searchInput}
-              onChange={e => setSearchInput(e.target.value)}
-            />
-            <button type="submit" className="btn-primary px-4">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+          <form onSubmit={handleSearch} style={{ display: 'flex', gap: 8, flex: 1, minWidth: 200 }}>
+            <div style={{ flex: 1, position: 'relative' }}>
+              <span style={{
+                position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
+                color: '#64748b', fontSize: 16, pointerEvents: 'none',
+              }}>🔍</span>
+              <input
+                type="text"
+                placeholder="Tìm kiếm phim..."
+                value={searchInput}
+                onChange={e => setSearchInput(e.target.value)}
+                style={{
+                  width: '100%', padding: '10px 16px 10px 42px',
+                  background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(51,65,85,0.8)',
+                  borderRadius: 12, color: '#fff', fontSize: 13,
+                  backdropFilter: 'blur(10px)', outline: 'none',
+                  transition: 'border-color 0.2s',
+                  boxSizing: 'border-box',
+                }}
+                onFocus={e => { e.target.style.borderColor = 'rgba(244,63,94,0.5)' }}
+                onBlur={e => { e.target.style.borderColor = 'rgba(51,65,85,0.8)' }}
+              />
+            </div>
+            <button type="submit" style={{
+              background: 'linear-gradient(135deg, #e11d48, #be123c)',
+              border: 'none', borderRadius: 12, padding: '10px 20px',
+              color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 13,
+              transition: 'transform 0.15s, box-shadow 0.15s',
+              boxShadow: '0 4px 12px rgba(225,29,72,0.35)',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)' }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}
+            >
+              Tìm
             </button>
           </form>
         </div>
 
+        {/* Result count */}
+        {!loading && movies.length > 0 && (
+          <p style={{ color: '#64748b', fontSize: 13, marginBottom: 16, animation: 'fadeIn 0.4s ease-out' }}>
+            Tìm thấy <span style={{ color: '#fb7185', fontWeight: 700 }}>{movies.length}</span> phim
+            {keyword && <span> cho "<span style={{ color: '#e2e8f0' }}>{keyword}</span>"</span>}
+          </p>
+        )}
+
+        {/* Grid */}
         {loading ? (
-          <div className="flex justify-center py-20"><div className="w-10 h-10 border-2 border-dark-700 border-t-primary-500 rounded-full animate-spin" /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+            {Array(6).fill(0).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
         ) : movies.length === 0 ? (
-          <div className="text-center py-20 text-dark-400">
-            <svg className="w-16 h-16 mx-auto mb-4 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M7 4v16M17 4v16M3 8h18M3 16h18" />
-            </svg>
-            <p>Không tìm thấy phim nào</p>
+          <div style={{ textAlign: 'center', padding: '80px 0', animation: 'fadeSlideUp 0.5s ease-out' }}>
+            <div style={{ fontSize: 64, marginBottom: 16 }}>🎬</div>
+            <p style={{ color: '#64748b', fontSize: 16 }}>Không tìm thấy phim nào</p>
+            <button
+              onClick={() => setSearchParams({})}
+              style={{
+                marginTop: 16, background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.3)',
+                color: '#fb7185', borderRadius: 10, padding: '8px 20px', cursor: 'pointer', fontSize: 13,
+              }}
+            >
+              Xem tất cả phim
+            </button>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {movies.map(m => <MovieCard key={m.id} movie={m} />)}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+              {movies.map((m, i) => <MovieCard key={m.id} movie={m} index={i} />)}
             </div>
             <Pagination
               currentPage={page}

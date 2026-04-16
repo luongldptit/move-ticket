@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import ReviewList from '../../components/reviews/ReviewList'
+import { KEYFRAMES } from '../../utils/animations'
 import { useParams, useNavigate } from 'react-router-dom'
 import { movieApi } from '../../api/movieApi'
 import { cinemaApi } from '../../api/cinemaApi'
@@ -24,6 +25,7 @@ export default function MovieDetailPage() {
   const [stLoading, setStLoading] = useState(false)
   const [showTrailer, setShowTrailer] = useState(false)
   const [daysWithShowtimes, setDaysWithShowtimes] = useState(new Set())
+  const [heroLoaded, setHeroLoaded] = useState(false)
 
   const getYoutubeEmbedUrl = useCallback((url) => {
     if (!url) return null
@@ -40,7 +42,10 @@ export default function MovieDetailPage() {
     movieApi.getMovieById(id)
       .then(r => setMovie(r.data.data))
       .catch(() => navigate('/movies'))
-      .finally(() => setLoading(false))
+      .finally(() => {
+        setLoading(false)
+        setTimeout(() => setHeroLoaded(true), 100)
+      })
     cinemaApi.getCinemas().then(r => setCinemas(r.data.data || []))
   }, [id])
 
@@ -101,6 +106,7 @@ export default function MovieDetailPage() {
 
   return (
     <div className="min-h-screen pt-20">
+      <style>{KEYFRAMES}</style>
       {/* Hero / Banner */}
       <div className="relative">
         {/* Blurred backdrop */}
@@ -113,16 +119,25 @@ export default function MovieDetailPage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex flex-col md:flex-row gap-8">
             {/* Poster */}
-            <div className="flex-shrink-0 w-48 md:w-64 mx-auto md:mx-0">
+            <div className="flex-shrink-0 w-48 md:w-64 mx-auto md:mx-0" style={{
+              opacity: heroLoaded ? 1 : 0,
+              transform: heroLoaded ? 'none' : 'translateX(-30px) scale(0.95)',
+              transition: 'opacity 0.8s ease-out, transform 0.8s ease-out',
+            }}>
               <img
                 src={movie.posterUrl || 'https://placehold.co/256x384/1e293b/94a3b8?text=No+Poster'}
                 alt={movie.title}
                 className="w-full rounded-2xl shadow-2xl shadow-black/50"
+                style={{ boxShadow: '0 25px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05)' }}
               />
             </div>
 
             {/* Info */}
-            <div className="flex-1">
+            <div className="flex-1" style={{
+              opacity: heroLoaded ? 1 : 0,
+              transform: heroLoaded ? 'none' : 'translateX(30px)',
+              transition: 'opacity 0.8s ease-out 0.15s, transform 0.8s ease-out 0.15s',
+            }}>
               <div className="flex items-center gap-3 flex-wrap mb-3">
                 <span className={`${rating.color} text-white text-sm font-bold px-3 py-1 rounded-lg`} title={rating.title}>
                   {rating.label}
@@ -172,12 +187,19 @@ export default function MovieDetailPage() {
               {movie.trailerUrl && (
                 <button
                   onClick={() => setShowTrailer(true)}
-                  className="inline-flex items-center gap-2 mt-4 bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-xl transition-colors text-sm font-medium"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                    marginTop: 16,
+                    background: 'linear-gradient(135deg, #e11d48, #be123c)',
+                    color: '#fff', border: 'none', padding: '10px 20px',
+                    borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                    boxShadow: '0 4px 20px rgba(225,29,72,0.4)',
+                    transition: 'all 0.2s', animation: 'glowPulse 3s ease-in-out infinite',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(225,29,72,0.6)' }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 20px rgba(225,29,72,0.4)' }}
                 >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 0a10 10 0 100 20A10 10 0 0010 0zm-2 14.5v-9l6 4.5-6 4.5z"/>
-                  </svg>
-                  Xem trailer
+                  ▶ Xem trailer
                 </button>
               )}
             </div>
@@ -252,15 +274,34 @@ export default function MovieDetailPage() {
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  {sts.map(st => (
+                  {sts.map((st, stIdx) => (
                     <button
                       key={st.id}
                       onClick={() => handleBookShowtime(st)}
-                      className="border border-dark-600 hover:border-primary-500 bg-dark-800/50 hover:bg-primary-600/10 rounded-xl p-3 text-left transition-all group"
+                      style={{
+                        border: '1.5px solid rgba(51,65,85,0.7)',
+                        background: 'rgba(15,23,42,0.8)',
+                        borderRadius: 14, padding: 12, textAlign: 'left',
+                        cursor: 'pointer', transition: 'all 0.25s',
+                        animation: 'fadeSlideUp 0.4s ease-out both',
+                        animationDelay: `${stIdx * 50}ms`,
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.borderColor = '#fb7185'
+                        e.currentTarget.style.background = 'rgba(244,63,94,0.08)'
+                        e.currentTarget.style.transform = 'translateY(-3px)'
+                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(244,63,94,0.2)'
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.borderColor = 'rgba(51,65,85,0.7)'
+                        e.currentTarget.style.background = 'rgba(15,23,42,0.8)'
+                        e.currentTarget.style.transform = ''
+                        e.currentTarget.style.boxShadow = ''
+                      }}
                     >
-                      <div className="text-white font-semibold text-base group-hover:text-primary-400">{formatTime(st.startTime)}</div>
-                      <div className="text-dark-400 text-xs mt-0.5">{st.room?.type} · {st.room?.name}</div>
-                      <div className="text-dark-400 text-xs mt-1">từ {formatPrice(st.priceStandard)}</div>
+                      <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{formatTime(st.startTime)}</div>
+                      <div style={{ color: '#64748b', fontSize: 11, marginTop: 2 }}>{st.room?.type} · {st.room?.name}</div>
+                      <div style={{ color: '#fb7185', fontSize: 11, marginTop: 4, fontWeight: 600 }}>từ {formatPrice(st.priceStandard)}</div>
                     </button>
                   ))}
                 </div>
