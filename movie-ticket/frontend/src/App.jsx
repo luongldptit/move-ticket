@@ -1,9 +1,11 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
 import Navbar from './components/layout/Navbar'
 import Footer from './components/layout/Footer'
 import PrivateRoute from './components/common/PrivateRoute'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { pageVariants } from './utils/motion'
 
 // Public pages
 import HomePage from './pages/movies/HomePage'
@@ -42,24 +44,18 @@ function Layout({ children }) {
   )
 }
 
-export default function App() {
+function AnimatedRoutes() {
+  const location = useLocation()
   return (
-    <>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        theme="dark"
-        toastStyle={{
-          background: '#1e293b',
-          border: '1px solid #334155',
-          borderRadius: '12px',
-          color: '#e2e8f0',
-        }}
-      />
-      <Routes>
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={location.pathname}
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+      >
+        <Routes location={location}>
         {/* Public routes with main layout */}
         <Route path="/" element={<Layout><HomePage /></Layout>} />
         <Route path="/movies" element={<Layout><MovieListPage /></Layout>} />
@@ -122,7 +118,30 @@ export default function App() {
 
         {/* Fallback */}
         <Route path="*" element={<Layout><div className="min-h-screen flex items-center justify-center text-dark-400">404 — Không tìm thấy trang</div></Layout>} />
-      </Routes>
+        </Routes>
+      </motion.div>
+    </AnimatePresence>
+  )
+}
+
+export default function App() {
+  return (
+    <>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        theme="dark"
+        toastStyle={{
+          background: '#1e293b',
+          border: '1px solid #334155',
+          borderRadius: '12px',
+          color: '#e2e8f0',
+        }}
+      />
+      <AnimatedRoutes />
     </>
   )
 }
