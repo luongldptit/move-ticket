@@ -24,10 +24,12 @@ export default function ReviewList({ movieId }) {
   const [page, setPage] = useState(0)
   const [editingReview, setEditingReview] = useState(null)
 
+  // Fetch all public reviews — always, for everyone
   useEffect(() => {
     dispatch(fetchReviews({ movieId, page, size: 10 }))
   }, [dispatch, movieId, page])
 
+  // Fetch my review — only when logged in
   useEffect(() => {
     if (isAuthenticated) {
       dispatch(fetchMyReview(movieId))
@@ -54,8 +56,13 @@ export default function ReviewList({ movieId }) {
     ? (reviewData.content.reduce((s, r) => s + r.rating, 0) / reviewData.content.length).toFixed(1)
     : null
 
+  // Reviews from other users (exclude my own to avoid duplicate display)
+  const otherReviews = reviewData?.content?.filter(r => r.id !== myCurrentReview?.id) || []
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-white">Đánh giá & Bình luận</h2>
         {totalElements > 0 && avgRating && (
@@ -67,41 +74,49 @@ export default function ReviewList({ movieId }) {
         )}
       </div>
 
-      {/* Form section */}
+      {/* ── Write / Edit section (logged in only) ── */}
       <div id="review-form" className="mb-8">
-        {!isAuthenticated ? (
+        {isAuthenticated ? (
+          editingReview ? (
+            // Editing an existing review
+            <ReviewForm
+              movieId={movieId}
+              existingReview={editingReview}
+              onCancel={() => {
+                setEditingReview(null)
+                dispatch(fetchReviews({ movieId, page, size: 10 }))
+              }}
+            />
+          ) : myCurrentReview ? (
+            // Already reviewed — show it with edit option
+            <div className="bg-dark-800/40 rounded-2xl p-5 border border-dark-700">
+              <div className="text-dark-400 text-sm mb-3">Đánh giá của bạn</div>
+              <ReviewItem
+                review={myCurrentReview}
+                currentUser={user}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+              />
+            </div>
+          ) : (
+            // Logged in but haven't reviewed yet
+            <ReviewForm movieId={movieId} />
+          )
+        ) : (
+          // Guest — invite to login
           <div className="bg-dark-800/40 rounded-2xl p-5 border border-dark-700 text-center">
             <p className="text-dark-300 text-sm mb-3">Đăng nhập để viết đánh giá</p>
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/login', { state: { from: { pathname: window.location.pathname } } })}
               className="btn-primary px-6 py-2 text-sm"
             >
               Đăng nhập
             </button>
           </div>
-        ) : myCurrentReview && !editingReview ? (
-          <div className="bg-dark-800/40 rounded-2xl p-5 border border-dark-700">
-            <div className="text-dark-400 text-sm mb-3">Đánh giá của bạn</div>
-            <ReviewItem
-              review={myCurrentReview}
-              currentUser={user}
-              onDelete={handleDelete}
-              onEdit={handleEdit}
-            />
-          </div>
-        ) : (
-          <ReviewForm
-            movieId={movieId}
-            existingReview={editingReview}
-            onCancel={() => {
-              setEditingReview(null)
-              dispatch(fetchReviews({ movieId, page, size: 10 }))
-            }}
-          />
         )}
       </div>
 
-      {/* Review list */}
+      {/* ── Review list (visible to everyone) ── */}
       {loading && !reviewData ? (
         <div className="flex justify-center py-10">
           <div className="w-8 h-8 border-2 border-dark-700 border-t-primary-500 rounded-full animate-spin" />
@@ -113,17 +128,15 @@ export default function ReviewList({ movieId }) {
       ) : (
         <>
           <div className="space-y-4">
-            {reviewData.content
-              .filter(r => r.id !== myCurrentReview?.id)
-              .map(r => (
-                <ReviewItem
-                  key={r.id}
-                  review={r}
-                  currentUser={user}
-                  onDelete={handleDelete}
-                  onEdit={handleEdit}
-                />
-              ))}
+            {otherReviews.map(r => (
+              <ReviewItem
+                key={r.id}
+                review={r}
+                currentUser={user}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+              />
+            ))}
           </div>
 
           {reviewData.totalPages > 1 && (
