@@ -191,43 +191,51 @@ export default function MovieDetailPage() {
                 </span>
               </div>
 
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 tracking-tight drop-shadow-xl leading-tight" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+              <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-dark-400 mb-6 tracking-tighter drop-shadow-2xl leading-tight" style={{ filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.5))' }}>
                 {movie.title}
               </h1>
 
-              <div className="flex flex-wrap justify-center lg:justify-start gap-2 mb-8">
+              <div className="flex flex-wrap justify-center lg:justify-start gap-2.5 mb-10">
                 {(movie.genres || []).map(g => (
-                  <span key={g.id} className="bg-dark-800/80 backdrop-blur-md border border-dark-600/50 text-dark-200 text-xs font-semibold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-sm">
+                  <span key={g.id} className="bg-white/5 backdrop-blur-md border border-white/10 text-dark-100 text-[11px] font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-sm">
                     {g.name}
                   </span>
                 ))}
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+              <div className="flex flex-wrap gap-4 mb-10 justify-center lg:justify-start">
                 {[
                   { icon: '⏱', label: 'Thời lượng', val: `${movie.duration} phút` },
                   { icon: '🎬', label: 'Đạo diễn', val: movie.director || '—' },
                   { icon: '📅', label: 'Khởi chiếu', val: movie.releaseDate ? formatDate(movie.releaseDate) : '—' },
                 ].map(({ icon, label, val }) => (
-                  <div key={label} className="bg-dark-900/60 backdrop-blur-md border border-dark-700/50 rounded-2xl p-4 shadow-xl">
-                    <div className="text-2xl mb-1.5 opacity-90">{icon}</div>
-                    <div className="text-dark-400 text-xs font-medium uppercase tracking-wider mb-1">{label}</div>
-                    <div className="text-white text-sm font-bold">{val}</div>
+                  <div key={label} className="flex items-center gap-3 bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl px-5 py-3 shadow-xl">
+                    <div className="text-2xl opacity-90 drop-shadow-md">{icon}</div>
+                    <div className="text-left">
+                      <div className="text-dark-400 text-[10px] font-black uppercase tracking-widest mb-0.5">{label}</div>
+                      <div className="text-white text-sm font-bold">{val}</div>
+                    </div>
                   </div>
                 ))}
               </div>
 
               {movie.castMembers && (
-                <div className="mb-6">
-                  <div className="text-dark-400 text-sm font-bold uppercase tracking-wider mb-2">Diễn viên</div>
-                  <div className="text-white text-base leading-relaxed bg-dark-900/20 p-4 rounded-xl border border-dark-800/50">{movie.castMembers}</div>
+                <div className="mb-8">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-1 h-4 bg-primary-500 rounded-full"></div>
+                    <div className="text-dark-400 text-sm font-black uppercase tracking-widest">Diễn viên</div>
+                  </div>
+                  <div className="text-white/90 text-[15px] font-medium leading-relaxed pl-4 border-l border-white/5">{movie.castMembers}</div>
                 </div>
               )}
 
               {movie.description && (
                 <div className="mb-10 lg:mb-16">
-                  <div className="text-dark-400 text-sm font-bold uppercase tracking-wider mb-2">Nội dung</div>
-                  <p className="text-dark-200 text-base leading-loose bg-dark-900/20 p-4 rounded-xl border border-dark-800/50">{movie.description}</p>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-1 h-4 bg-primary-500 rounded-full"></div>
+                    <div className="text-dark-400 text-sm font-black uppercase tracking-widest">Nội dung</div>
+                  </div>
+                  <p className="text-dark-200 text-base leading-loose pl-4 border-l border-white/5">{movie.description}</p>
                 </div>
               )}
             </motion.div>
@@ -275,14 +283,17 @@ export default function MovieDetailPage() {
           </div>
 
           {/* Cinema filter */}
-          <select
-            value={selectedCinema}
-            onChange={e => setSelectedCinema(e.target.value)}
-            className="input-field w-auto mb-6"
-          >
-            <option value="">Tất cả rạp</option>
-            {cinemas.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+          <div className="mb-8">
+            <select
+              value={selectedCinema}
+              onChange={e => setSelectedCinema(e.target.value)}
+              className="bg-white/5 border border-white/10 text-white text-sm font-semibold rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none backdrop-blur-md transition-all w-full sm:w-auto cursor-pointer appearance-none"
+              style={{ backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23cbd5e1%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem top 50%', backgroundSize: '0.65rem auto', paddingRight: '2.5rem' }}
+            >
+              <option value="" className="bg-dark-900">Tất cả cụm rạp</option>
+              {cinemas.map(c => <option key={c.id} value={c.id} className="bg-dark-900">{c.name}</option>)}
+            </select>
+          </div>
 
           {/* Showtime list */}
           {stLoading ? (
@@ -316,14 +327,15 @@ export default function MovieDetailPage() {
                       whileTap={{ scale: 0.96 }}
                       onClick={() => handleBookShowtime(st)}
                       style={{
-                        border: '1.5px solid rgba(51,65,85,0.7)',
-                        background: 'rgba(15,23,42,0.8)',
-                        borderRadius: 14, padding: 12, textAlign: 'left', cursor: 'pointer',
+                        border: '1px solid rgba(255,255,255,0.06)',
+                        background: 'rgba(255,255,255,0.03)',
+                        backdropFilter: 'blur(12px)',
+                        borderRadius: 16, padding: '12px 14px', textAlign: 'left', cursor: 'pointer',
                       }}
                     >
-                      <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{formatTime(st.startTime)}</div>
-                      <div style={{ color: '#64748b', fontSize: 11, marginTop: 2 }}>{st.room?.type} · {st.room?.name}</div>
-                      <div style={{ color: '#fb7185', fontSize: 11, marginTop: 4, fontWeight: 600 }}>từ {formatPrice(st.priceStandard)}</div>
+                      <div className="text-white font-black text-lg tracking-wide">{formatTime(st.startTime)}</div>
+                      <div className="text-dark-400 text-[10px] uppercase font-bold tracking-widest mt-1.5">{st.room?.type} · {st.room?.name}</div>
+                      <div className="text-primary-400 text-[11px] mt-1 font-black">TỪ {formatPrice(st.priceStandard)}</div>
                     </motion.button>
                   ))}
                 </motion.div>
