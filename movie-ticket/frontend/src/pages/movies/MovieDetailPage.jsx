@@ -159,10 +159,18 @@ export default function MovieDetailPage() {
               {movie.trailerUrl && (
                 <motion.button
                   onClick={() => setShowTrailer(true)}
-                  variants={fadeUp} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.2 }}
-                  whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}
-                  animate={{ boxShadow: ['0 4px 16px rgba(225,29,72,0.3)', '0 4px 28px rgba(225,29,72,0.6)', '0 4px 16px rgba(225,29,72,0.3)'] }}
-                  transition={{ duration: 2.5, repeat: Infinity }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ 
+                    opacity: 1, y: 0, 
+                    boxShadow: ['0 4px 16px rgba(225,29,72,0.3)', '0 4px 28px rgba(225,29,72,0.6)', '0 4px 16px rgba(225,29,72,0.3)'] 
+                  }}
+                  transition={{ 
+                    opacity: { duration: 0.6, delay: 0.2 },
+                    y: { duration: 0.6, delay: 0.2 },
+                    boxShadow: { duration: 2.5, repeat: Infinity, ease: "linear" }
+                  }}
+                  whileHover={{ scale: 1.03, y: -2 }} 
+                  whileTap={{ scale: 0.97 }}
                   className="w-full max-w-xs lg:max-w-none flex items-center justify-center gap-2 mt-2 bg-gradient-to-tr from-primary-600 to-rose-600 text-white border-none py-3.5 rounded-xl text-[15px] font-bold cursor-pointer transition-all"
                 >
                   <span className="text-xl">▶</span> XEM TRAILER
