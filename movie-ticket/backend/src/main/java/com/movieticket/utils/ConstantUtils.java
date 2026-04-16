@@ -1,6 +1,9 @@
 package com.movieticket.utils;
 
 public class ConstantUtils {
+
+    private ConstantUtils() {}
+
     public static final String CUSTOMER_NAME = "customerName";
 
     public static final String MOVIE_TITLE = "movieTitle";

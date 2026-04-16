@@ -267,22 +267,22 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private void sendBookingEmail(User user, Showtime showtime, List<Seat> seats, BigDecimal finalAmount) {
-        log.info("sendBookingEmail start  user:{}, showtime:{}, seats:{}, finalAmount:{}", user, showtime, seats, finalAmount);
         String movieTitle = showtime.getMovie().getTitle();
-
         String seatCodes = seats.stream()
                 .map(Seat::getSeatCode)
                 .collect(Collectors.joining(", "));
-
-        emailService.sendBookingSuccessEmail(
-//                "ltung7436@gmail.com",
-                user.getEmail(), //hard code tạm thời
-                user.getFullName(),
-                movieTitle,
-                showtime.getStartTime(),
-                seatCodes,
-                finalAmount
-        );
-        log.info("sendBookingEmail end email");
+        try {
+            emailService.sendBookingSuccessEmail(
+                    user.getEmail(),
+                    user.getFullName(),
+                    movieTitle,
+                    showtime.getStartTime(),
+                    seatCodes,
+                    finalAmount
+            );
+            log.info("Booking email sent successfully to: {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send booking email to {}: {}", user.getEmail(), e.getMessage());
+        }
     }
 }

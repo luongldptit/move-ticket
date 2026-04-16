@@ -1,7 +1,5 @@
 package com.movieticket.service;
 
-import com.movieticket.entity.Booking;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
