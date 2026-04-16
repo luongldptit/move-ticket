@@ -129,39 +129,52 @@ export default function MovieDetailPage() {
 
   return (
     <motion.div
-      className="min-h-screen pt-20"
+      className="min-h-screen pt-20 pb-20 relative"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}
       style={{ background: '#020617' }}
     >
-      {/* Hero / Banner */}
-      <div className="relative border-b border-dark-800/50">
-        <HeroDetailBackground movie={movie} />
+      <HeroDetailBackground movie={movie} />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="flex flex-col md:flex-row gap-8 lg:gap-16 items-center md:items-start">
-            {/* Poster */}
-            <motion.div
-              className="flex-shrink-0 w-56 md:w-72 relative group perspective-[1000px] mb-6 md:mb-0"
-              variants={fadeLeft} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.1 }}
-            >
-              <motion.img
-                src={movie.posterUrl || 'https://placehold.co/256x384/1e293b/94a3b8?text=No+Poster'}
-                alt={movie.title}
-                className="w-full rounded-2xl relative z-10 border border-white/10"
-                style={{ boxShadow: '0 30px 60px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.05)' }}
-                whileHover={{ scale: 1.04, rotateY: 4, rotateX: 4 }}
-                transition={spring}
-              />
-              {/* Magic outer glow */}
-              <div className="absolute inset-0 bg-primary-600/40 blur-[60px] rounded-full scale-100 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            </motion.div>
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+          
+          {/* CỘT TRÁI - STICKY (Poster & Trailer Btn) */}
+          <div className="lg:col-span-4 lg:col-start-1">
+            <div className="lg:sticky lg:top-28 flex flex-col items-center lg:items-start" style={{ alignSelf: 'start' }}>
+              <motion.div
+                className="w-56 sm:w-72 lg:w-full relative group perspective-[1000px] mb-6"
+                variants={fadeLeft} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.1 }}
+              >
+                <motion.img
+                  src={movie.posterUrl || 'https://placehold.co/400x600/1e293b/94a3b8?text=No+Poster'}
+                  alt={movie.title}
+                  className="w-full rounded-2xl relative z-10 border border-white/10"
+                  style={{ boxShadow: '0 30px 60px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.05)' }}
+                  whileHover={{ scale: 1.04, rotateY: 4, rotateX: 4 }}
+                  transition={spring}
+                />
+                <div className="absolute inset-0 bg-primary-600/40 blur-[60px] rounded-full scale-100 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+              </motion.div>
 
-            {/* Info */}
-            <motion.div
-              className="flex-1 text-center md:text-left"
-              variants={fadeRight} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.18 }}
-            >
-              <div className="flex items-center justify-center md:justify-start gap-3 flex-wrap mb-4">
+              {movie.trailerUrl && (
+                <motion.button
+                  onClick={() => setShowTrailer(true)}
+                  variants={fadeUp} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.2 }}
+                  whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}
+                  animate={{ boxShadow: ['0 4px 16px rgba(225,29,72,0.3)', '0 4px 28px rgba(225,29,72,0.6)', '0 4px 16px rgba(225,29,72,0.3)'] }}
+                  transition={{ duration: 2.5, repeat: Infinity }}
+                  className="w-full max-w-xs lg:max-w-none flex items-center justify-center gap-2 mt-2 bg-gradient-to-tr from-primary-600 to-rose-600 text-white border-none py-3.5 rounded-xl text-[15px] font-bold cursor-pointer transition-all"
+                >
+                  <span className="text-xl">▶</span> XEM TRAILER
+                </motion.button>
+              )}
+            </div>
+          </div>
+
+          {/* CỘT PHẢI - CUỘN DỌC (Nội dung chính) */}
+          <div className="lg:col-span-8 flex flex-col text-center lg:text-left pt-6 lg:pt-0">
+            <motion.div variants={fadeRight} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.18 }}>
+              <div className="flex items-center justify-center lg:justify-start gap-3 flex-wrap mb-4">
                 <span className={`${rating.color} text-white font-black text-xs px-3 py-1.5 rounded-lg uppercase tracking-wider backdrop-blur-md shadow-lg border border-white/10`} title={rating.title}>
                   {rating.label}
                 </span>
@@ -170,12 +183,11 @@ export default function MovieDetailPage() {
                 </span>
               </div>
 
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 tracking-tight drop-shadow-xl"
-                  style={{ textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 tracking-tight drop-shadow-xl leading-tight" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
                 {movie.title}
               </h1>
 
-              <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-6">
+              <div className="flex flex-wrap justify-center lg:justify-start gap-2 mb-8">
                 {(movie.genres || []).map(g => (
                   <span key={g.id} className="bg-dark-800/80 backdrop-blur-md border border-dark-600/50 text-dark-200 text-xs font-semibold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-sm">
                     {g.name}
@@ -198,45 +210,27 @@ export default function MovieDetailPage() {
               </div>
 
               {movie.castMembers && (
-                <div className="mb-4">
-                  <div className="text-dark-400 text-sm mb-1">Diễn viên</div>
-                  <div className="text-white text-sm">{movie.castMembers}</div>
+                <div className="mb-6">
+                  <div className="text-dark-400 text-sm font-bold uppercase tracking-wider mb-2">Diễn viên</div>
+                  <div className="text-white text-base leading-relaxed bg-dark-900/20 p-4 rounded-xl border border-dark-800/50">{movie.castMembers}</div>
                 </div>
               )}
 
               {movie.description && (
-                <div>
-                  <div className="text-dark-400 text-sm mb-1">Nội dung</div>
-                  <p className="text-dark-200 text-sm leading-relaxed line-clamp-4">{movie.description}</p>
+                <div className="mb-10 lg:mb-16">
+                  <div className="text-dark-400 text-sm font-bold uppercase tracking-wider mb-2">Nội dung</div>
+                  <p className="text-dark-200 text-base leading-loose bg-dark-900/20 p-4 rounded-xl border border-dark-800/50">{movie.description}</p>
                 </div>
               )}
-
-              {/* Trailer */}
-              {movie.trailerUrl && (
-                <motion.button
-                  onClick={() => setShowTrailer(true)}
-                  whileHover={{ scale: 1.06, y: -2 }} whileTap={{ scale: 0.95 }}
-                  animate={{ boxShadow: ['0 4px 16px rgba(225,29,72,0.3)', '0 4px 28px rgba(225,29,72,0.6)', '0 4px 16px rgba(225,29,72,0.3)'] }}
-                  transition={{ duration: 2.5, repeat: Infinity }}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 16,
-                    background: 'linear-gradient(135deg, #e11d48, #be123c)',
-                    color: '#fff', border: 'none', padding: '11px 22px',
-                    borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                  }}
-                >
-                  ▶ Xem trailer
-                </motion.button>
-              )}
             </motion.div>
-          </div>
-        </div>
-      </div>
 
-      {/* Showtimes */}
-      {movie.status === 'NOW_SHOWING' && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <h2 className="text-2xl font-bold text-white mb-6">Lịch Chiếu</h2>
+            {/* Showtimes Section */}
+            {movie.status === 'NOW_SHOWING' && (
+              <motion.div variants={fadeUp} initial="hidden" animate="show" className="mb-16">
+                <div className="flex items-center gap-4 mb-6">
+                  <h2 className="text-2xl font-black text-white uppercase tracking-wide">Đặt Vé Nhanh</h2>
+                  <div className="flex-1 h-px bg-dark-800/80"></div>
+                </div>
 
           {/* Date picker */}
           <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-4 mb-6 pt-2">
@@ -325,14 +319,24 @@ export default function MovieDetailPage() {
                     </motion.button>
                   ))}
                 </motion.div>
-              </div>
-            ))
-          )}
-        </div>
-      )}
+                  </div>
+                ))
+              )}
+            </motion.div>
+            )}
 
-      {/* Reviews */}
-      <ReviewList movieId={parseInt(id)} />
+            {/* Reviews Section */}
+            <motion.div variants={fadeUp} initial="hidden" animate="show" className="mb-10">
+              <div className="flex items-center gap-4 mb-6">
+                <h2 className="text-2xl font-black text-white uppercase tracking-wide">Đánh Giá</h2>
+                <div className="flex-1 h-px bg-dark-800/80"></div>
+              </div>
+              <ReviewList movieId={parseInt(id)} />
+            </motion.div>
+
+          </div> {/* END Right Column */}
+        </div> {/* END Grid */}
+      </div> {/* END Container */}
 
       {/* Trailer Modal (Cinematic) */}
       <AnimatePresence>
