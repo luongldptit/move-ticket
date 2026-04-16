@@ -1,5 +1,6 @@
 package com.movieticket.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,6 +11,7 @@ public class CinemaResponse {
     private String name;
     private String address;
     private String phone;
-    private boolean isActive;
+    @JsonProperty("isActive")
+    private Boolean isActive;
     private Integer totalRooms;
 }

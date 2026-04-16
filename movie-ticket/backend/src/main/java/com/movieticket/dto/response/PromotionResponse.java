@@ -1,5 +1,6 @@
 package com.movieticket.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -20,7 +21,8 @@ public class PromotionResponse {
     private Integer usedCount;
     private LocalDate startDate;
     private LocalDate endDate;
-    private boolean isActive;
+    @JsonProperty("isActive")
+    private Boolean isActive;
     // For validate response
     private Boolean isValid;
     private BigDecimal discountAmount;
