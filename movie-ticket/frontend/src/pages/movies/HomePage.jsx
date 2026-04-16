@@ -131,6 +131,65 @@ function TiltPoster({ movie }) {
   )
 }
 
+/* ─── Featured Trailer (fallback to TiltPoster) ─── */
+function FeaturedTrailer({ movie }) {
+  const videoId = movie?.trailerUrl?.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/)?.[1]
+  
+  if (!videoId) return <TiltPoster movie={movie} />
+
+  const rating = AGE_RATING[movie?.ageRating] || { label: movie?.ageRating || 'P', color: 'bg-green-600' }
+
+  return (
+    <motion.div
+      className="relative w-full max-w-[480px] lg:max-w-[560px] mx-auto group"
+      whileHover={{ y: -4 }}
+      transition={spring}
+    >
+      <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-black border border-dark-700" style={{ paddingTop: '56.25%' }}>
+        <iframe
+          className="absolute inset-0 w-full h-full"
+          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&showinfo=0&rel=0`}
+          title={`Trailer - ${movie.title}`}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          style={{ border: 'none', pointerEvents: 'none' }} 
+        />
+        {/* Overlay gradient so text is readable if overlayed, and adds premium feel */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+        
+        {/* Play button overlay that appears on hover to actually open full trailer or just visual polish */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+           <Link to={`/movies/${movie.id}`} className="w-16 h-16 flex items-center justify-center rounded-full bg-primary-600/80 text-white backdrop-blur-md scale-90 group-hover:scale-100 transition-transform shadow-lg shadow-primary-500/50">
+             ▶
+           </Link>
+        </div>
+
+        {/* Movie Info Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-none">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className={`${rating.color} text-white text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shadow`}>{rating.label}</span>
+            {movie?.genres?.slice(0, 2).map((g, i) => (
+              <span key={i} className="text-[10px] text-gray-200 bg-black/40 px-1.5 py-0.5 rounded backdrop-blur border border-white/10 uppercase tracking-widest">
+                {typeof g === 'string' ? g : g.name}
+              </span>
+            ))}
+          </div>
+          <div className="text-white font-bold text-lg line-clamp-1 leading-snug drop-shadow-md">{movie?.title}</div>
+        </div>
+      </div>
+      
+      {/* Outer glow */}
+      <div style={{
+        position: 'absolute', inset: -20,
+        background: 'radial-gradient(ellipse, rgba(225,29,72,0.18) 0%, transparent 65%)',
+        filter: 'blur(20px)', zIndex: -1,
+      }} />
+      {/* Border glow */}
+      <div className="absolute inset-0 rounded-2xl ring-1 ring-primary-500/20 group-hover:ring-primary-500/50 pointer-events-none transition-all duration-300" />
+    </motion.div>
+  )
+}
+
 /* ─── Now showing card (carousel, larger than coming soon) ─── */
 function NowShowingCard({ movie }) {
   const status = MOVIE_STATUS[movie.status] || {}
@@ -589,18 +648,18 @@ export default function HomePage() {
               </motion.div>
             </div>
 
-            {/* Right: Featured poster with tilt */}
+            {/* Right: Featured poster with tilt / trailer */}
             <motion.div
               variants={fadeLeft}
               initial="hidden"
               animate="show"
               transition={{ ...easeOut, delay: 0.15 }}
-              className="flex-shrink-0 lg:w-[340px] xl:w-[380px]"
+              className="flex-shrink-0 w-full lg:w-[480px] xl:w-[540px] mt-8 lg:mt-0"
             >
               {featuredMovie ? (
-                <TiltPoster movie={featuredMovie} />
+                <FeaturedTrailer movie={featuredMovie} />
               ) : (
-                <div className="w-[280px] aspect-[2/3] rounded-2xl bg-dark-800 border border-dark-700 mx-auto" />
+                <div className="w-[480px] aspect-video rounded-2xl bg-dark-800 border border-dark-700 mx-auto" />
               )}
               {featuredMovie && (
                 <motion.div
