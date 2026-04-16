@@ -8,30 +8,30 @@ import {
   fadeUp, fadeIn, staggerContainer, staggerItem, scaleIn, spring, easeOut,
 } from '../../utils/motion'
 
-/* ─── Skeleton card ─── */
+/* ─── Skeleton card (Vertical) ─── */
 function SkeletonCard() {
   return (
     <motion.div
       variants={staggerItem}
       style={{
-        background: 'rgba(30,41,59,0.8)',
-        border: '1px solid rgba(51,65,85,0.6)',
-        borderRadius: 16, padding: 12,
-        display: 'flex', gap: 14,
+        background: 'rgba(15,23,42,0.6)',
+        border: '1px solid rgba(51,65,85,0.4)',
+        borderRadius: 20, overflow: 'hidden',
+        display: 'flex', flexDirection: 'column',
       }}
     >
       <motion.div
-        style={{ width: 80, borderRadius: 10, flexShrink: 0, aspectRatio: '2/3', background: '#1e293b' }}
-        animate={{ opacity: [0.5, 1, 0.5] }}
-        transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+        style={{ width: '100%', aspectRatio: '2/3', background: '#1e293b' }}
+        animate={{ opacity: [0.5, 0.8, 0.5] }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
       />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {[80, 55, 70].map((w, i) => (
+      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {[80, 50, 65].map((w, i) => (
           <motion.div
             key={i}
-            style={{ height: 13, width: `${w}%`, borderRadius: 6, background: '#1e293b' }}
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut', delay: i * 0.12 }}
+            style={{ height: 12, width: `${w}%`, borderRadius: 6, background: '#334155' }}
+            animate={{ opacity: [0.5, 0.8, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.15 }}
           />
         ))}
       </div>
@@ -39,85 +39,78 @@ function SkeletonCard() {
   )
 }
 
-/* ─── Movie card (list variant) ─── */
+/* ─── Premium Movie Card (Vertical Portrait) ─── */
 function MovieCard({ movie }) {
   const status = MOVIE_STATUS[movie.status] || {}
   const rating = AGE_RATING[movie.ageRating] || { label: movie.ageRating, color: 'bg-dark-600' }
 
   return (
-    <motion.div variants={staggerItem}>
-      <Link to={`/movies/${movie.id}`} style={{ textDecoration: 'none', display: 'block' }}>
+    <motion.div variants={staggerItem} style={{ userSelect: 'none' }}>
+      <Link to={`/movies/${movie.id}`} className="block group" style={{ textDecoration: 'none' }}>
         <motion.div
-          whileHover={{ y: -4, boxShadow: '0 16px 44px rgba(0,0,0,0.55), 0 0 0 1px rgba(244,63,94,0.25)' }}
-          whileTap={{ scale: 0.98 }}
-          transition={spring}
-          style={{
-            background: 'rgba(15,23,42,0.85)',
-            border: '1px solid rgba(51,65,85,0.5)',
-            borderRadius: 16, padding: 12,
-            display: 'flex', gap: 14, cursor: 'pointer',
-          }}
+          whileHover={{ y: -6, scale: 1.02 }}
+          whileTap={{ scale: 0.96 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          className="relative rounded-2xl overflow-hidden bg-black shadow-lg"
+          style={{ aspectRatio: '2/3', border: '1px solid rgba(255,255,255,0.05)' }}
         >
-          {/* Poster */}
-          <div style={{ width: 80, flexShrink: 0, borderRadius: 10, overflow: 'hidden', position: 'relative', aspectRatio: '2/3' }}>
-            <motion.img
-              src={movie.posterUrl || 'https://placehold.co/80x120/1e293b/94a3b8?text=?'}
-              alt={movie.title}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              whileHover={{ scale: 1.08 }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
-            />
-            <div style={{
-              position: 'absolute', top: 4, left: 4, background: 'rgba(0,0,0,0.8)',
-              borderRadius: 4, padding: '2px 6px', fontSize: 10, fontWeight: 700, color: '#fff',
-            }}>
+          {/* Glassmorphism reflection */}
+          <div className="absolute inset-0 z-20 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+               style={{ background: 'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.1) 25%, transparent 30%)' }} />
+
+          {/* Poster Image */}
+          <motion.img
+            src={movie.posterUrl || 'https://placehold.co/400x600/1e293b/94a3b8?text=No+Poster'}
+            alt={movie.title}
+            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+          />
+
+          {/* Core Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#020617] to-transparent opacity-0 group-hover:opacity-90 transition-opacity duration-300" />
+
+          {/* Top Badges */}
+          <div className="absolute top-3 inset-x-3 flex justify-between items-start z-10">
+            <span className={`${rating.color} text-white text-[11px] font-black px-2 py-1 rounded-md shadow-md uppercase tracking-wider`}>
               {rating.label}
-            </div>
-          </div>
-
-          {/* Info */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h3 style={{
-              fontWeight: 700, color: '#fff', fontSize: 14, lineHeight: 1.4, margin: '0 0 6px',
-              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-            }}>
-              {movie.title}
-            </h3>
-
-            <span style={{
-              fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 999,
-              background: movie.status === 'NOW_SHOWING' ? 'rgba(34,197,94,0.15)' : 'rgba(251,191,36,0.15)',
-              color: movie.status === 'NOW_SHOWING' ? '#4ade80' : '#fbbf24',
-              border: `1px solid ${movie.status === 'NOW_SHOWING' ? 'rgba(34,197,94,0.3)' : 'rgba(251,191,36,0.3)'}`,
+            </span>
+            <span className="text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow" style={{
+              background: movie.status === 'NOW_SHOWING' ? 'rgba(34,197,94,0.8)' : 'rgba(251,191,36,0.8)',
+              color: '#fff', backdropFilter: 'blur(4px)'
             }}>
               {status.label}
             </span>
+          </div>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 8 }}>
+          {/* Hover Play Button */}
+          <div className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+            <div className="w-14 h-14 rounded-full bg-primary-600/80 backdrop-blur-md flex items-center justify-center text-white shadow-xl scale-75 group-hover:scale-100 transition-transform duration-300">
+              ▶
+            </div>
+          </div>
+
+          {/* Bottom Content */}
+          <div className="absolute bottom-0 inset-x-0 p-4 z-10 transform translate-y-6 group-hover:translate-y-0 transition-transform duration-300">
+            <h3 className="font-extrabold text-white text-base lg:text-lg line-clamp-2 leading-tight mb-2 drop-shadow-md">
+              {movie.title}
+            </h3>
+            
+            <div className="flex flex-wrap gap-1.5 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">
               {(movie.genres || []).slice(0, 3).map((g, i) => (
-                <span key={i} style={{
-                  fontSize: 11, padding: '2px 8px', borderRadius: 6,
-                  background: 'rgba(51,65,85,0.8)', color: '#94a3b8',
-                }}>
+                <span key={i} className="text-[10px] bg-white/10 text-white/90 px-2 py-0.5 rounded backdrop-blur-sm border border-white/5 whitespace-nowrap">
                   {typeof g === 'string' ? g : g.name}
                 </span>
               ))}
             </div>
 
-            <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: 12, color: '#64748b' }}>
-              <span>⏱ {movie.duration} phút</span>
-              {movie.releaseDate && <span>📅 {formatDate(movie.releaseDate)}</span>}
+            <div className="flex items-center justify-between text-xs text-slate-300 font-medium">
+              <span className="flex items-center gap-1"><span className="text-primary-400">⏱</span> {movie.duration}p</span>
+              {movie.releaseDate && <span className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100"><span className="text-blue-400">📅</span> {formatDate(movie.releaseDate)}</span>}
             </div>
           </div>
-
-          {/* Arrow */}
-          <motion.span
-            style={{ alignSelf: 'center', color: '#fb7185', fontSize: 20, flexShrink: 0 }}
-            initial={{ opacity: 0, x: -8 }}
-            whileHover={{ opacity: 1, x: 0 }}
-          >
-            ›
-          </motion.span>
+          
+          {/* Card outer glow on hover */}
+          <div className="absolute inset-0 rounded-2xl ring-2 ring-primary-500/0 group-hover:ring-primary-500/50 transition-all duration-300 pointer-events-none shadow-[inset_0_0_20px_rgba(244,63,94,0)] group-hover:shadow-[inset_0_0_20px_rgba(244,63,94,0.3)]" />
         </motion.div>
       </Link>
     </motion.div>
@@ -168,12 +161,16 @@ export default function MovieListPage() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={easeOut}
-      style={{ minHeight: '100vh', paddingTop: 96, paddingBottom: 64, background: '#020617' }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      style={{ minHeight: '100vh', paddingTop: 96, paddingBottom: 64, background: '#020617', position: 'relative', overflow: 'hidden' }}
     >
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
+      {/* Background Ambience */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary-600/10 blur-[100px] pointer-events-none" />
+      <div className="absolute top-[30%] right-[-10%] w-[600px] h-[600px] rounded-full bg-purple-600/10 blur-[120px] pointer-events-none" />
+
+      <div style={{ relative: 'true', maxWidth: 1280, margin: '0 auto', padding: '0 24px', zIndex: 10 }}>
 
         {/* Header */}
         <motion.div variants={fadeUp} initial="hidden" animate="show" transition={easeOut} style={{ marginBottom: 32 }}>
@@ -284,7 +281,7 @@ export default function MovieListPage() {
             <motion.div
               key="skeleton"
               variants={staggerContainer(0.06)} initial="hidden" animate="show"
-              style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}
+              style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 24 }}
             >
               {Array(6).fill(0).map((_, i) => <SkeletonCard key={i} />)}
             </motion.div>
@@ -318,7 +315,7 @@ export default function MovieListPage() {
             <motion.div key="list">
               <motion.div
                 variants={staggerContainer(0.055)} initial="hidden" animate="show"
-                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}
+                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 24 }}
               >
                 {movies.map(m => <MovieCard key={m.id} movie={m} />)}
               </motion.div>
