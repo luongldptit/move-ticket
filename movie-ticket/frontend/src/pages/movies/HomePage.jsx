@@ -398,6 +398,7 @@ export default function HomePage() {
   const [comingSoon, setComingSoon] = useState([])
   const [loading, setLoading] = useState(true)
   const carouselRef = useRef(null)
+  const nowShowingCarouselRef = useRef(null)
 
   useEffect(() => {
     Promise.all([
@@ -414,7 +415,6 @@ export default function HomePage() {
   if (loading) return <PageLoader />
 
   const featuredMovie = nowShowing[0] || null
-  const nowShowingCarouselRef = useRef(null)
 
   return (
     <motion.div
