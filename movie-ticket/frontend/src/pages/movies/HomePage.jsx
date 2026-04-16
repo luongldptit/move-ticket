@@ -130,88 +130,63 @@ function TiltPoster({ movie }) {
   )
 }
 
-/* ─── Spotlight card (first now-showing movie) ─── */
-function SpotlightCard({ movie }) {
+/* ─── Now showing card (carousel, larger than coming soon) ─── */
+function NowShowingCard({ movie }) {
   const status = MOVIE_STATUS[movie.status] || {}
   const rating = AGE_RATING[movie.ageRating] || { label: movie.ageRating, color: 'bg-dark-600' }
 
   return (
     <motion.div
-      variants={fadeUp}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, margin: '-60px' }}
-      transition={easeOut}
-      className="mb-6"
+      whileHover={{ y: -6 }}
+      whileTap={{ scale: 0.97 }}
+      transition={spring}
+      className="flex-shrink-0 w-40 sm:w-48 md:w-52"
+      style={{ userSelect: 'none' }}
     >
       <Link to={`/movies/${movie.id}`} className="block group">
-        <motion.div
-          whileHover={{ y: -3 }}
-          transition={spring}
-          className="relative rounded-2xl overflow-hidden border border-dark-700/60 bg-dark-900 flex flex-col sm:flex-row"
-        >
-          {/* Poster — fixed 160px wide on sm+, full width on mobile */}
-          <div className="relative overflow-hidden flex-shrink-0 w-full sm:w-40 md:w-48" style={{ height: 220 }}>
-            <motion.img
-              src={movie.posterUrl || 'https://placehold.co/200x300/1e293b/94a3b8?text=No+Poster'}
-              alt={movie.title}
-              className="w-full h-full object-cover"
-              whileHover={{ scale: 1.06 }}
-              transition={{ duration: 0.5 }}
-            />
-            {/* right-to-center fade on sm+ */}
-            <div className="hidden sm:block absolute inset-0" style={{
-              background: 'linear-gradient(to right, transparent 55%, rgba(2,6,23,0.95) 100%)',
-            }} />
-            {/* bottom fade on mobile */}
-            <div className="block sm:hidden absolute inset-0" style={{
-              background: 'linear-gradient(to bottom, transparent 55%, rgba(2,6,23,0.95) 100%)',
-            }} />
+        <div className="relative rounded-xl overflow-hidden mb-3 border border-dark-700/50" style={{ aspectRatio: '2/3' }}>
+          <img
+            src={movie.posterUrl || 'https://placehold.co/208x312/1e293b/94a3b8?text=No+Poster'}
+            alt={movie.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            draggable={false}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+          {/* Badges top */}
+          <div className="absolute top-2 left-2 right-2 flex justify-between items-start">
+            <span className={`${rating.color} text-white text-xs font-bold px-2 py-0.5 rounded shadow`}>{rating.label}</span>
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${status.color}`}>{status.label}</span>
           </div>
-
-          {/* Info */}
-          <div className="flex-1 p-5 sm:p-6 flex flex-col justify-center relative min-w-0">
-            {/* left bleed from poster on sm+ */}
-            <div className="hidden sm:block absolute left-0 top-0 bottom-0 w-16 pointer-events-none" style={{
-              background: 'linear-gradient(to right, rgba(2,6,23,0.95), transparent)',
-            }} />
-            <div className="flex items-center gap-2 mb-3 flex-wrap">
-              <span className="text-xs font-bold text-primary-400 bg-primary-500/10 border border-primary-500/20 px-2 py-0.5 rounded-full">
-                ⭐ Nổi bật
-              </span>
-              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${status.color}`}>{status.label}</span>
-              <span className={`${rating.color} text-white text-xs font-bold px-2 py-0.5 rounded`}>{rating.label}</span>
+          {/* CTA on hover */}
+          <motion.div
+            className="absolute bottom-0 left-0 right-0 p-3"
+            initial={{ y: '100%' }}
+            whileHover={{ y: 0 }}
+            transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+          >
+            <div className="btn-primary w-full text-center text-xs py-2 shadow-lg shadow-primary-500/40">
+              🎬 Đặt vé
             </div>
-            <h3 className="text-lg sm:text-xl font-bold text-white mb-2 group-hover:text-primary-300 transition-colors line-clamp-2">
-              {movie.title}
-            </h3>
-            {movie.genres?.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {movie.genres.slice(0, 3).map((g, i) => (
-                  <span key={i} className="text-xs bg-dark-800 text-dark-300 px-2 py-0.5 rounded-full">
-                    {typeof g === 'string' ? g : g.name}
-                  </span>
-                ))}
-              </div>
-            )}
-            {movie.description && (
-              <p className="text-dark-400 text-sm leading-relaxed line-clamp-2 mb-3">{movie.description}</p>
-            )}
-            <div className="flex items-center gap-4 text-sm text-dark-400 mb-4 flex-wrap">
-              <span>{movie.duration} phút</span>
-              {movie.director && (
-                <span>Đạo diễn: <span className="text-dark-300">{movie.director}</span></span>
-              )}
-            </div>
-            <motion.span
-              whileHover={{ scale: 1.04, x: 4 }}
-              transition={spring}
-              className="btn-primary px-5 py-2.5 text-sm w-fit"
-            >
-              🎬 Đặt vé ngay →
-            </motion.span>
+          </motion.div>
+        </div>
+        <div className="px-1">
+          <h3 className="font-semibold text-white text-sm line-clamp-2 leading-snug group-hover:text-primary-400 transition-colors mb-1">
+            {movie.title}
+          </h3>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-dark-500 text-xs">{movie.duration} phút</span>
+            {movie.releaseDate && <span className="text-dark-600 text-xs">{formatDate(movie.releaseDate)}</span>}
           </div>
-        </motion.div>
+          {movie.genres?.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {movie.genres.slice(0, 2).map((g, i) => (
+                <span key={i} className="text-xs bg-dark-800 text-dark-400 px-2 py-0.5 rounded">
+                  {typeof g === 'string' ? g : g.name}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       </Link>
     </motion.div>
   )
@@ -438,7 +413,7 @@ export default function HomePage() {
   if (loading) return <PageLoader />
 
   const featuredMovie = nowShowing[0] || null
-  const gridMovies = nowShowing.slice(1, 7)
+  const nowShowingCarouselRef = useRef(null)
 
   return (
     <motion.div
@@ -685,7 +660,7 @@ export default function HomePage() {
       {/* ═══ MOVIE SECTIONS ═══ */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-14">
 
-        {/* ── Now Showing ── */}
+        {/* ── Now Showing — Drag Carousel ── */}
         {nowShowing.length > 0 && (
           <motion.section
             className="mb-16"
@@ -703,19 +678,26 @@ export default function HomePage() {
               linkLabel="Xem tất cả"
             />
 
-            {featuredMovie && <SpotlightCard movie={featuredMovie} />}
+            <div className="relative">
+              <div className="absolute left-0 top-0 bottom-0 w-8 z-10 pointer-events-none"
+                style={{ background: 'linear-gradient(to right, #020617, transparent)' }} />
+              <div className="absolute right-0 top-0 bottom-0 w-8 z-10 pointer-events-none"
+                style={{ background: 'linear-gradient(to left, #020617, transparent)' }} />
 
-            {gridMovies.length > 0 && (
               <motion.div
-                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
-                variants={staggerContainer(0.06)}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true, margin: '-60px' }}
+                ref={nowShowingCarouselRef}
+                drag="x"
+                dragConstraints={{ right: 0, left: -(nowShowing.length * 224) }}
+                dragTransition={{ bounceStiffness: 300, bounceDamping: 30 }}
+                whileDrag={{ cursor: 'grabbing' }}
+                className="flex gap-4 cursor-grab pb-4"
+                style={{ touchAction: 'pan-y' }}
               >
-                {gridMovies.map(m => <MovieCard key={m.id} movie={m} />)}
+                {nowShowing.map(m => <NowShowingCard key={m.id} movie={m} />)}
               </motion.div>
-            )}
+            </div>
+
+            <p className="text-center text-dark-600 text-xs mt-1">← Kéo để xem thêm →</p>
           </motion.section>
         )}
 
