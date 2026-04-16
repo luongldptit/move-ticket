@@ -58,9 +58,7 @@ public class ReviewServiceImpl implements ReviewService {
             throw new ConflictException("Bạn đã đánh giá phim này rồi");
         }
 
-        if (!bookingRepository.hasCompletedBookingForMovie(currentUser.getId(), movieId, Booking.BookingStatus.CONFIRMED, java.time.LocalDateTime.now())) {
-            throw new BusinessException("Chỉ có thể đánh giá sau khi suất chiếu đã kết thúc");
-        }
+        // Removed checking for completed booking to allow reviewing at any status
 
         try {
             Review review = Review.builder()
