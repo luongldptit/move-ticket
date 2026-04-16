@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import ReviewList from '../../components/reviews/ReviewList'
-import { KEYFRAMES } from '../../utils/animations'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useParams, useNavigate } from 'react-router-dom'
 import { movieApi } from '../../api/movieApi'
 import { cinemaApi } from '../../api/cinemaApi'
@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { setCurrentShowtime } from '../../store/slices/bookingSlice'
 import { PageLoader } from '../../components/common/Spinner'
 import { AGE_RATING, MOVIE_STATUS, formatDate, formatTime, formatPrice, getNextNDays, formatDayLabel } from '../../utils/helpers'
+import { fadeUp, fadeLeft, fadeRight, scaleIn, staggerContainer, staggerItem, spring, easeOut } from '../../utils/motion'
 import { toast } from 'react-toastify'
 
 export default function MovieDetailPage() {
@@ -25,7 +26,6 @@ export default function MovieDetailPage() {
   const [stLoading, setStLoading] = useState(false)
   const [showTrailer, setShowTrailer] = useState(false)
   const [daysWithShowtimes, setDaysWithShowtimes] = useState(new Set())
-  const [heroLoaded, setHeroLoaded] = useState(false)
 
   const getYoutubeEmbedUrl = useCallback((url) => {
     if (!url) return null
@@ -42,10 +42,7 @@ export default function MovieDetailPage() {
     movieApi.getMovieById(id)
       .then(r => setMovie(r.data.data))
       .catch(() => navigate('/movies'))
-      .finally(() => {
-        setLoading(false)
-        setTimeout(() => setHeroLoaded(true), 100)
-      })
+      .finally(() => setLoading(false))
     cinemaApi.getCinemas().then(r => setCinemas(r.data.data || []))
   }, [id])
 
@@ -105,8 +102,10 @@ export default function MovieDetailPage() {
   }, {})
 
   return (
-    <div className="min-h-screen pt-20">
-      <style>{KEYFRAMES}</style>
+    <motion.div
+      className="min-h-screen pt-20"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
+    >
       {/* Hero / Banner */}
       <div className="relative">
         {/* Blurred backdrop */}
@@ -119,25 +118,25 @@ export default function MovieDetailPage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex flex-col md:flex-row gap-8">
             {/* Poster */}
-            <div className="flex-shrink-0 w-48 md:w-64 mx-auto md:mx-0" style={{
-              opacity: heroLoaded ? 1 : 0,
-              transform: heroLoaded ? 'none' : 'translateX(-30px) scale(0.95)',
-              transition: 'opacity 0.8s ease-out, transform 0.8s ease-out',
-            }}>
-              <img
+            <motion.div
+              className="flex-shrink-0 w-48 md:w-64 mx-auto md:mx-0"
+              variants={fadeLeft} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.1 }}
+            >
+              <motion.img
                 src={movie.posterUrl || 'https://placehold.co/256x384/1e293b/94a3b8?text=No+Poster'}
                 alt={movie.title}
-                className="w-full rounded-2xl shadow-2xl shadow-black/50"
+                className="w-full rounded-2xl"
                 style={{ boxShadow: '0 25px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05)' }}
+                whileHover={{ scale: 1.03 }}
+                transition={spring}
               />
-            </div>
+            </motion.div>
 
             {/* Info */}
-            <div className="flex-1" style={{
-              opacity: heroLoaded ? 1 : 0,
-              transform: heroLoaded ? 'none' : 'translateX(30px)',
-              transition: 'opacity 0.8s ease-out 0.15s, transform 0.8s ease-out 0.15s',
-            }}>
+            <motion.div
+              className="flex-1"
+              variants={fadeRight} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.18 }}
+            >
               <div className="flex items-center gap-3 flex-wrap mb-3">
                 <span className={`${rating.color} text-white text-sm font-bold px-3 py-1 rounded-lg`} title={rating.title}>
                   {rating.label}
@@ -185,24 +184,22 @@ export default function MovieDetailPage() {
 
               {/* Trailer */}
               {movie.trailerUrl && (
-                <button
+                <motion.button
                   onClick={() => setShowTrailer(true)}
+                  whileHover={{ scale: 1.06, y: -2 }} whileTap={{ scale: 0.95 }}
+                  animate={{ boxShadow: ['0 4px 16px rgba(225,29,72,0.3)', '0 4px 28px rgba(225,29,72,0.6)', '0 4px 16px rgba(225,29,72,0.3)'] }}
+                  transition={{ duration: 2.5, repeat: Infinity }}
                   style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 8,
-                    marginTop: 16,
+                    display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 16,
                     background: 'linear-gradient(135deg, #e11d48, #be123c)',
-                    color: '#fff', border: 'none', padding: '10px 20px',
+                    color: '#fff', border: 'none', padding: '11px 22px',
                     borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                    boxShadow: '0 4px 20px rgba(225,29,72,0.4)',
-                    transition: 'all 0.2s', animation: 'glowPulse 3s ease-in-out infinite',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(225,29,72,0.6)' }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 20px rgba(225,29,72,0.4)' }}
                 >
                   ▶ Xem trailer
-                </button>
+                </motion.button>
               )}
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
@@ -273,38 +270,29 @@ export default function MovieDetailPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  {sts.map((st, stIdx) => (
-                    <button
+                <motion.div
+                  className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3"
+                  variants={staggerContainer(0.05)} initial="hidden" animate="show"
+                >
+                  {sts.map(st => (
+                    <motion.button
                       key={st.id}
+                      variants={staggerItem}
+                      whileHover={{ y: -4, borderColor: '#fb7185', background: 'rgba(244,63,94,0.08)', boxShadow: '0 8px 24px rgba(244,63,94,0.25)' }}
+                      whileTap={{ scale: 0.96 }}
                       onClick={() => handleBookShowtime(st)}
                       style={{
                         border: '1.5px solid rgba(51,65,85,0.7)',
                         background: 'rgba(15,23,42,0.8)',
-                        borderRadius: 14, padding: 12, textAlign: 'left',
-                        cursor: 'pointer', transition: 'all 0.25s',
-                        animation: 'fadeSlideUp 0.4s ease-out both',
-                        animationDelay: `${stIdx * 50}ms`,
-                      }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.borderColor = '#fb7185'
-                        e.currentTarget.style.background = 'rgba(244,63,94,0.08)'
-                        e.currentTarget.style.transform = 'translateY(-3px)'
-                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(244,63,94,0.2)'
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.borderColor = 'rgba(51,65,85,0.7)'
-                        e.currentTarget.style.background = 'rgba(15,23,42,0.8)'
-                        e.currentTarget.style.transform = ''
-                        e.currentTarget.style.boxShadow = ''
+                        borderRadius: 14, padding: 12, textAlign: 'left', cursor: 'pointer',
                       }}
                     >
                       <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{formatTime(st.startTime)}</div>
                       <div style={{ color: '#64748b', fontSize: 11, marginTop: 2 }}>{st.room?.type} · {st.room?.name}</div>
                       <div style={{ color: '#fb7185', fontSize: 11, marginTop: 4, fontWeight: 600 }}>từ {formatPrice(st.priceStandard)}</div>
-                    </button>
+                    </motion.button>
                   ))}
-                </div>
+                </motion.div>
               </div>
             ))
           )}
@@ -315,33 +303,41 @@ export default function MovieDetailPage() {
       <ReviewList movieId={parseInt(id)} />
 
       {/* Trailer Modal */}
-      {showTrailer && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4"
-          onClick={() => setShowTrailer(false)}
-        >
-          <div
-            className="relative w-full max-w-3xl"
-            onClick={e => e.stopPropagation()}
+      <AnimatePresence>
+        {showTrailer && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setShowTrailer(false)}
           >
-            <button
-              onClick={() => setShowTrailer(false)}
-              className="absolute -top-10 right-0 text-white/70 hover:text-white text-sm flex items-center gap-1"
+            <motion.div
+              className="relative w-full max-w-3xl"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={spring}
+              onClick={e => e.stopPropagation()}
             >
-              ✕ Đóng
-            </button>
-            <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl" style={{ paddingTop: '56.25%' }}>
-              <iframe
-                className="absolute inset-0 w-full h-full"
-                src={getYoutubeEmbedUrl(movie.trailerUrl)}
-                title={`Trailer - ${movie.title}`}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+              <motion.button
+                onClick={() => setShowTrailer(false)}
+                whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                className="absolute -top-10 right-0 text-white/70 hover:text-white text-sm flex items-center gap-1"
+              >
+                ✕ Đóng
+              </motion.button>
+              <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl" style={{ paddingTop: '56.25%' }}>
+                <iframe
+                  className="absolute inset-0 w-full h-full"
+                  src={getYoutubeEmbedUrl(movie.trailerUrl)}
+                  title={`Trailer - ${movie.title}`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   )
 }
