@@ -10,7 +10,9 @@
       "Bash(findstr :8080)",
       "Bash(taskkill *)",
       "Bash(cmd *)",
-      "Bash(powershell *)"
+      "Bash(powershell *)",
+      "Bash(./mvnw compile *)",
+      "Bash(mvn compile *)"
     ]
   }
 }
