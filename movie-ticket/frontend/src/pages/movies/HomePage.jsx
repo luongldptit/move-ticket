@@ -131,62 +131,45 @@ function TiltPoster({ movie }) {
   )
 }
 
-/* ─── Featured Trailer (fallback to TiltPoster) ─── */
-function FeaturedTrailer({ movie }) {
+/* ─── Hero Cinematic Background ─── */
+function HeroBackground({ movie }) {
   const videoId = movie?.trailerUrl?.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/)?.[1]
-  
-  if (!videoId) return <TiltPoster movie={movie} />
 
-  const rating = AGE_RATING[movie?.ageRating] || { label: movie?.ageRating || 'P', color: 'bg-green-600' }
+  if (videoId) {
+    return (
+      <div className="absolute inset-0 z-0 overflow-hidden bg-black pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 w-[110vw] h-[110vh] min-w-[177vh] min-h-[56.25vw]"
+             style={{ transform: 'translate(-50%, -50%)', opacity: 0.6 }}>
+          <iframe
+            className="w-full h-full rounded-none"
+            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&showinfo=0&rel=0&modestbranding=1&disablekb=1`}
+            title="Background Trailer"
+            allow="autoplay; encrypted-media"
+            style={{ border: 'none' }}
+          />
+        </div>
+        {/* Gradients to fade out the video towards the edges and bottom */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#020617] via-[#020617]/70 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020617]/40 via-transparent to-[#020617]" />
+        <div className="absolute inset-0 bg-gradient-to-l from-[#020617]/80 via-transparent to-transparent" />
+      </div>
+    )
+  }
+
+  if (movie?.posterUrl) {
+    return (
+      <div className="absolute inset-0 z-0 overflow-hidden bg-[#020617] pointer-events-none">
+        <img src={movie.posterUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" style={{ filter: 'blur(12px)' }} />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#020617] via-[#020617]/80 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020617]/40 via-transparent to-[#020617]" />
+      </div>
+    )
+  }
 
   return (
-    <motion.div
-      className="relative w-full max-w-[480px] lg:max-w-[560px] mx-auto group"
-      whileHover={{ y: -4 }}
-      transition={spring}
-    >
-      <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-black border border-dark-700" style={{ paddingTop: '56.25%' }}>
-        <iframe
-          className="absolute inset-0 w-full h-full"
-          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&showinfo=0&rel=0`}
-          title={`Trailer - ${movie.title}`}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          style={{ border: 'none', pointerEvents: 'none' }} 
-        />
-        {/* Overlay gradient so text is readable if overlayed, and adds premium feel */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
-        
-        {/* Play button overlay that appears on hover to actually open full trailer or just visual polish */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-           <Link to={`/movies/${movie.id}`} className="w-16 h-16 flex items-center justify-center rounded-full bg-primary-600/80 text-white backdrop-blur-md scale-90 group-hover:scale-100 transition-transform shadow-lg shadow-primary-500/50">
-             ▶
-           </Link>
-        </div>
-
-        {/* Movie Info Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-none">
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className={`${rating.color} text-white text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shadow`}>{rating.label}</span>
-            {movie?.genres?.slice(0, 2).map((g, i) => (
-              <span key={i} className="text-[10px] text-gray-200 bg-black/40 px-1.5 py-0.5 rounded backdrop-blur border border-white/10 uppercase tracking-widest">
-                {typeof g === 'string' ? g : g.name}
-              </span>
-            ))}
-          </div>
-          <div className="text-white font-bold text-lg line-clamp-1 leading-snug drop-shadow-md">{movie?.title}</div>
-        </div>
-      </div>
-      
-      {/* Outer glow */}
-      <div style={{
-        position: 'absolute', inset: -20,
-        background: 'radial-gradient(ellipse, rgba(225,29,72,0.18) 0%, transparent 65%)',
-        filter: 'blur(20px)', zIndex: -1,
-      }} />
-      {/* Border glow */}
-      <div className="absolute inset-0 rounded-2xl ring-1 ring-primary-500/20 group-hover:ring-primary-500/50 pointer-events-none transition-all duration-300" />
-    </motion.div>
+    <div className="absolute inset-0 z-0 pointer-events-none" style={{
+      background: 'radial-gradient(ellipse 130% 90% at 30% 0%, #1e1038 0%, #0f172a 50%, #020617 100%)',
+    }} />
   )
 }
 
@@ -490,21 +473,13 @@ export default function HomePage() {
         className="relative overflow-hidden flex items-center"
         style={{ minHeight: '92vh', paddingTop: 80 }}
       >
-        {/* Background */}
-        <div className="absolute inset-0" style={{
-          background: 'radial-gradient(ellipse 130% 90% at 30% 0%, #1e1038 0%, #0f172a 50%, #020617 100%)',
-        }} />
-
-        {/* Film grain */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          backgroundSize: '200px 200px',
-        }} />
-
-        {/* Grid lines */}
-        <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: 'linear-gradient(rgba(244,63,94,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(244,63,94,0.03) 1px, transparent 1px)',
-          backgroundSize: '64px 64px',
+        {/* Background Film/Trailer */}
+        <HeroBackground movie={featuredMovie} />
+        
+        {/* Grid lines (optional texture over background) */}
+        <div className="absolute inset-0 pointer-events-none z-0" style={{
+          backgroundImage: 'linear-gradient(rgba(244,63,94,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(244,63,94,0.015) 1px, transparent 1px)',
+          backgroundSize: '80px 80px',
         }} />
 
         {/* Orbs */}
@@ -650,18 +625,18 @@ export default function HomePage() {
               </motion.div>
             </div>
 
-            {/* Right: Featured poster with tilt / trailer */}
+            {/* Right: Featured poster with tilt */}
             <motion.div
               variants={fadeLeft}
               initial="hidden"
               animate="show"
               transition={{ ...easeOut, delay: 0.15 }}
-              className="flex-shrink-0 w-full lg:w-[480px] xl:w-[540px] mt-8 lg:mt-0"
+              className="flex-shrink-0 lg:w-[340px] xl:w-[380px] mt-10 lg:mt-0 z-10"
             >
               {featuredMovie ? (
-                <FeaturedTrailer movie={featuredMovie} />
+                <TiltPoster movie={featuredMovie} />
               ) : (
-                <div className="w-[480px] aspect-video rounded-2xl bg-dark-800 border border-dark-700 mx-auto" />
+                <div className="w-[280px] aspect-[2/3] rounded-2xl bg-dark-800 border border-dark-700 mx-auto" />
               )}
               {featuredMovie && (
                 <motion.div
@@ -671,8 +646,8 @@ export default function HomePage() {
                   transition={{ ...easeOut, delay: 0.32 }}
                   className="mt-4 text-center"
                 >
-                  <span className="text-dark-500 text-xs">Đang chiếu • </span>
-                  <Link to={`/movies/${featuredMovie.id}`} className="text-primary-400 text-xs font-semibold hover:text-primary-300 transition-colors">
+                  <span className="text-dark-400 text-xs shadow-black drop-shadow-md">Đang chiếu • </span>
+                  <Link to={`/movies/${featuredMovie.id}`} className="text-primary-400 text-xs font-semibold hover:text-primary-300 transition-colors shadow-black drop-shadow-md">
                     {featuredMovie.title}
                   </Link>
                 </motion.div>
