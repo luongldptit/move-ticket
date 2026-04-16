@@ -119,3 +119,24 @@ export const formatDayLabel = (dateStr) => {
 export const getErrorMessage = (error) => {
   return error?.response?.data?.message || error?.message || 'Có lỗi xảy ra, vui lòng thử lại'
 }
+
+/**
+ * Check if a JWT token is expired (client-side, no crypto)
+ * Returns true if token is missing or expired
+ */
+export const isTokenExpired = (token) => {
+  if (!token) return true
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    // exp is in seconds, Date.now() is ms
+    return payload.exp * 1000 < Date.now()
+  } catch {
+    return true
+  }
+}
+
+/**
+ * Returns true only if token exists AND is not expired
+ */
+export const isTokenAlive = (token) => !isTokenExpired(token)
+

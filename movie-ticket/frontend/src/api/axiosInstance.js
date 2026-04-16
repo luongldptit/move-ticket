@@ -8,7 +8,7 @@ const axiosInstance = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Request interceptor — attach JWT
+// Request interceptor — attach JWT only if token alive
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
@@ -20,13 +20,20 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-// Response interceptor — handle 401
+// Response interceptor — on 401: silently logout (guest mode), no redirect
+// Components that need auth should check isAuthenticated before calling API
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      store.dispatch(logout())
-      window.location.href = '/login'
+      const errorCode = error.response?.data?.errorCode
+
+      if (errorCode === 'TOKEN_EXPIRED' || errorCode === 'TOKEN_INVALID') {
+        // Token invalid/expired → clear credentials silently, become guest
+        store.dispatch(logout())
+      }
+      // For UNAUTHORIZED (no token) we do nothing — component should have
+      // already guarded the call with isAuthenticated check
     }
     return Promise.reject(error)
   }

@@ -1,16 +1,24 @@
 import { createSlice } from '@reduxjs/toolkit'
+import { isTokenAlive } from '../../utils/helpers'
 
 const tokenFromStorage = localStorage.getItem('token')
 const userFromStorage = localStorage.getItem('user')
   ? JSON.parse(localStorage.getItem('user'))
   : null
 
+// If stored token is expired, clear it immediately — user is guest
+const validToken = isTokenAlive(tokenFromStorage) ? tokenFromStorage : null
+if (!validToken && tokenFromStorage) {
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+}
+
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
-    user: userFromStorage,
-    token: tokenFromStorage,
-    isAuthenticated: !!tokenFromStorage,
+    user: validToken ? userFromStorage : null,
+    token: validToken,
+    isAuthenticated: !!validToken,
   },
   reducers: {
     setCredentials: (state, action) => {
