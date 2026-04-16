@@ -1,21 +1,21 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from 'framer-motion'
 import { movieApi } from '../../api/movieApi'
 import { PageLoader } from '../../components/common/Spinner'
 import { MOVIE_STATUS, AGE_RATING, formatDate } from '../../utils/helpers'
 import {
-  fadeUp, fadeIn, fadeLeft, fadeRight, scaleIn, slideDown,
+  fadeUp, fadeLeft, fadeRight, scaleIn,
   staggerContainer, staggerItem, spring, easeOut,
 } from '../../utils/motion'
 
-/* ─── Floating orb (background decoration) ─── */
+/* ─── Background orb ─── */
 function Orb({ style }) {
   return (
     <motion.div
       style={style}
-      animate={{ y: [0, -28, 12, 0], x: [0, 14, -10, 0], scale: [1, 1.06, 0.96, 1] }}
-      transition={{ duration: 14 + Math.random() * 6, repeat: Infinity, ease: 'easeInOut' }}
+      animate={{ y: [0, -24, 10, 0], x: [0, 12, -8, 0], scale: [1, 1.05, 0.97, 1] }}
+      transition={{ duration: 16 + Math.random() * 6, repeat: Infinity, ease: 'easeInOut' }}
     />
   )
 }
@@ -43,7 +43,177 @@ function AnimatedCounter({ target }) {
   return <>{count}{isK ? 'K' : ''}{hasPlus ? '+' : ''}</>
 }
 
-/* ─── Movie card ─── */
+/* ─── Days until release ─── */
+function DaysUntil({ dateStr }) {
+  if (!dateStr) return null
+  const days = Math.ceil((new Date(dateStr) - new Date()) / 86400000)
+  if (days <= 0) return <span className="text-green-400 text-xs font-semibold">Đang chiếu</span>
+  return <span className="text-primary-400 text-xs font-semibold">{days} ngày nữa</span>
+}
+
+/* ─── Tilt poster (hero right panel) ─── */
+function TiltPoster({ movie }) {
+  const ref = useRef(null)
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const rotateX = useSpring(useTransform(y, [-1, 1], [12, -12]), { stiffness: 200, damping: 20 })
+  const rotateY = useSpring(useTransform(x, [-1, 1], [-12, 12]), { stiffness: 200, damping: 20 })
+  const glowX = useTransform(x, [-1, 1], ['0%', '100%'])
+  const glowY = useTransform(y, [-1, 1], ['0%', '100%'])
+
+  const handleMove = (e) => {
+    if (!ref.current) return
+    const rect = ref.current.getBoundingClientRect()
+    x.set(((e.clientX - rect.left) / rect.width) * 2 - 1)
+    y.set(((e.clientY - rect.top) / rect.height) * 2 - 1)
+  }
+  const handleLeave = () => { x.set(0); y.set(0) }
+
+  const rating = AGE_RATING[movie?.ageRating] || { label: movie?.ageRating || 'P', color: 'bg-green-600' }
+  const posterUrl = movie?.posterUrl || 'https://placehold.co/400x600/1e293b/94a3b8?text=No+Poster'
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMove}
+      onMouseLeave={handleLeave}
+      style={{ perspective: 800 }}
+      className="relative w-full max-w-[280px] lg:max-w-[320px] mx-auto"
+    >
+      <motion.div
+        style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
+        className="relative rounded-2xl overflow-hidden shadow-2xl"
+      >
+        <img
+          src={posterUrl}
+          alt={movie?.title || ''}
+          className="w-full object-cover"
+          style={{ aspectRatio: '2/3', display: 'block' }}
+        />
+        {/* Dynamic light glare */}
+        <motion.div
+          style={{
+            position: 'absolute', inset: 0, pointerEvents: 'none',
+            background: `radial-gradient(circle at ${glowX} ${glowY}, rgba(255,255,255,0.14) 0%, transparent 60%)`,
+          }}
+        />
+        {/* Bottom gradient */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)',
+          padding: '24px 16px 16px',
+        }}>
+          <div className="flex items-center gap-2 mb-1">
+            <span className={`${rating.color} text-white text-xs font-bold px-2 py-0.5 rounded`}>{rating.label}</span>
+            {movie?.genres?.slice(0, 2).map((g, i) => (
+              <span key={i} className="text-xs text-dark-300 bg-white/10 px-2 py-0.5 rounded backdrop-blur-sm">
+                {typeof g === 'string' ? g : g.name}
+              </span>
+            ))}
+          </div>
+          <div className="text-white font-bold text-sm line-clamp-2 leading-snug">{movie?.title}</div>
+        </div>
+        {/* Border glow */}
+        <div style={{
+          position: 'absolute', inset: 0, borderRadius: 16,
+          boxShadow: 'inset 0 0 0 1px rgba(244,63,94,0.25)',
+          pointerEvents: 'none',
+        }} />
+      </motion.div>
+      {/* Outer glow */}
+      <div style={{
+        position: 'absolute', inset: -20,
+        background: 'radial-gradient(ellipse, rgba(244,63,94,0.22) 0%, transparent 70%)',
+        filter: 'blur(20px)', zIndex: -1,
+      }} />
+    </motion.div>
+  )
+}
+
+/* ─── Spotlight card (first now-showing movie) ─── */
+function SpotlightCard({ movie }) {
+  const status = MOVIE_STATUS[movie.status] || {}
+  const rating = AGE_RATING[movie.ageRating] || { label: movie.ageRating, color: 'bg-dark-600' }
+
+  return (
+    <motion.div
+      variants={fadeUp}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, margin: '-60px' }}
+      transition={easeOut}
+      className="mb-6"
+    >
+      <Link to={`/movies/${movie.id}`} className="block group">
+        <motion.div
+          whileHover={{ y: -3 }}
+          transition={spring}
+          className="relative rounded-2xl overflow-hidden border border-dark-700/60 bg-dark-900"
+          style={{ display: 'grid', gridTemplateColumns: '200px 1fr' }}
+        >
+          <div className="relative overflow-hidden" style={{ maxHeight: 260 }}>
+            <motion.img
+              src={movie.posterUrl || 'https://placehold.co/200x300/1e293b/94a3b8?text=No+Poster'}
+              alt={movie.title}
+              className="w-full h-full object-cover"
+              style={{ aspectRatio: '2/3' }}
+              whileHover={{ scale: 1.06 }}
+              transition={{ duration: 0.5 }}
+            />
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(to right, transparent 60%, rgba(2,6,23,0.95) 100%)',
+            }} />
+          </div>
+          <div className="p-6 flex flex-col justify-center relative">
+            <div style={{
+              position: 'absolute', left: 0, top: 0, bottom: 0, width: 80,
+              background: 'linear-gradient(to right, rgba(2,6,23,0.95), transparent)',
+              pointerEvents: 'none',
+            }} />
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
+              <span className="text-xs font-bold text-primary-400 bg-primary-500/10 border border-primary-500/20 px-2 py-0.5 rounded-full">
+                ⭐ Nổi bật
+              </span>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${status.color}`}>{status.label}</span>
+              <span className={`${rating.color} text-white text-xs font-bold px-2 py-0.5 rounded`}>{rating.label}</span>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2 group-hover:text-primary-300 transition-colors line-clamp-2">
+              {movie.title}
+            </h3>
+            {movie.genres?.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {movie.genres.slice(0, 3).map((g, i) => (
+                  <span key={i} className="text-xs bg-dark-800 text-dark-300 px-2 py-0.5 rounded-full">
+                    {typeof g === 'string' ? g : g.name}
+                  </span>
+                ))}
+              </div>
+            )}
+            {movie.description && (
+              <p className="text-dark-400 text-sm leading-relaxed line-clamp-2 mb-4">{movie.description}</p>
+            )}
+            <div className="flex items-center gap-4 text-sm text-dark-400 mb-4">
+              <span>{movie.duration} phút</span>
+              {movie.director && (
+                <span>Đạo diễn: <span className="text-dark-300">{movie.director}</span></span>
+              )}
+            </div>
+            <motion.span
+              whileHover={{ scale: 1.04, x: 4 }}
+              transition={spring}
+              className="btn-primary px-5 py-2.5 text-sm w-fit"
+            >
+              🎬 Đặt vé ngay →
+            </motion.span>
+          </div>
+        </motion.div>
+      </Link>
+    </motion.div>
+  )
+}
+
+/* ─── Standard movie card ─── */
 function MovieCard({ movie }) {
   const status = MOVIE_STATUS[movie.status] || {}
   const rating = AGE_RATING[movie.ageRating] || { label: movie.ageRating, color: 'bg-dark-600' }
@@ -56,45 +226,26 @@ function MovieCard({ movie }) {
           variants={{ hover: { y: -6, boxShadow: '0 20px 50px rgba(0,0,0,0.6), 0 0 0 1px rgba(244,63,94,0.2)' } }}
           transition={spring}
         >
-          {/* Poster */}
           <div className="relative overflow-hidden aspect-[2/3]">
             <motion.img
               src={movie.posterUrl || 'https://placehold.co/300x450/1e293b/94a3b8?text=No+Poster'}
               alt={movie.title}
               className="w-full h-full object-cover"
-              variants={{ hover: { scale: 1.1 } }}
-              transition={{ duration: 0.6, ease: 'easeOut' }}
+              variants={{ hover: { scale: 1.08 } }}
+              transition={{ duration: 0.55, ease: 'easeOut' }}
             />
-            {/* Overlay */}
             <motion.div
-              className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"
+              className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"
               initial={{ opacity: 0 }}
               variants={{ hover: { opacity: 1 } }}
               transition={{ duration: 0.3 }}
             />
-            {/* Shimmer */}
-            <motion.div
-              className="absolute inset-0 pointer-events-none"
-              variants={{ hover: { opacity: 1 } }}
-              initial={{ opacity: 0 }}
-            >
-              <motion.div
-                style={{
-                  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                  background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)',
-                }}
-                variants={{ hover: { x: ['−100%', '200%'] } }}
-                transition={{ duration: 0.7, ease: 'easeInOut' }}
-              />
-            </motion.div>
-            {/* Badges */}
             <div className={`absolute top-2 left-2 ${rating.color} text-white text-xs font-bold px-2 py-0.5 rounded shadow`}>
               {rating.label}
             </div>
             <div className={`absolute top-2 right-2 ${status.color} text-xs font-semibold px-2 py-1 rounded-full`}>
               {status.label}
             </div>
-            {/* CTA */}
             <motion.div
               className="absolute bottom-0 left-0 right-0 p-3"
               initial={{ y: '100%' }}
@@ -106,8 +257,6 @@ function MovieCard({ movie }) {
               </div>
             </motion.div>
           </div>
-
-          {/* Info */}
           <div className="p-3">
             <h3 className="font-semibold text-white text-sm line-clamp-2 leading-tight group-hover:text-primary-400 transition-colors">
               {movie.title}
@@ -132,32 +281,148 @@ function MovieCard({ movie }) {
   )
 }
 
-/* ─── Stat item ─── */
-function StatItem({ num, label, icon, delay }) {
+/* ─── Coming soon card (carousel) ─── */
+function ComingSoonCard({ movie }) {
+  const rating = AGE_RATING[movie.ageRating] || { label: movie.ageRating, color: 'bg-dark-600' }
+
   return (
     <motion.div
-      variants={fadeUp}
-      transition={{ ...easeOut, delay }}
-      className="text-center"
+      whileHover={{ y: -6 }}
+      whileTap={{ scale: 0.97 }}
+      transition={spring}
+      className="flex-shrink-0 w-44 sm:w-52"
+      style={{ userSelect: 'none' }}
     >
-      <div className="text-2xl mb-1">{icon}</div>
-      <div className="text-2xl font-black text-primary-400">
-        <AnimatedCounter target={num} />
-      </div>
-      <div className="text-dark-500 text-xs mt-1">{label}</div>
+      <Link to={`/movies/${movie.id}`} className="block group">
+        <div className="relative rounded-xl overflow-hidden mb-3 border border-dark-700/50" style={{ aspectRatio: '2/3' }}>
+          <img
+            src={movie.posterUrl || 'https://placehold.co/208x312/1e293b/94a3b8?text=No+Poster'}
+            alt={movie.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            draggable={false}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+          <div className="absolute top-2 left-2 right-2 flex justify-between items-start">
+            <span className={`${rating.color} text-white text-xs font-bold px-2 py-0.5 rounded shadow`}>{rating.label}</span>
+            <span className="bg-dark-900/80 backdrop-blur-sm text-xs px-2 py-0.5 rounded-full border border-dark-700/50">
+              <DaysUntil dateStr={movie.releaseDate} />
+            </span>
+          </div>
+          {movie.releaseDate && (
+            <div className="absolute bottom-0 left-0 right-0 p-3">
+              <div className="text-dark-300 text-xs flex items-center gap-1">
+                <svg className="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                {formatDate(movie.releaseDate)}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="px-1">
+          <h3 className="font-semibold text-white text-sm line-clamp-2 leading-snug group-hover:text-primary-400 transition-colors mb-1">
+            {movie.title}
+          </h3>
+          {movie.genres?.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {movie.genres.slice(0, 2).map((g, i) => (
+                <span key={i} className="text-xs bg-dark-800 text-dark-400 px-2 py-0.5 rounded">
+                  {typeof g === 'string' ? g : g.name}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </Link>
     </motion.div>
   )
 }
 
+/* ─── Section header ─── */
+function SectionHeader({ title, subtitle, accentColor, linkTo, linkLabel }) {
+  return (
+    <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center gap-4">
+        <motion.div
+          style={{ width: 3, height: 32, borderRadius: 4, background: accentColor }}
+          animate={{
+            boxShadow: [`0 0 6px ${accentColor}50`, `0 0 18px ${accentColor}80`, `0 0 6px ${accentColor}50`],
+          }}
+          transition={{ duration: 2.5, repeat: Infinity }}
+        />
+        <div>
+          <h2 className="text-xl font-bold text-white">{title}</h2>
+          {subtitle && <p className="text-dark-500 text-xs mt-0.5">{subtitle}</p>}
+        </div>
+      </div>
+      {linkTo && (
+        <motion.div whileHover={{ x: 3 }} transition={spring}>
+          <Link to={linkTo} className="text-sm font-medium text-dark-400 hover:text-white transition-colors flex items-center gap-1">
+            {linkLabel} <span>→</span>
+          </Link>
+        </motion.div>
+      )}
+    </div>
+  )
+}
+
+/* ─── Features data ─── */
+const FEATURES = [
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+      </svg>
+    ),
+    title: 'Đặt vé siêu nhanh',
+    desc: 'Chọn ghế & thanh toán chỉ trong 60 giây',
+    bg: 'rgba(251,113,133,0.1)', border: 'rgba(251,113,133,0.2)', color: '#fb7185',
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
+      </svg>
+    ),
+    title: 'QR code tức thì',
+    desc: 'Nhận vé điện tử ngay sau khi thanh toán',
+    bg: 'rgba(168,85,247,0.1)', border: 'rgba(168,85,247,0.2)', color: '#a855f7',
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+      </svg>
+    ),
+    title: 'Bảo mật tuyệt đối',
+    desc: 'Thông tin được mã hóa SSL an toàn',
+    bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.2)', color: '#22c55e',
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+      </svg>
+    ),
+    title: 'Ưu đãi hấp dẫn',
+    desc: 'Nhiều mã giảm giá và combo hot mỗi tuần',
+    bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.2)', color: '#fbbf24',
+  },
+]
+
+/* ═══════════════════════════════════════════ */
 export default function HomePage() {
   const [nowShowing, setNowShowing] = useState([])
   const [comingSoon, setComingSoon] = useState([])
   const [loading, setLoading] = useState(true)
+  const carouselRef = useRef(null)
 
   useEffect(() => {
     Promise.all([
       movieApi.getNowShowing({ size: 8 }),
-      movieApi.getComingSoon({ size: 6 }),
+      movieApi.getComingSoon({ size: 8 }),
     ]).then(([nsRes, csRes]) => {
       const ns = nsRes.data.data
       const cs = csRes.data.data
@@ -168,6 +433,9 @@ export default function HomePage() {
 
   if (loading) return <PageLoader />
 
+  const featuredMovie = nowShowing[0] || null
+  const gridMovies = nowShowing.slice(1, 7)
+
   return (
     <motion.div
       className="min-h-screen"
@@ -176,191 +444,232 @@ export default function HomePage() {
       transition={{ duration: 0.4 }}
     >
 
-      {/* ─── HERO ─── */}
-      <section className="relative overflow-hidden min-h-[88vh] flex items-center" style={{ paddingTop: 80 }}>
-
-        {/* BG gradient */}
+      {/* ═══ HERO — Split Layout ═══ */}
+      <section
+        className="relative overflow-hidden flex items-center"
+        style={{ minHeight: '92vh', paddingTop: 80 }}
+      >
+        {/* Background */}
         <div className="absolute inset-0" style={{
-          background: 'radial-gradient(ellipse 120% 100% at 50% 0%, #1e1b4b 0%, #0f172a 55%, #020617 100%)',
+          background: 'radial-gradient(ellipse 130% 90% at 30% 0%, #1e1038 0%, #0f172a 50%, #020617 100%)',
         }} />
 
-        {/* Floating orbs */}
+        {/* Film grain */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          backgroundSize: '200px 200px',
+        }} />
+
+        {/* Grid lines */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          backgroundImage: 'linear-gradient(rgba(244,63,94,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(244,63,94,0.03) 1px, transparent 1px)',
+          backgroundSize: '64px 64px',
+        }} />
+
+        {/* Orbs */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <Orb style={{
-            position: 'absolute', top: '12%', left: '5%', width: 520, height: 520,
-            background: 'radial-gradient(circle, rgba(244,63,94,0.18) 0%, transparent 70%)',
-            borderRadius: '50%', filter: 'blur(45px)',
+            position: 'absolute', top: '5%', left: '-5%', width: 560, height: 560,
+            background: 'radial-gradient(circle, rgba(225,29,72,0.16) 0%, transparent 70%)',
+            borderRadius: '50%', filter: 'blur(50px)',
           }} />
           <Orb style={{
-            position: 'absolute', top: '38%', right: '5%', width: 380, height: 380,
-            background: 'radial-gradient(circle, rgba(139,92,246,0.16) 0%, transparent 70%)',
-            borderRadius: '50%', filter: 'blur(55px)',
+            position: 'absolute', top: '45%', right: '-8%', width: 420, height: 420,
+            background: 'radial-gradient(circle, rgba(124,58,237,0.14) 0%, transparent 70%)',
+            borderRadius: '50%', filter: 'blur(60px)',
           }} />
-          <Orb style={{
-            position: 'absolute', bottom: '8%', left: '28%', width: 300, height: 300,
-            background: 'radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%)',
-            borderRadius: '50%', filter: 'blur(65px)',
-          }} />
-          {/* Scatter particles */}
-          {[...Array(8)].map((_, i) => (
-            <motion.div
-              key={i}
-              style={{
-                position: 'absolute',
-                left: `${8 + i * 12}%`,
-                top: `${18 + (i % 3) * 22}%`,
-                width: 4 + (i % 3) * 2,
-                height: 4 + (i % 3) * 2,
-                borderRadius: '50%',
-                background: i % 2 === 0 ? 'rgba(244,63,94,0.65)' : 'rgba(139,92,246,0.65)',
-              }}
-              animate={{ y: [0, -22, 0], rotate: [0, 180, 360] }}
-              transition={{ duration: 4 + i * 0.7, repeat: Infinity, delay: i * 0.3, ease: 'easeInOut' }}
-            />
-          ))}
-          {/* Scan line */}
           <motion.div
             style={{
               position: 'absolute', left: 0, right: 0, height: 1,
-              background: 'linear-gradient(90deg, transparent, rgba(244,63,94,0.4), transparent)',
+              background: 'linear-gradient(90deg, transparent, rgba(244,63,94,0.35), transparent)',
             }}
             animate={{ top: ['-5%', '110%'] }}
-            transition={{ duration: 6, repeat: Infinity, delay: 2, ease: 'linear', repeatDelay: 4 }}
+            transition={{ duration: 7, repeat: Infinity, delay: 3, ease: 'linear', repeatDelay: 5 }}
           />
-          {/* Grid */}
-          <div style={{
-            position: 'absolute', inset: 0,
-            backgroundImage: 'linear-gradient(rgba(244,63,94,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(244,63,94,0.025) 1px, transparent 1px)',
-            backgroundSize: '80px 80px',
-          }} />
         </div>
 
         {/* Content */}
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-20 w-full">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-16">
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
 
-          {/* Badge */}
-          <motion.div
-            variants={slideDown}
-            initial="hidden"
-            animate="show"
-            transition={{ ...easeOut, delay: 0 }}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.26)',
-              color: '#fb7185', fontSize: 13, fontWeight: 600,
-              padding: '8px 22px', borderRadius: 999, marginBottom: 32,
-            }}
-          >
-            <motion.span
-              style={{ width: 8, height: 8, borderRadius: '50%', background: '#fb7185', display: 'inline-block' }}
-              animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            />
-            🎬 Hệ thống đặt vé trực tuyến số 1 Việt Nam
-          </motion.div>
+            {/* Left: Text */}
+            <div className="flex-1 text-center lg:text-left">
+              {/* Badge */}
+              <motion.div
+                variants={fadeRight}
+                initial="hidden"
+                animate="show"
+                transition={{ ...easeOut, delay: 0 }}
+                className="inline-flex items-center gap-2 mb-6"
+                style={{
+                  background: 'rgba(244,63,94,0.07)',
+                  border: '1px solid rgba(244,63,94,0.22)',
+                  color: '#fb7185', fontSize: 12, fontWeight: 600,
+                  padding: '7px 18px', borderRadius: 999,
+                }}
+              >
+                <motion.span
+                  style={{ width: 7, height: 7, borderRadius: '50%', background: '#fb7185', display: 'inline-block' }}
+                  animate={{ scale: [1, 1.6, 1], opacity: [1, 0.4, 1] }}
+                  transition={{ duration: 1.4, repeat: Infinity }}
+                />
+                🎬 Số 1 Việt Nam về đặt vé trực tuyến
+              </motion.div>
 
-          {/* Title */}
-          <motion.h1
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-            transition={{ ...easeOut, delay: 0.1 }}
-            style={{
-              fontSize: 'clamp(2.6rem, 7vw, 5.5rem)',
-              fontWeight: 900, color: '#ffffff', lineHeight: 1.1, marginBottom: 24,
-            }}
-          >
-            Xem phim,{' '}
-            <span style={{
-              background: 'linear-gradient(135deg, #fb7185 0%, #e11d48 40%, #a855f7 100%)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            }}>đặt vé</span>
-            <br />dễ như ăn bánh
-          </motion.h1>
+              {/* Title */}
+              <motion.h1
+                variants={fadeRight}
+                initial="hidden"
+                animate="show"
+                transition={{ ...easeOut, delay: 0.1 }}
+                style={{
+                  fontSize: 'clamp(2.4rem, 5.5vw, 4.8rem)',
+                  fontWeight: 900, color: '#ffffff',
+                  lineHeight: 1.1, marginBottom: 20,
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                Xem phim hay,{' '}
+                <br />
+                <span style={{
+                  background: 'linear-gradient(135deg, #fb7185 0%, #e11d48 45%, #a855f7 100%)',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                }}>đặt vé dễ</span>
+              </motion.h1>
 
-          {/* Subtitle */}
-          <motion.p
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-            transition={{ ...easeOut, delay: 0.22 }}
-            style={{ color: '#94a3b8', fontSize: 'clamp(1rem, 2vw, 1.2rem)', maxWidth: 520, margin: '0 auto 40px', lineHeight: 1.7 }}
-          >
-            Chọn phim yêu thích, chọn ghế ngồi, thanh toán nhanh chóng.<br />
-            Nhận QR code xác nhận ngay lập tức.
-          </motion.p>
+              {/* Subtitle */}
+              <motion.p
+                variants={fadeRight}
+                initial="hidden"
+                animate="show"
+                transition={{ ...easeOut, delay: 0.2 }}
+                className="mx-auto lg:mx-0"
+                style={{
+                  color: '#94a3b8', fontSize: 'clamp(0.95rem, 1.8vw, 1.1rem)',
+                  maxWidth: 440, lineHeight: 1.75, marginBottom: 36,
+                }}
+              >
+                Chọn phim, chọn ghế, thanh toán nhanh chóng.
+                Nhận QR code xác nhận ngay lập tức.
+              </motion.p>
 
-          {/* CTAs */}
-          <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-            transition={{ ...easeOut, delay: 0.32 }}
-            style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}
-          >
-            <motion.div whileHover={{ scale: 1.05, y: -3 }} whileTap={{ scale: 0.97 }} transition={spring}>
-              <Link to="/movies?status=NOW_SHOWING" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                background: 'linear-gradient(135deg, #e11d48, #be123c)',
-                color: '#fff', fontWeight: 700, fontSize: 15,
-                padding: '14px 32px', borderRadius: 16, textDecoration: 'none',
-                boxShadow: '0 8px 32px rgba(225,29,72,0.4)',
-              }}>
-                🎬 Đặt vé ngay
-              </Link>
+              {/* CTAs */}
+              <motion.div
+                variants={fadeRight}
+                initial="hidden"
+                animate="show"
+                transition={{ ...easeOut, delay: 0.28 }}
+                className="flex gap-3 flex-wrap justify-center lg:justify-start mb-12"
+              >
+                <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} transition={spring}>
+                  <Link to="/movies?status=NOW_SHOWING" style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                    background: 'linear-gradient(135deg, #e11d48, #9f1239)',
+                    color: '#fff', fontWeight: 700, fontSize: 14,
+                    padding: '13px 28px', borderRadius: 14, textDecoration: 'none',
+                    boxShadow: '0 6px 28px rgba(225,29,72,0.38)',
+                  }}>
+                    🎬 Đặt vé ngay
+                  </Link>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} transition={spring}>
+                  <Link to="/movies?status=COMING_SOON" style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    backdropFilter: 'blur(10px)',
+                    color: '#cbd5e1', fontWeight: 600, fontSize: 14,
+                    padding: '13px 28px', borderRadius: 14, textDecoration: 'none',
+                  }}>
+                    🗓 Sắp ra mắt
+                  </Link>
+                </motion.div>
+              </motion.div>
+
+              {/* Stats */}
+              <motion.div
+                variants={fadeRight}
+                initial="hidden"
+                animate="show"
+                transition={{ ...easeOut, delay: 0.38 }}
+                className="flex gap-8 justify-center lg:justify-start"
+              >
+                {[
+                  { num: '50+', label: 'Phim / tháng' },
+                  { num: '20+', label: 'Rạp chiếu' },
+                  { num: '100K+', label: 'Khách hàng' },
+                ].map((s, i) => (
+                  <div key={i} className="text-center lg:text-left">
+                    <div className="text-xl font-black text-white">
+                      <AnimatedCounter target={s.num} />
+                    </div>
+                    <div className="text-dark-500 text-xs mt-0.5">{s.label}</div>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+
+            {/* Right: Featured poster with tilt */}
+            <motion.div
+              variants={fadeLeft}
+              initial="hidden"
+              animate="show"
+              transition={{ ...easeOut, delay: 0.15 }}
+              className="flex-shrink-0 lg:w-[340px] xl:w-[380px]"
+            >
+              {featuredMovie ? (
+                <TiltPoster movie={featuredMovie} />
+              ) : (
+                <div className="w-[280px] aspect-[2/3] rounded-2xl bg-dark-800 border border-dark-700 mx-auto" />
+              )}
+              {featuredMovie && (
+                <motion.div
+                  variants={fadeLeft}
+                  initial="hidden"
+                  animate="show"
+                  transition={{ ...easeOut, delay: 0.32 }}
+                  className="mt-4 text-center"
+                >
+                  <span className="text-dark-500 text-xs">Đang chiếu • </span>
+                  <Link to={`/movies/${featuredMovie.id}`} className="text-primary-400 text-xs font-semibold hover:text-primary-300 transition-colors">
+                    {featuredMovie.title}
+                  </Link>
+                </motion.div>
+              )}
             </motion.div>
-            <motion.div whileHover={{ scale: 1.05, y: -3 }} whileTap={{ scale: 0.97 }} transition={spring}>
-              <Link to="/movies?status=COMING_SOON" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)',
-                backdropFilter: 'blur(10px)', color: '#fff', fontWeight: 700, fontSize: 15,
-                padding: '14px 32px', borderRadius: 16, textDecoration: 'none',
-              }}>
-                🗓 Sắp ra mắt
-              </Link>
-            </motion.div>
-          </motion.div>
 
-          {/* Stats */}
-          <motion.div
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, maxWidth: 380, margin: '64px auto 0' }}
-            initial="hidden"
-            animate="show"
-          >
-            <StatItem num="50+" label="Phim / tháng" icon="🎥" delay={0.5} />
-            <StatItem num="20+" label="Rạp chiếu"    icon="🏟️" delay={0.6} />
-            <StatItem num="100K+" label="Khách hàng" icon="👥" delay={0.7} />
-          </motion.div>
+          </div>
         </div>
 
         {/* Bottom fade */}
         <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: 120,
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: 100,
           background: 'linear-gradient(to bottom, transparent, #020617)',
           pointerEvents: 'none',
         }} />
       </section>
 
-      {/* ─── TICKER ─── */}
+      {/* ═══ TICKER ═══ */}
       <div style={{
         overflow: 'hidden',
-        borderTop: '1px solid rgba(244,63,94,0.1)',
-        borderBottom: '1px solid rgba(244,63,94,0.1)',
-        background: 'rgba(244,63,94,0.03)',
-        padding: '10px 0',
+        borderTop: '1px solid rgba(244,63,94,0.08)',
+        borderBottom: '1px solid rgba(244,63,94,0.08)',
+        background: 'rgba(255,255,255,0.015)',
+        backdropFilter: 'blur(8px)',
+        padding: '9px 0',
       }}>
         <motion.div
-          style={{ display: 'flex', width: 'max-content', gap: 0 }}
+          style={{ display: 'flex', width: 'max-content' }}
           animate={{ x: ['0%', '-50%'] }}
-          transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
+          transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
         >
           {[...Array(2)].map((_, rep) =>
             ['🔥 Phim hot tuần này', '⭐ Ưu đãi thành viên', '🎟️ Giảm 20% thứ 4', '🍿 Combo bắp nước', '🎬 Phim mới mỗi tuần', '🏆 Top #1 Việt Nam']
               .map((item, i) => (
                 <span key={`${rep}-${i}`} style={{
-                  whiteSpace: 'nowrap', padding: '0 48px',
-                  fontSize: 12, fontWeight: 600, letterSpacing: '0.05em',
-                  color: i % 2 === 0 ? '#fb7185' : '#94a3b8',
+                  whiteSpace: 'nowrap', padding: '0 52px',
+                  fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase',
+                  color: i % 2 === 0 ? '#fb7185' : '#475569',
                 }}>
                   {item}
                 </span>
@@ -369,155 +678,130 @@ export default function HomePage() {
         </motion.div>
       </div>
 
-      {/* ─── MOVIE SECTIONS ─── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-16">
+      {/* ═══ MOVIE SECTIONS ═══ */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-14">
 
-        {/* Now Showing */}
-        <AnimatePresence>
-          {nowShowing.length > 0 && (
-            <motion.section
-              className="mb-20"
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, margin: '-80px' }}
-              transition={easeOut}
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
-                  <motion.div
-                    style={{
-                      width: 4, height: 36, borderRadius: 4,
-                      background: 'linear-gradient(to bottom, #fb7185, #e11d48)',
-                    }}
-                    animate={{ boxShadow: ['0 0 8px rgba(244,63,94,0.3)', '0 0 20px rgba(244,63,94,0.65)', '0 0 8px rgba(244,63,94,0.3)'] }}
-                    transition={{ duration: 2.5, repeat: Infinity }}
-                  />
-                  <div>
-                    <h2 style={{ fontSize: 26, fontWeight: 800, color: '#fff', margin: 0 }}>Đang Chiếu</h2>
-                    <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>Những bộ phim đang được chiếu tại rạp</p>
-                  </div>
-                </div>
-                <motion.div whileHover={{ x: 4 }} transition={spring}>
-                  <Link to="/movies?status=NOW_SHOWING" style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    color: '#fb7185', fontSize: 13, fontWeight: 600, textDecoration: 'none',
-                    padding: '8px 16px', borderRadius: 10,
-                    border: '1px solid rgba(244,63,94,0.2)',
-                    background: 'rgba(244,63,94,0.05)',
-                  }}>
-                    Xem tất cả →
-                  </Link>
-                </motion.div>
-              </div>
+        {/* ── Now Showing ── */}
+        {nowShowing.length > 0 && (
+          <motion.section
+            className="mb-16"
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: '-80px' }}
+            transition={easeOut}
+          >
+            <SectionHeader
+              title="Đang Chiếu"
+              subtitle="Những bộ phim đang được chiếu tại rạp"
+              accentColor="#e11d48"
+              linkTo="/movies?status=NOW_SHOWING"
+              linkLabel="Xem tất cả"
+            />
 
-              {/* Cards */}
+            {featuredMovie && <SpotlightCard movie={featuredMovie} />}
+
+            {gridMovies.length > 0 && (
               <motion.div
                 className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
-                variants={staggerContainer(0.07)}
+                variants={staggerContainer(0.06)}
                 initial="hidden"
                 whileInView="show"
                 viewport={{ once: true, margin: '-60px' }}
               >
-                {nowShowing.slice(0, 6).map(m => <MovieCard key={m.id} movie={m} />)}
+                {gridMovies.map(m => <MovieCard key={m.id} movie={m} />)}
               </motion.div>
-            </motion.section>
-          )}
-        </AnimatePresence>
+            )}
+          </motion.section>
+        )}
 
-        {/* Feature banner */}
-        <motion.div
+        {/* ── Features ── */}
+        <motion.section
+          className="mb-16"
           variants={scaleIn}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: '-60px' }}
           transition={easeOut}
-          style={{
-            borderRadius: 24,
-            background: 'linear-gradient(135deg, rgba(225,29,72,0.12) 0%, rgba(139,92,246,0.12) 100%)',
-            border: '1px solid rgba(244,63,94,0.2)',
-            padding: '40px 48px', marginBottom: 80,
-            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 32,
-            position: 'relative', overflow: 'hidden',
-          }}
         >
-          <Orb style={{
-            position: 'absolute', top: -60, right: -60, width: 200, height: 200,
-            background: 'radial-gradient(circle, rgba(244,63,94,0.2), transparent)',
-            borderRadius: '50%', filter: 'blur(30px)',
-          }} />
-          {[
-            { icon: '⚡', title: 'Đặt vé siêu nhanh', desc: 'Chọn ghế & thanh toán chỉ trong 60 giây' },
-            { icon: '🎟️', title: 'QR code tức thì',   desc: 'Nhận vé điện tử ngay sau khi thanh toán' },
-            { icon: '🔐', title: 'Bảo mật tuyệt đối', desc: 'Thông tin được mã hóa SSL an toàn' },
-            { icon: '🎁', title: 'Ưu đãi hấp dẫn',   desc: 'Nhiều mã giảm giá và combo hot mỗi tuần' },
-          ].map((f, i) => (
-            <motion.div
-              key={i}
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true }}
-              transition={{ ...easeOut, delay: i * 0.08 }}
-            >
-              <div style={{ fontSize: 32, marginBottom: 10 }}>{f.icon}</div>
-              <div style={{ fontWeight: 700, color: '#fff', fontSize: 15, marginBottom: 4 }}>{f.title}</div>
-              <div style={{ color: '#64748b', fontSize: 13, lineHeight: 1.5 }}>{f.desc}</div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Coming Soon */}
-        <AnimatePresence>
-          {comingSoon.length > 0 && (
-            <motion.section
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, margin: '-80px' }}
-              transition={easeOut}
-            >
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
+          <div
+            className="rounded-2xl border border-dark-700/50 overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, rgba(225,29,72,0.04) 0%, rgba(124,58,237,0.04) 100%)',
+              backdropFilter: 'blur(12px)',
+            }}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              {FEATURES.map((f, i) => (
+                <motion.div
+                  key={i}
+                  variants={fadeUp}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={{ once: true }}
+                  transition={{ ...easeOut, delay: i * 0.07 }}
+                  className="p-6 transition-colors duration-300 relative"
+                  style={{
+                    borderRight: i < 3 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                  }}
+                  whileHover={{ backgroundColor: f.bg }}
+                >
                   <motion.div
-                    style={{
-                      width: 4, height: 36, borderRadius: 4,
-                      background: 'linear-gradient(to bottom, #a855f7, #7c3aed)',
-                    }}
-                    animate={{ boxShadow: ['0 0 8px rgba(168,85,247,0.3)', '0 0 20px rgba(168,85,247,0.65)', '0 0 8px rgba(168,85,247,0.3)'] }}
-                    transition={{ duration: 2.5, repeat: Infinity }}
-                  />
-                  <div>
-                    <h2 style={{ fontSize: 26, fontWeight: 800, color: '#fff', margin: 0 }}>Sắp Chiếu</h2>
-                    <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>Những bộ phim sắp ra mắt</p>
-                  </div>
-                </div>
-                <motion.div whileHover={{ x: 4 }} transition={spring}>
-                  <Link to="/movies?status=COMING_SOON" style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    color: '#a855f7', fontSize: 13, fontWeight: 600, textDecoration: 'none',
-                    padding: '8px 16px', borderRadius: 10,
-                    border: '1px solid rgba(168,85,247,0.2)',
-                    background: 'rgba(168,85,247,0.05)',
-                  }}>
-                    Xem tất cả →
-                  </Link>
+                    className="mb-4 w-11 h-11 rounded-xl flex items-center justify-center"
+                    style={{ background: f.bg, border: `1px solid ${f.border}`, color: f.color }}
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    transition={spring}
+                  >
+                    {f.icon}
+                  </motion.div>
+                  <div className="font-bold text-white text-sm mb-1.5">{f.title}</div>
+                  <div className="text-dark-400 text-xs leading-relaxed">{f.desc}</div>
                 </motion.div>
-              </div>
+              ))}
+            </div>
+          </div>
+        </motion.section>
+
+        {/* ── Coming Soon — Drag Carousel ── */}
+        {comingSoon.length > 0 && (
+          <motion.section
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: '-80px' }}
+            transition={easeOut}
+          >
+            <SectionHeader
+              title="Sắp Chiếu"
+              subtitle="Những bộ phim sắp ra mắt"
+              accentColor="#a855f7"
+              linkTo="/movies?status=COMING_SOON"
+              linkLabel="Xem tất cả"
+            />
+
+            <div className="relative">
+              <div className="absolute left-0 top-0 bottom-0 w-8 z-10 pointer-events-none"
+                style={{ background: 'linear-gradient(to right, #020617, transparent)' }} />
+              <div className="absolute right-0 top-0 bottom-0 w-8 z-10 pointer-events-none"
+                style={{ background: 'linear-gradient(to left, #020617, transparent)' }} />
 
               <motion.div
-                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
-                variants={staggerContainer(0.07)}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true, margin: '-60px' }}
+                ref={carouselRef}
+                drag="x"
+                dragConstraints={{ right: 0, left: -(comingSoon.length * 224) }}
+                dragTransition={{ bounceStiffness: 300, bounceDamping: 30 }}
+                whileDrag={{ cursor: 'grabbing' }}
+                className="flex gap-4 cursor-grab pb-4"
+                style={{ touchAction: 'pan-y' }}
               >
-                {comingSoon.slice(0, 6).map(m => <MovieCard key={m.id} movie={m} />)}
+                {comingSoon.map(m => <ComingSoonCard key={m.id} movie={m} />)}
               </motion.div>
-            </motion.section>
-          )}
-        </AnimatePresence>
+            </div>
+
+            <p className="text-center text-dark-600 text-xs mt-1">← Kéo để xem thêm →</p>
+          </motion.section>
+        )}
+
       </div>
     </motion.div>
   )
