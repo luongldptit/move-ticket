@@ -11,33 +11,28 @@ import { AGE_RATING, MOVIE_STATUS, formatDate, formatTime, formatPrice, getNextN
 import { fadeUp, fadeLeft, fadeRight, scaleIn, staggerContainer, staggerItem, spring, easeOut } from '../../utils/motion'
 import { toast } from 'react-toastify'
 
-/* ─── Hero Cinematic Background ─── */
+/* ─── Hero Cinematic Background (No Autoplay Video) ─── */
 function HeroDetailBackground({ movie }) {
-  const videoId = movie?.trailerUrl?.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/)?.[1]
-
-  if (videoId) {
-    return (
-      <div className="absolute inset-0 z-0 overflow-hidden bg-[#020617] pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 w-[110vw] h-[110vh] min-w-[177vh] min-h-[56.25vw]"
-             style={{ transform: 'translate(-50%, -50%)', opacity: 0.35 }}>
-          <iframe
-            className="w-full h-full rounded-none"
-            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&showinfo=0&rel=0&modestbranding=1&disablekb=1`}
-            title="Background Trailer"
-            allow="autoplay; encrypted-media"
-            style={{ border: 'none' }}
-          />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-[#020617]/40 via-[#020617]/70 to-[#020617]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent" />
-      </div>
-    )
-  }
-
   return (
-    <div className="absolute inset-0 z-0 bg-[#020617] pointer-events-none">
-      <img src={movie?.posterUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" style={{ filter: 'blur(30px)' }} />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/50 to-[#020617]/90" />
+    <div className="absolute inset-0 z-0 bg-[#020617] pointer-events-none overflow-hidden">
+      <motion.img 
+        src={movie?.posterUrl} 
+        alt="" 
+        className="absolute inset-0 w-full h-full object-cover opacity-30 transform scale-125" 
+        style={{ filter: 'blur(40px)' }} 
+        initial={{ opacity: 0, scale: 1.1 }}
+        animate={{ opacity: 0.3, scale: 1.25 }}
+        transition={{ duration: 2, ease: "easeOut" }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/50 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#020617] via-[#020617]/30 to-transparent" />
+      
+      {/* Cinematic ambient spotlight */}
+      <motion.div 
+        className="absolute left-1/4 top-1/4 w-[500px] h-[500px] bg-primary-600/10 rounded-full blur-[120px] mix-blend-screen"
+        animate={{ opacity: [0.5, 0.8, 0.5], scale: [1, 1.1, 1] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+      />
     </div>
   )
 }
@@ -339,30 +334,47 @@ export default function MovieDetailPage() {
       {/* Reviews */}
       <ReviewList movieId={parseInt(id)} />
 
-      {/* Trailer Modal */}
+      {/* Trailer Modal (Cinematic) */}
       <AnimatePresence>
         {showTrailer && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center px-4 md:px-12"
+            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }} 
+            animate={{ opacity: 1, backdropFilter: 'blur(20px)' }} 
+            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            transition={{ duration: 0.4 }}
             onClick={() => setShowTrailer(false)}
+            style={{ background: 'rgba(2, 6, 23, 0.85)' }}
           >
+            {/* Massive background glow for trailer */}
+            <motion.div 
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-primary-600/30 blur-[150px] rounded-full pointer-events-none"
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2, duration: 0.8 }}
+            />
+
             <motion.div
-              className="relative w-full max-w-3xl"
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              transition={spring}
+              className="relative w-full max-w-5xl rounded-3xl overflow-hidden ring-1 ring-white/20"
+              initial={{ scale: 0.85, opacity: 0, y: 40, rotateX: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0, rotateX: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 30, rotateX: -5 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               onClick={e => e.stopPropagation()}
+              style={{ boxShadow: '0 50px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1)' }}
             >
-              <motion.button
-                onClick={() => setShowTrailer(false)}
-                whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-                className="absolute -top-10 right-0 text-white/70 hover:text-white text-sm flex items-center gap-1"
-              >
-                ✕ Đóng
-              </motion.button>
-              <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl" style={{ paddingTop: '56.25%' }}>
+              <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-black/80 to-transparent z-10 pointer-events-none flex justify-end p-4">
+                <motion.button
+                  onClick={() => setShowTrailer(false)}
+                  whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.2)' }} 
+                  whileTap={{ scale: 0.9 }}
+                  className="w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center backdrop-blur-md border border-white/10 pointer-events-auto transition-colors"
+                >
+                  ✕
+                </motion.button>
+              </div>
+
+              <div className="relative w-full bg-black" style={{ paddingTop: '42.85%' }}> {/* Wider cinematic aspect ratio */}
                 <iframe
                   className="absolute inset-0 w-full h-full"
                   src={getYoutubeEmbedUrl(movie.trailerUrl)}
