@@ -346,56 +346,63 @@ export default function MovieDetailPage() {
         </div> {/* END Grid */}
       </div> {/* END Container */}
 
-      {/* Trailer Modal (Cinematic) */}
+      {/* Trailer Modal (Cinema Experience) */}
       <AnimatePresence>
         {showTrailer && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center px-4 md:px-12"
-            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }} 
-            animate={{ opacity: 1, backdropFilter: 'blur(20px)' }} 
-            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-            transition={{ duration: 0.4 }}
-            onClick={() => setShowTrailer(false)}
-            style={{ background: 'rgba(2, 6, 23, 0.85)' }}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-3xl flex items-center justify-center"
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            {/* Massive background glow for trailer */}
-            <motion.div 
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-primary-600/30 blur-[150px] rounded-full pointer-events-none"
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2, duration: 0.8 }}
-            />
-
-            <motion.div
-              className="relative w-full max-w-5xl rounded-3xl overflow-hidden ring-1 ring-white/20"
-              initial={{ scale: 0.85, opacity: 0, y: 40, rotateX: 10 }}
-              animate={{ scale: 1, opacity: 1, y: 0, rotateX: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 30, rotateX: -5 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              onClick={e => e.stopPropagation()}
-              style={{ boxShadow: '0 50px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1)' }}
+            {/* Nút tắt khổng lồ & sang trọng */}
+            <motion.button
+              onClick={() => setShowTrailer(false)}
+              className="absolute top-6 right-6 md:top-10 md:right-10 z-[110] w-14 h-14 rounded-full bg-white/10 border border-white/20 text-white flex items-center justify-center backdrop-blur-md transition-colors"
+              whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.2)', rotate: 90 }} 
+              whileTap={{ scale: 0.9 }}
             >
-              <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-black/80 to-transparent z-10 pointer-events-none flex justify-end p-4">
-                <motion.button
-                  onClick={() => setShowTrailer(false)}
-                  whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.2)' }} 
-                  whileTap={{ scale: 0.9 }}
-                  className="w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center backdrop-blur-md border border-white/10 pointer-events-auto transition-colors"
-                >
-                  ✕
-                </motion.button>
-              </div>
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </motion.button>
 
-              <div className="relative w-full bg-black" style={{ paddingTop: '42.85%' }}> {/* Wider cinematic aspect ratio */}
+            {/* Khung viền sáng Cinematic */}
+            <motion.div
+              className="w-full max-w-7xl px-0 md:px-10"
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 1.05, opacity: 0 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 200, delay: 0.1 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="relative w-full aspect-video bg-dark-900 md:rounded-2xl overflow-hidden" 
+                   style={{ boxShadow: '0 0 120px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1)' }}>
                 <iframe
                   className="absolute inset-0 w-full h-full"
-                  src={getYoutubeEmbedUrl(movie.trailerUrl)}
+                  src={`${getYoutubeEmbedUrl(movie.trailerUrl)}&autoplay=1`}
                   title={`Trailer - ${movie.title}`}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                 />
               </div>
+
+              {/* Tên phim hiển thị dưới Trailer */}
+              <motion.div 
+                className="mt-6 text-center"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <h3 className="text-2xl font-black text-white/90 tracking-widest uppercase shadow-black drop-shadow-md">
+                  {movie.title}
+                </h3>
+              </motion.div>
             </motion.div>
+            
+            {/* Lớp màu ánh sáng chiếu dưới đáy */}
+            <div className="absolute -bottom-32 left-1/2 -translate-x-1/2 w-3/4 h-64 bg-primary-600/20 blur-[120px] rounded-[100%] pointer-events-none" />
           </motion.div>
         )}
       </AnimatePresence>
