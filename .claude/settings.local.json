@@ -12,7 +12,8 @@
       "Bash(cmd *)",
       "Bash(powershell *)",
       "Bash(./mvnw compile *)",
-      "Bash(mvn compile *)"
+      "Bash(mvn compile *)",
+      "Bash(npm run *)"
     ]
   }
 }
