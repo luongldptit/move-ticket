@@ -25,6 +25,7 @@ public class MovieServiceImpl implements MovieService {
     private final GenreRepository genreRepository;
     private final ShowtimeRepository showtimeRepository;
     private final BookingSeatRepository bookingSeatRepository;
+    private final com.movieticket.repository.ReviewRepository reviewRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -165,6 +166,8 @@ public class MovieServiceImpl implements MovieService {
                 .ageRating(movie.getAgeRating() != null ? movie.getAgeRating().name() : "P")
                 .status(movie.getStatus().name())
                 .genres(genres)
+                .averageRating(reviewRepository.findAverageRatingByMovieId(movie.getId()))
+                .reviewCount(reviewRepository.countByMovieId(movie.getId()))
                 .build();
     }
 

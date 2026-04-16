@@ -46,6 +46,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/cinemas/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/rooms/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/showtimes/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/reviews/**").permitAll()
                 .requestMatchers("/api/v1/payments/callback").permitAll()
 
                 // Customer endpoints

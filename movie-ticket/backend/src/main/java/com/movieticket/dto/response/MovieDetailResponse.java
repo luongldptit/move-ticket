@@ -21,4 +21,6 @@ public class MovieDetailResponse {
     private String ageRating;
     private String status;
     private List<GenreResponse> genres;
+    private Double averageRating;
+    private Long reviewCount;
 }

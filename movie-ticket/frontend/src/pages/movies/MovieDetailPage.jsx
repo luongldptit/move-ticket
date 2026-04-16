@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import ReviewList from '../../components/reviews/ReviewList'
 import { useParams, useNavigate } from 'react-router-dom'
 import { movieApi } from '../../api/movieApi'
 import { cinemaApi } from '../../api/cinemaApi'
@@ -234,6 +235,9 @@ export default function MovieDetailPage() {
           )}
         </div>
       )}
+
+      {/* Reviews */}
+      <ReviewList movieId={parseInt(id)} />
 
       {/* Trailer Modal */}
       {showTrailer && (
