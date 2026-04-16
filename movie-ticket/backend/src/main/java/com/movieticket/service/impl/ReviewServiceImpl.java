@@ -3,6 +3,7 @@ package com.movieticket.service.impl;
 import com.movieticket.dto.request.ReviewRequest;
 import com.movieticket.dto.response.PageResponse;
 import com.movieticket.dto.response.ReviewResponse;
+import com.movieticket.entity.Booking;
 import com.movieticket.entity.Review;
 import com.movieticket.entity.User;
 import com.movieticket.exception.BusinessException;
@@ -57,7 +58,7 @@ public class ReviewServiceImpl implements ReviewService {
             throw new ConflictException("Bạn đã đánh giá phim này rồi");
         }
 
-        if (!bookingRepository.hasCompletedBookingForMovie(currentUser.getId(), movieId, java.time.LocalDateTime.now())) {
+        if (!bookingRepository.hasCompletedBookingForMovie(currentUser.getId(), movieId, Booking.BookingStatus.CONFIRMED, java.time.LocalDateTime.now())) {
             throw new BusinessException("Chỉ có thể đánh giá sau khi suất chiếu đã kết thúc");
         }
 

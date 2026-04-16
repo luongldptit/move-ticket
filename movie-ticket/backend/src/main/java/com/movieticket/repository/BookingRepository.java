@@ -33,10 +33,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END FROM Booking b " +
            "WHERE b.user.id = :userId AND b.showtime.movie.id = :movieId " +
-           "AND b.status = com.movieticket.entity.Booking.BookingStatus.CONFIRMED " +
+           "AND b.status = :status " +
            "AND b.showtime.endTime < :now")
     boolean hasCompletedBookingForMovie(@Param("userId") Long userId,
                                         @Param("movieId") Long movieId,
+                                        @Param("status") Booking.BookingStatus status,
                                         @Param("now") java.time.LocalDateTime now);
 
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.showtime.id = :showtimeId AND b.status IN ('PENDING', 'CONFIRMED')")
