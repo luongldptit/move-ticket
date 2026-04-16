@@ -6,19 +6,19 @@ import { showtimeApi } from '../../api/showtimeApi'
 import { toggleSeat, clearSeats } from '../../store/slices/bookingSlice'
 import { PageLoader } from '../../components/common/Spinner'
 import { formatPrice, formatTime, formatDate } from '../../utils/helpers'
-import { fadeUp, fadeIn, fadeRight, scaleIn, staggerContainer, staggerItem, spring, easeOut } from '../../utils/motion'
+import { fadeUp, fadeIn, fadeRight, staggerContainer, staggerItem, spring, easeOut } from '../../utils/motion'
 import { toast } from 'react-toastify'
 
 /* ─── Seat style configs ─── */
 const SEAT_CFG = {
-  available:       { bg: 'rgba(34,197,94,0.18)',  border: '#22c55e', color: '#4ade80' },
-  selected:        { bg: 'rgba(225,29,72,0.85)',  border: '#fb7185', color: '#fff'    },
-  booked:          { bg: 'rgba(30,41,59,0.45)',   border: '#334155', color: '#475569' },
-  held:            { bg: 'rgba(234,179,8,0.18)',  border: '#ca8a04', color: '#fbbf24' },
-  vip:             { bg: 'rgba(139,92,246,0.22)', border: '#8b5cf6', color: '#c4b5fd' },
-  vip_selected:    { bg: 'rgba(139,92,246,0.85)', border: '#a78bfa', color: '#fff'    },
-  couple:          { bg: 'rgba(236,72,153,0.22)', border: '#ec4899', color: '#f9a8d4' },
-  couple_selected: { bg: 'rgba(236,72,153,0.85)', border: '#f472b6', color: '#fff'    },
+  available:       { bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.2)', color: '#cbd5e1' },
+  selected:        { bg: 'rgba(225,29,72,0.85)',   border: '#fb7185',               color: '#fff'    },
+  booked:          { bg: 'rgba(15,23,42,0.6)',     border: 'rgba(51,65,85,0.8)',    color: '#475569' },
+  held:            { bg: 'rgba(234,179,8,0.18)',   border: '#ca8a04',               color: '#fbbf24' },
+  vip:             { bg: 'rgba(139,92,246,0.15)',  border: '#8b5cf6',               color: '#c4b5fd' },
+  vip_selected:    { bg: 'rgba(139,92,246,0.85)',  border: '#a78bfa',               color: '#fff'    },
+  couple:          { bg: 'rgba(236,72,153,0.15)',  border: '#ec4899',               color: '#f9a8d4' },
+  couple_selected: { bg: 'rgba(236,72,153,0.85)',  border: '#f472b6',               color: '#fff'    },
 }
 
 function Seat({ seat, selected, onToggle }) {
@@ -43,31 +43,26 @@ function Seat({ seat, selected, onToggle }) {
       disabled={disabled}
       onClick={() => !disabled && onToggle(seat)}
       title={`${seat.seatCode} · ${seat.type} · ${formatPrice(seat.price)}`}
-      whileHover={!disabled ? { scale: 1.18, zIndex: 10 } : {}}
-      whileTap={!disabled ? { scale: 0.88 } : {}}
+      whileHover={!disabled ? { scale: 1.15, zIndex: 10 } : {}}
+      whileTap={!disabled ? { scale: 0.9 } : {}}
       animate={selected ? {
-        boxShadow: [`0 0 0px ${cfg.border}00`, `0 0 16px ${cfg.border}99`, `0 0 6px ${cfg.border}55`],
+        boxShadow: [`0 0 0px ${cfg.border}00`, `0 0 20px ${cfg.border}99`, `0 0 8px ${cfg.border}55`],
       } : {}}
       transition={spring}
       style={{
-        width: isCouple ? 54 : 36, height: 32, borderRadius: 6,
+        width: isCouple ? 60 : 36, height: 36, 
         background: cfg.bg, border: `1.5px solid ${cfg.border}`,
-        color: cfg.color, fontSize: 10, fontWeight: 700,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        opacity: disabled ? 0.4 : 1, outline: 'none',
-        position: 'relative',
+        color: cfg.color, 
       }}
+      className={`relative flex items-center justify-center text-[10px] font-black outline-none transition-colors ${isCouple ? 'rounded-t-2xl rounded-b-lg' : 'rounded-t-xl rounded-b-md'} ${disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer hover:border-white/50'}`}
     >
       {seat.seatCode}
-      {/* Selection ring */}
+      {/* Selection outer ring effect */}
       {selected && !disabled && (
         <motion.span
           layoutId={`ring-${seat.id}`}
-          style={{
-            position: 'absolute', inset: -3, borderRadius: 8,
-            border: `2px solid ${cfg.border}`, pointerEvents: 'none',
-          }}
+          className="absolute -inset-1 pointer-events-none rounded-xl"
+          style={{ border: `2px solid ${cfg.border}` }}
           initial={{ opacity: 0, scale: 1.3 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0 }}
@@ -79,8 +74,8 @@ function Seat({ seat, selected, onToggle }) {
 
 function LegendItem({ bg, border, label }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#94a3b8', fontSize: 12 }}>
-      <div style={{ width: 20, height: 14, borderRadius: 4, background: bg, border: `1.5px solid ${border}` }} />
+    <div className="flex items-center gap-2.5 text-dark-300 text-xs font-bold uppercase tracking-widest">
+      <div className="w-5 h-4 rounded-t-lg rounded-b-sm" style={{ background: bg, border: `1.5px solid ${border}` }} />
       {label}
     </div>
   )
@@ -124,77 +119,68 @@ export default function SeatMapPage() {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
-      style={{ minHeight: '100vh', paddingTop: 80, paddingBottom: 32, background: '#020617' }}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}
+      className="min-h-screen pt-24 pb-12 bg-[#020617] relative overflow-hidden"
     >
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px' }}>
+      {/* Mảng sương mù gradient làm nền */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80vw] h-96 bg-primary-600/10 blur-[150px] rounded-full pointer-events-none" />
 
-        {/* Info bar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+        {/* Info bar Header */}
         {showtime && (
           <motion.div
             variants={fadeUp} initial="hidden" animate="show" transition={easeOut}
-            style={{
-              background: 'rgba(15,23,42,0.9)',
-              border: '1px solid rgba(51,65,85,0.6)',
-              borderRadius: 16, padding: '14px 20px', marginBottom: 24,
-              backdropFilter: 'blur(12px)',
-              display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'center',
-            }}
+            className="flex flex-wrap items-center gap-6 lg:gap-12 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl py-4 px-6 md:px-10 mb-10 shadow-2xl"
           >
             {[
-              { label: 'Phim',       val: showtime.movie?.title || showtime.movieTitle },
+              { label: 'Phóng sự',   val: showtime.movie?.title || showtime.movieTitle, highlight: true },
               { label: 'Suất chiếu', val: `${formatTime(showtime.startTime)} · ${formatDate(showtime.startTime)}` },
-              { label: 'Phòng',      val: `${showtime.room?.name} (${showtime.room?.type})` },
-              { label: 'Rạp',        val: showtime.cinema?.name || showtime.cinemaName },
+              { label: 'Phòng rạp',  val: `${showtime.room?.name} - ${showtime.cinema?.name || showtime.cinemaName}` },
             ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                {i > 0 && <div style={{ width: 1, height: 32, background: 'rgba(51,65,85,0.8)' }} />}
+              <div key={i} className="flex items-center gap-6">
+                {i > 0 && <div className="hidden md:block w-px h-10 bg-white/10" />}
                 <div>
-                  <div style={{ color: '#64748b', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</div>
-                  <div style={{ color: '#e2e8f0', fontWeight: 700, fontSize: 14, marginTop: 2 }}>{item.val}</div>
+                  <div className="text-dark-400 text-[10px] font-black uppercase tracking-widest mb-1">{item.label}</div>
+                  <div className={`text-base font-black ${item.highlight ? 'text-transparent bg-clip-text bg-gradient-to-r from-white to-primary-200' : 'text-white'}`}>
+                    {item.val}
+                  </div>
                 </div>
               </div>
             ))}
           </motion.div>
         )}
 
-        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+        {/* Cấu trúc Layout Chính */}
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
 
-          {/* ─── Seat map ─── */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-
-            {/* Screen */}
-            <motion.div
-              variants={fadeUp} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.1 }}
-              style={{ textAlign: 'center', marginBottom: 32 }}
-            >
-              <motion.div
-                style={{
-                  width: '70%', maxWidth: 500, height: 4, margin: '0 auto 8px',
-                  background: 'linear-gradient(90deg, transparent, rgba(244,63,94,0.7), transparent)',
-                  borderRadius: 4,
-                }}
-                animate={{ boxShadow: ['0 0 10px rgba(244,63,94,0.2)', '0 0 30px rgba(244,63,94,0.6)', '0 0 10px rgba(244,63,94,0.2)'] }}
-                transition={{ duration: 2.5, repeat: Infinity }}
-              />
-              <span style={{ color: '#64748b', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase' }}>▲ MÀN HÌNH ▲</span>
+          {/* ─── BÊN TRÁI: Sơ đồ ghế ─── */}
+          <div className="flex-1 w-full bg-dark-900/30 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-6 sm:p-10 shadow-2xl overflow-x-auto">
+            
+            {/* Cinematic Curved Screen */}
+            <motion.div variants={fadeUp} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.1 }} className="mb-20 mt-4 relative">
+              <div className="relative w-full max-w-2xl mx-auto h-12 overflow-hidden flex justify-center">
+                {/* Đường cong màn hình */}
+                <div className="absolute top-0 w-[120%] h-32 border-t-4 border-primary-500 rounded-[50%] blur-[2px] opacity-70" />
+                <div className="absolute top-0 w-[120%] h-32 border-t-2 border-white rounded-[50%] shadow-[0_0_80px_rgba(244,63,94,0.6)]" />
+                {/* Chữ */}
+                <span className="absolute top-6 text-primary-400/80 text-[10px] font-black tracking-[0.5em] uppercase">Màn Hình Tương Tác</span>
+              </div>
             </motion.div>
 
-            {/* Rows */}
+            {/* Các hàng ghế (Rows) */}
             <motion.div
               variants={staggerContainer(0.04, 0.15)} initial="hidden" animate="show"
-              style={{ display: 'flex', flexDirection: 'column', gap: 6 }}
+              className="flex flex-col gap-4 items-center min-w-[600px]"
             >
               {rows.map(row => (
-                <motion.div
-                  key={row.rowLabel}
-                  variants={staggerItem}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8 }}
-                >
-                  <div style={{ width: 24, color: '#475569', fontSize: 11, fontWeight: 700, textAlign: 'right', flexShrink: 0 }}>
+                <motion.div key={row.rowLabel} variants={staggerItem} className="flex items-center gap-6">
+                  {/* Tên hàng ghế */}
+                  <div className="w-8 text-dark-400 text-sm font-black text-right shrink-0">
                     {row.rowLabel}
                   </div>
-                  <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                  {/* Danh sách ghế trong hàng */}
+                  <div className="flex gap-2.5">
                     {(row.seats || []).map(seat => (
                       <Seat
                         key={seat.id}
@@ -204,166 +190,128 @@ export default function SeatMapPage() {
                       />
                     ))}
                   </div>
+                  {/* Tên hàng ghế (Bên phải đối xứng) */}
+                  <div className="w-8 text-dark-400 text-sm font-black text-left shrink-0">
+                    {row.rowLabel}
+                  </div>
                 </motion.div>
               ))}
             </motion.div>
 
-            {/* Legend */}
+            {/* Chú thích màu ghế (Legend) */}
             <motion.div
               variants={fadeIn} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.5 }}
-              style={{
-                display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 28, justifyContent: 'center',
-                padding: '14px 20px', background: 'rgba(15,23,42,0.6)',
-                borderRadius: 12, border: '1px solid rgba(51,65,85,0.4)',
-              }}
+              className="mt-24 pt-6 py-4 px-6 bg-black/40 rounded-2xl flex flex-wrap justify-center gap-6 border border-white/5"
             >
-              <LegendItem bg="rgba(34,197,94,0.18)"  border="#22c55e" label="Trống" />
-              <LegendItem bg="rgba(30,41,59,0.45)"   border="#334155" label="Đã đặt" />
-              <LegendItem bg="rgba(234,179,8,0.18)"  border="#ca8a04" label="Đang giữ" />
-              <LegendItem bg="rgba(139,92,246,0.22)" border="#8b5cf6" label="VIP" />
-              <LegendItem bg="rgba(236,72,153,0.22)" border="#ec4899" label="Couple" />
-              <LegendItem bg="rgba(225,29,72,0.85)"  border="#fb7185" label="Đã chọn" />
+              <LegendItem bg="rgba(255,255,255,0.05)" border="rgba(255,255,255,0.2)" label="Trống" />
+              <LegendItem bg="rgba(15,23,42,0.6)" border="rgba(51,65,85,0.8)" label="Đã đặt" />
+              <LegendItem bg="rgba(139,92,246,0.15)" border="#8b5cf6" label="Khế VIP" />
+              <LegendItem bg="rgba(236,72,153,0.15)" border="#ec4899" label="Couple" />
+              <LegendItem bg="rgba(225,29,72,0.85)" border="#fb7185" label="Đang Giao dịch" />
             </motion.div>
+
           </div>
 
-          {/* ─── Summary panel ─── */}
-          <motion.div
-            variants={fadeRight} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.2 }}
-            style={{ width: 280, flexShrink: 0 }}
-          >
-            <div style={{
-              background: 'rgba(15,23,42,0.95)',
-              border: '1px solid rgba(51,65,85,0.6)',
-              borderRadius: 20, padding: 20,
-              position: 'sticky', top: 90,
-              backdropFilter: 'blur(12px)',
-              boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
-            }}>
-              {/* Header */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <h3 style={{ fontWeight: 800, color: '#fff', margin: 0, fontSize: 15 }}>🎟️ Ghế đã chọn</h3>
-                <motion.span
-                  animate={{
-                    background: selectedSeats.length > 0
-                      ? ['rgba(244,63,94,0.15)', 'rgba(244,63,94,0.3)', 'rgba(244,63,94,0.15)']
-                      : 'rgba(51,65,85,0.4)',
-                  }}
-                  transition={{ duration: 2, repeat: selectedSeats.length > 0 ? Infinity : 0 }}
-                  style={{
-                    color: selectedSeats.length > 0 ? '#fb7185' : '#64748b',
-                    border: `1px solid ${selectedSeats.length > 0 ? 'rgba(244,63,94,0.3)' : 'rgba(51,65,85,0.5)'}`,
-                    borderRadius: 999, padding: '2px 10px', fontSize: 12, fontWeight: 700,
-                    display: 'inline-block',
-                  }}
-                >
-                  {selectedSeats.length}/8
-                </motion.span>
-              </div>
+          {/* ─── BÊN PHẢI: Bảng thanh toán Sticky ─── */}
+          <div className="w-full lg:w-96 shrink-0 relative lg:sticky lg:top-28">
+            <motion.div variants={fadeRight} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.2 }}>
+              <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                
+                {/* Tiêu đề Bảng */}
+                <div className="flex justify-between items-end mb-8 border-b border-white/10 pb-4">
+                  <h3 className="font-black text-white text-xl uppercase tracking-wider">🎟️ Đặt Chỗ</h3>
+                  <motion.span
+                    animate={{
+                      background: selectedSeats.length > 0
+                        ? ['rgba(244,63,94,0.1)', 'rgba(244,63,94,0.25)', 'rgba(244,63,94,0.1)']
+                        : 'rgba(51,65,85,0.4)',
+                    }}
+                    transition={{ duration: 2, repeat: selectedSeats.length > 0 ? Infinity : 0 }}
+                    className={`px-3 py-1 text-xs font-black rounded-full border ${selectedSeats.length > 0 ? 'text-primary-400 border-primary-500/30' : 'text-dark-400 border-white/10'}`}
+                  >
+                    {selectedSeats.length}/8
+                  </motion.span>
+                </div>
 
-              {/* Seat list */}
-              <AnimatePresence>
-                {selectedSeats.length === 0 ? (
-                  <motion.div
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    style={{ textAlign: 'center', padding: '24px 0', color: '#475569', fontSize: 13 }}
-                  >
-                    <motion.div
-                      animate={{ y: [0, -8, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      style={{ fontSize: 36, marginBottom: 8 }}
-                    >
-                      🪑
-                    </motion.div>
-                    Chưa chọn ghế nào
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}
-                  >
-                    <AnimatePresence>
-                      {selectedSeats.map(s => (
-                        <motion.div
-                          key={s.id}
-                          layout
-                          initial={{ opacity: 0, scale: 0.85, y: -10 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.85, x: 30 }}
-                          transition={spring}
-                          style={{
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                            padding: '8px 12px', borderRadius: 10,
-                            background: 'rgba(244,63,94,0.07)', border: '1px solid rgba(244,63,94,0.18)',
-                          }}
-                        >
-                          <div>
-                            <span style={{ color: '#fff', fontWeight: 700, fontSize: 13 }}>{s.seatCode}</span>
-                            <span style={{
-                              marginLeft: 7, fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4,
-                              background: s.type === 'VIP' ? 'rgba(139,92,246,0.2)' : s.type === 'COUPLE' ? 'rgba(236,72,153,0.2)' : 'rgba(51,65,85,0.6)',
-                              color: s.type === 'VIP' ? '#c4b5fd' : s.type === 'COUPLE' ? '#f9a8d4' : '#94a3b8',
-                            }}>
-                              {s.type}
-                            </span>
-                          </div>
-                          <span style={{ color: '#fb7185', fontWeight: 700, fontSize: 13 }}>{formatPrice(s.price)}</span>
+                {/* Danh sách ghế cuộn */}
+                <div className="max-h-[300px] overflow-y-auto scrollbar-hide pr-2 mb-6">
+                  <AnimatePresence>
+                    {selectedSeats.length === 0 ? (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-12">
+                        <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 2, repeat: Infinity }} className="text-4xl mb-4 opacity-50">
+                          💺
                         </motion.div>
-                      ))}
-                    </AnimatePresence>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                        <p className="text-dark-300 font-bold uppercase tracking-widest text-xs">Chưa có vị trí nào</p>
+                      </motion.div>
+                    ) : (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-3">
+                        <AnimatePresence>
+                          {selectedSeats.map(s => (
+                            <motion.div
+                              key={s.id} layout
+                              initial={{ opacity: 0, scale: 0.9, x: 20 }} animate={{ opacity: 1, scale: 1, x: 0 }} exit={{ opacity: 0, scale: 0.9, x: -20 }} transition={spring}
+                              className="flex justify-between items-center bg-white/5 border border-white/10 py-3 px-4 rounded-2xl"
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className="text-white font-black text-base">{s.seatCode}</span>
+                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${
+                                    s.type === 'VIP' ? 'bg-purple-500/20 text-purple-300' : s.type === 'COUPLE' ? 'bg-pink-500/20 text-pink-300' : 'bg-dark-700/50 text-dark-300'
+                                }`}>
+                                  {s.type}
+                                </span>
+                              </div>
+                              <span className="text-primary-400 font-bold text-sm tracking-wide">{formatPrice(s.price)}</span>
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
-              {/* Total */}
-              <div style={{ borderTop: '1px solid rgba(51,65,85,0.5)', paddingTop: 14, marginBottom: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: '#94a3b8', fontSize: 13 }}>Tổng cộng</span>
+                {/* Tổng tiền */}
+                <div className="pt-6 border-t border-white/10 mb-8 flex justify-between items-end">
+                  <span className="text-dark-300 font-black uppercase tracking-widest text-xs mb-1">Tạm tính</span>
                   <motion.span
                     key={totalPrice}
-                    initial={{ scale: 1.3, color: '#fbbf24' }}
-                    animate={{ scale: 1, color: '#fb7185' }}
-                    transition={spring}
-                    style={{ fontWeight: 800, fontSize: 20 }}
+                    initial={{ scale: 1.2, color: '#fbbf24' }} animate={{ scale: 1, color: '#fff' }} transition={spring}
+                    className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-rose-300 drop-shadow-md"
                   >
                     {formatPrice(totalPrice)}
                   </motion.span>
                 </div>
+
+                {/* Các thao tác Nút */}
+                <div className="flex flex-col gap-3">
+                  <motion.button
+                    onClick={handleContinue}
+                    whileHover={selectedSeats.length > 0 ? { scale: 1.03, y: -2 } : {}}
+                    whileTap={selectedSeats.length > 0 ? { scale: 0.97 } : {}}
+                    animate={selectedSeats.length > 0 ? {
+                      boxShadow: ['0 4px 20px rgba(225,29,72,0.35)', '0 4px 28px rgba(225,29,72,0.6)', '0 4px 20px rgba(225,29,72,0.35)'],
+                    } : {}}
+                    transition={{ duration: 2.5, repeat: selectedSeats.length > 0 ? Infinity : 0 }}
+                    disabled={selectedSeats.length === 0}
+                    className={`w-full py-4 rounded-2xl font-black text-[15px] tracking-wide transition-all ${
+                      selectedSeats.length > 0 ? 'bg-gradient-to-tr from-primary-600 to-rose-600 text-white cursor-pointer' : 'bg-dark-800 text-dark-400 cursor-not-allowed opacity-50'
+                    }`}
+                  >
+                    TIẾP TỤC BƯỚC ĐẶT VÉ
+                  </motion.button>
+
+                  <motion.button
+                    onClick={() => { dispatch(clearSeats()); navigate(-1) }}
+                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                    className="w-full py-3.5 rounded-2xl font-bold text-sm text-dark-300 hover:text-white border border-white/5 hover:bg-white/5 transition-all"
+                  >
+                    ← QUAY LẠI CHỌN SUẤT
+                  </motion.button>
+                </div>
+
               </div>
+            </motion.div>
+          </div>
 
-              {/* Buttons */}
-              <motion.button
-                onClick={handleContinue}
-                whileHover={selectedSeats.length > 0 ? { scale: 1.03, y: -2 } : {}}
-                whileTap={selectedSeats.length > 0 ? { scale: 0.97 } : {}}
-                animate={selectedSeats.length > 0 ? {
-                  boxShadow: ['0 4px 20px rgba(225,29,72,0.35)', '0 4px 28px rgba(225,29,72,0.6)', '0 4px 20px rgba(225,29,72,0.35)'],
-                } : {}}
-                transition={{ duration: 2.5, repeat: selectedSeats.length > 0 ? Infinity : 0 }}
-                style={{
-                  width: '100%', padding: '13px 0', border: 'none', borderRadius: 12,
-                  background: selectedSeats.length > 0 ? 'linear-gradient(135deg, #e11d48, #be123c)' : 'rgba(51,65,85,0.5)',
-                  color: '#fff', fontWeight: 700, fontSize: 14,
-                  cursor: selectedSeats.length > 0 ? 'pointer' : 'not-allowed',
-                }}
-              >
-                Tiếp tục →
-              </motion.button>
-
-              <motion.button
-                onClick={() => { dispatch(clearSeats()); navigate(-1) }}
-                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                style={{
-                  width: '100%', padding: '10px 0', marginTop: 8, border: '1px solid rgba(51,65,85,0.5)',
-                  borderRadius: 12, background: 'transparent', color: '#64748b',
-                  fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'color 0.2s',
-                }}
-                onMouseEnter={e => e.currentTarget.style.color = '#fff'}
-                onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
-              >
-                ← Quay lại
-              </motion.button>
-            </div>
-          </motion.div>
         </div>
       </div>
     </motion.div>
