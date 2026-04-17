@@ -28,7 +28,7 @@ const CustomTooltip = ({ active, payload, label }) => {
                 <div className="text-[10px] font-bold text-dark-300 uppercase tracking-wider">{entry.name}</div>
               </div>
               <div className="text-sm font-black text-white" style={{ color: entry.color }}>
-                {entry.name === 'Doanh Thu' ? formatPrice(entry.value) : `${entry.value.toLocaleString()} Vé`}
+                {entry.name === 'Doanh Thu' ? formatPrice(entry.value) : `${entry.value.toLocaleString()} Lượt`}
               </div>
             </div>
           ))}
@@ -64,7 +64,7 @@ export default function DashboardPage() {
     }).catch(console.error).finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => { load(from, to) }, [])
+  useEffect(() => { load(from, to) }, [load])
 
   const handlePreset = (preset) => {
     const [f, t] = preset.getDates()
@@ -187,7 +187,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { label: 'TỔNG DOANH THU', value: formatPrice(revenue?.totalRevenue || 0), desc: 'Đã thanh toán thành công', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1', color: 'from-green-500 to-emerald-700', glow: 'rgba(16,185,129,0.2)' },
-              { label: 'TỔNG VÉ ĐÃ ĐẶT', value: (revenue?.totalBookings || 0).toLocaleString(), desc: 'Lượt giao dịch chốt', icon: 'M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z', color: 'from-blue-500 to-indigo-700', glow: 'rgba(59,130,246,0.2)' },
+              { label: 'TỔNG LƯỢT GIAO DỊCH', value: (revenue?.totalBookings || 0).toLocaleString(), desc: 'Số đơn hàng đã chốt', icon: 'M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z', color: 'from-blue-500 to-indigo-700', glow: 'rgba(59,130,246,0.2)' },
               { label: 'TỶ LỆ LẤP ĐẦY RẠP', value: `${(occupancy?.averageOccupancyRate || 0).toFixed(1)}%`, desc: 'Tỉ suất bình quân phòng', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', color: 'from-purple-500 to-fuchsia-700', glow: 'rgba(168,85,247,0.2)' },
             ].map(s => (
               <div key={s.label} className="relative overflow-hidden bg-white/5 border border-white/10 rounded-3xl p-6 group">
@@ -236,7 +236,7 @@ export default function DashboardPage() {
                       
                       <Tooltip cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2, strokeDasharray: '5 5' }} content={<CustomTooltip />} />
                       
-                      <Bar yAxisId="right" dataKey="bookings" name="Số Vé Đặt" fill="url(#bk)" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                      <Bar yAxisId="right" dataKey="bookings" name="Lượt Giao Dịch" fill="url(#bk)" radius={[4, 4, 0, 0]} maxBarSize={40} />
                       <Area yAxisId="left" type="monotone" dataKey="revenue" name="Doanh Thu" stroke="#e11d48" fill="url(#rv)" strokeWidth={3} activeDot={{ r: 6, fill: '#fff', stroke: '#e11d48', strokeWidth: 3, className: 'drop-shadow-[0_0_10px_rgba(225,29,72,0.8)]' }} />
                     </ComposedChart>
                   </ResponsiveContainer>
