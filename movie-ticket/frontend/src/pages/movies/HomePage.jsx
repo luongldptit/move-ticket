@@ -1,13 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { motion, useMotionValue, useTransform, useSpring, useMotionTemplate, AnimatePresence } from 'framer-motion'
+import { motion, useMotionValue, useTransform, useSpring, useMotionTemplate } from 'framer-motion'
 import { movieApi } from '../../api/movieApi'
 import { PageLoader } from '../../components/common/Spinner'
 import { MOVIE_STATUS, AGE_RATING, formatDate } from '../../utils/helpers'
-import {
-  fadeUp, fadeLeft, fadeRight, scaleIn,
-  staggerContainer, staggerItem, spring, easeOut,
-} from '../../utils/motion'
+import { fadeUp, fadeLeft, fadeRight, scaleIn, spring, easeOut } from '../../utils/motion'
 
 /* ─── Background orb ─── */
 function Orb({ style }) {
@@ -235,74 +232,6 @@ function NowShowingCard({ movie }) {
   )
 }
 
-/* ─── Standard movie card ─── */
-function MovieCard({ movie }) {
-  const status = MOVIE_STATUS[movie.status] || {}
-  const rating = AGE_RATING[movie.ageRating] || { label: movie.ageRating, color: 'bg-dark-600' }
-
-  return (
-    <motion.div variants={staggerItem} whileHover="hover" whileTap={{ scale: 0.97 }}>
-      <Link to={`/movies/${movie.id}`} className="block">
-        <motion.div
-          className="card group overflow-hidden"
-          variants={{ hover: { y: -6, boxShadow: '0 20px 50px rgba(0,0,0,0.6), 0 0 0 1px rgba(244,63,94,0.2)' } }}
-          transition={spring}
-        >
-          <div className="relative overflow-hidden aspect-[2/3]">
-            <motion.img
-              src={movie.posterUrl || 'https://placehold.co/300x450/1e293b/94a3b8?text=No+Poster'}
-              alt={movie.title}
-              className="w-full h-full object-cover"
-              variants={{ hover: { scale: 1.08 } }}
-              transition={{ duration: 0.55, ease: 'easeOut' }}
-            />
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"
-              initial={{ opacity: 0 }}
-              variants={{ hover: { opacity: 1 } }}
-              transition={{ duration: 0.3 }}
-            />
-            <div className={`absolute top-2 left-2 ${rating.color} text-white text-xs font-bold px-2 py-0.5 rounded shadow`}>
-              {rating.label}
-            </div>
-            <div className={`absolute top-2 right-2 ${status.color} text-xs font-semibold px-2 py-1 rounded-full`}>
-              {status.label}
-            </div>
-            <motion.div
-              className="absolute bottom-0 left-0 right-0 p-3"
-              initial={{ y: '100%' }}
-              variants={{ hover: { y: 0 } }}
-              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-            >
-              <div className="btn-primary w-full text-center text-sm py-2 shadow-lg shadow-primary-500/40">
-                🎬 Đặt vé
-              </div>
-            </motion.div>
-          </div>
-          <div className="p-3">
-            <h3 className="font-semibold text-white text-sm line-clamp-2 leading-tight group-hover:text-primary-400 transition-colors">
-              {movie.title}
-            </h3>
-            <div className="flex items-center justify-between mt-2">
-              <span className="text-dark-400 text-xs">{movie.duration} phút</span>
-              {movie.releaseDate && <span className="text-dark-500 text-xs">{formatDate(movie.releaseDate)}</span>}
-            </div>
-            {movie.genres?.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {movie.genres.slice(0, 2).map((g, i) => (
-                  <span key={i} className="text-xs bg-dark-800 text-dark-300 px-2 py-0.5 rounded group-hover:bg-primary-900/40 group-hover:text-primary-300 transition-colors">
-                    {typeof g === 'string' ? g : g.name}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </motion.div>
-      </Link>
-    </motion.div>
-  )
-}
-
 /* ─── Coming soon card (carousel) ─── */
 function ComingSoonCard({ movie }) {
   const rating = AGE_RATING[movie.ageRating] || { label: movie.ageRating, color: 'bg-dark-600' }
@@ -393,7 +322,7 @@ function SectionHeader({ title, subtitle, accentColor, linkTo, linkLabel }) {
 /* ─── Features data ─── */
 const FEATURES = [
   {
-    icon: (
+    icon: () => (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
       </svg>
@@ -403,7 +332,7 @@ const FEATURES = [
     bg: 'rgba(251,113,133,0.1)', border: 'rgba(251,113,133,0.2)', color: '#fb7185',
   },
   {
-    icon: (
+    icon: () => (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
       </svg>
@@ -413,7 +342,7 @@ const FEATURES = [
     bg: 'rgba(168,85,247,0.1)', border: 'rgba(168,85,247,0.2)', color: '#a855f7',
   },
   {
-    icon: (
+    icon: () => (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
       </svg>
@@ -423,7 +352,7 @@ const FEATURES = [
     bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.2)', color: '#22c55e',
   },
   {
-    icon: (
+    icon: () => (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
         <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
       </svg>
@@ -775,7 +704,7 @@ export default function HomePage() {
                     whileHover={{ scale: 1.1, rotate: 5 }}
                     transition={spring}
                   >
-                    {f.icon}
+                    {f.icon()}
                   </motion.div>
                   <div className="font-bold text-white text-sm mb-1.5">{f.title}</div>
                   <div className="text-dark-400 text-xs leading-relaxed">{f.desc}</div>
