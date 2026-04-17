@@ -16,9 +16,19 @@ public class DataInitializer implements ApplicationRunner {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     @Override
     public void run(ApplicationArguments args) {
+        // Tự động gỡ bỏ check constraint cũ nếu tồn tại để tránh lỗi Enum update
+        try {
+            jdbcTemplate.execute("ALTER TABLE bookings DROP CONSTRAINT CONSTRAINT_A6");
+            log.info("Successfully dropped legacy constraint CONSTRAINT_A6 from bookings table");
+        } catch (Exception e) {
+            // Constraint có thể đã được xóa hoặc tên khác, bỏ qua lỗi
+            log.debug("Nghiệm thu: Constraint CONSTRAINT_A6 không tồn tại hoặc đã được gỡ bỏ trước đó.");
+        }
+
         if (!userRepository.existsByEmail("admin@movieticket.com")) {
             User admin = User.builder()
                     .email("admin@movieticket.com")
