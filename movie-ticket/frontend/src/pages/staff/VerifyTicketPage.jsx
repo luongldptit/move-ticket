@@ -203,14 +203,14 @@ export default function VerifyTicketPage() {
                 {/* Ticket Details */}
                 <div className="text-left space-y-4">
                   <div>
-                    <h2 className="text-2xl font-black text-white leading-tight mb-1">{result.showtimeInfo.movieTitle}</h2>
+                    <h2 className="text-2xl font-black text-white leading-tight mb-1">{result.showtime?.movieTitle}</h2>
                     <p className="text-primary-400 font-mono text-sm"># {result.bookingCode}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-white/5 p-3 rounded-2xl border border-white/5">
                       <p className="text-[10px] text-dark-500 uppercase font-black tracking-tighter mb-1">Thời gian</p>
-                      <p className="text-white font-bold text-sm tracking-tight">{formatDateTime(result.showtimeInfo.startTime).split(' ')[0]}</p>
+                      <p className="text-white font-bold text-sm tracking-tight">{formatDateTime(result.showtime?.startTime).split(' ')[0]}</p>
                     </div>
                     <div className="bg-white/5 p-3 rounded-2xl border border-white/5">
                       <p className="text-[10px] text-dark-500 uppercase font-black tracking-tighter mb-1">Dịch vụ</p>
