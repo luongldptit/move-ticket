@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { logout } from '../../store/slices/authSlice'
 import { authApi } from '../../api/authApi'
@@ -14,12 +14,27 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const searchRef = useRef(null)
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', handler, { passive: true })
     return () => window.removeEventListener('scroll', handler)
   }, [])
+
+  useEffect(() => {
+    if (searchOpen) searchRef.current?.focus()
+  }, [searchOpen])
+
+  const handleSearch = (e) => {
+    e.preventDefault()
+    if (!searchQuery.trim()) return
+    navigate(`/movies?search=${encodeURIComponent(searchQuery.trim())}`)
+    setSearchQuery('')
+    setSearchOpen(false)
+  }
 
   const handleLogout = async () => {
     try { await authApi.logout() } catch (_) {}
@@ -61,17 +76,70 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop nav links */}
+          {/* Desktop nav links + search */}
           <div className="hidden md:flex items-center gap-1">
-            {[
-              { to: '/movies?status=NOW_SHOWING', label: 'Đang chiếu' },
-              { to: '/movies?status=COMING_SOON', label: 'Sắp chiếu' },
-              { to: '/movies', label: 'Tất cả phim' },
-            ].map((link) => (
-              <motion.div key={link.to} whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}>
-                <Link to={link.to} className="btn-ghost text-sm">{link.label}</Link>
-              </motion.div>
-            ))}
+            <AnimatePresence mode="wait" initial={false}>
+              {searchOpen ? (
+                <motion.form
+                  key="search-form"
+                  onSubmit={handleSearch}
+                  className="flex items-center gap-2"
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+                >
+                  <div className="relative flex items-center">
+                    <svg className="absolute left-3 w-4 h-4 text-dark-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input
+                      ref={searchRef}
+                      type="text"
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      placeholder="Tìm phim..."
+                      className="pl-9 pr-3 py-1.5 w-48 bg-dark-800/80 border border-dark-600 focus:border-primary-500/60 rounded-xl text-sm text-white placeholder-dark-500 outline-none transition-colors"
+                      style={{ backdropFilter: 'blur(8px)' }}
+                      onKeyDown={e => e.key === 'Escape' && setSearchOpen(false)}
+                    />
+                  </div>
+                  <motion.button
+                    type="button"
+                    onClick={() => { setSearchOpen(false); setSearchQuery('') }}
+                    className="btn-ghost p-1.5 text-dark-400 hover:text-white"
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </motion.button>
+                </motion.form>
+              ) : (
+                <motion.div key="nav-links" className="flex items-center gap-1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  {[
+                    { to: '/movies?status=NOW_SHOWING', label: 'Đang chiếu' },
+                    { to: '/movies?status=COMING_SOON', label: 'Sắp chiếu' },
+                    { to: '/movies', label: 'Tất cả phim' },
+                  ].map((link) => (
+                    <motion.div key={link.to} whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}>
+                      <Link to={link.to} className="btn-ghost text-sm">{link.label}</Link>
+                    </motion.div>
+                  ))}
+                  <motion.button
+                    onClick={() => setSearchOpen(true)}
+                    className="btn-ghost p-2 text-dark-400 hover:text-white ml-1"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.92 }}
+                    title="Tìm kiếm phim"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </motion.button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Right side */}
@@ -187,6 +255,18 @@ export default function Navbar() {
             animate="show"
             exit="exit"
           >
+            <form onSubmit={e => { e.preventDefault(); if (searchQuery.trim()) { navigate(`/movies?search=${encodeURIComponent(searchQuery.trim())}`); setSearchQuery(''); setMobileOpen(false) } }} className="relative mb-2">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Tìm phim..."
+                className="w-full pl-9 pr-3 py-2 bg-dark-800 border border-dark-700 rounded-xl text-sm text-white placeholder-dark-500 outline-none focus:border-primary-500/60 transition-colors"
+              />
+            </form>
             <Link to="/movies?status=NOW_SHOWING" onClick={() => setMobileOpen(false)} className="btn-ghost text-sm text-left">Đang chiếu</Link>
             <Link to="/movies?status=COMING_SOON" onClick={() => setMobileOpen(false)} className="btn-ghost text-sm text-left">Sắp chiếu</Link>
             <Link to="/movies" onClick={() => setMobileOpen(false)} className="btn-ghost text-sm text-left">Tất cả phim</Link>
