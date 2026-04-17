@@ -26,8 +26,11 @@ export default function DashboardPage() {
 
   const load = useCallback((f, t) => {
     setLoading(true)
+    const diffDays = Math.ceil(Math.abs(new Date(t) - new Date(f)) / (1000 * 60 * 60 * 24))
+    const reportType = diffDays <= 31 ? 'DAILY' : 'MONTHLY'
+    
     Promise.all([
-      adminApi.getRevenueReport({ type: 'MONTHLY', from: f, to: t }),
+      adminApi.getRevenueReport({ type: reportType, from: f, to: t }),
       adminApi.getTopMovies({ from: f, to: t, limit: 5 }),
       adminApi.getOccupancyReport({ from: f, to: t }),
     ]).then(([rv, tm, oc]) => {
