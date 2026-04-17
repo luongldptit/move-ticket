@@ -30,7 +30,15 @@ export default function VerifyTicketPage() {
 
   const handleScan = async (scannedData) => {
     if (scannedData && scannedData.length > 0) {
-      const scannedCode = scannedData[0].rawValue || scannedData[0]
+      let scannedCode = scannedData[0].rawValue || scannedData[0]
+      
+      // Smart parsing: Extract booking code (MT...) if embedded in a larger string
+      // Matches pattern like QR-MT123456789-Timestamp or just MT123456789
+      const match = scannedCode.match(/(MT\d+)/)
+      if (match) {
+        scannedCode = match[1]
+      }
+
       setCode(scannedCode)
       setShowScanner(false)
       // Automatically verify after scanning

@@ -75,7 +75,7 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setTransactionId(request.getTransactionId());
             payment.setPaidAt(LocalDateTime.now());
             booking.setStatus(Booking.BookingStatus.CONFIRMED);
-            booking.setQrCode("QR-" + booking.getBookingCode() + "-" + System.currentTimeMillis());
+            booking.setQrCode(booking.getBookingCode());
         } else {
             payment.setStatus(Payment.Status.FAILED);
             booking.setStatus(Booking.BookingStatus.EXPIRED);
