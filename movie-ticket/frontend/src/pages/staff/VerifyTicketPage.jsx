@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { bookingApi } from '../../api/bookingApi'
 import { BOOKING_STATUS, formatPrice, formatDateTime, getErrorMessage } from '../../utils/helpers'
 import { toast } from 'react-toastify'
 import { Scanner } from '@yudiel/react-qr-scanner'
 import { motion, AnimatePresence } from 'framer-motion'
 import { modalBackdrop, modalPanel } from '../../utils/motion'
+import jsQR from 'jsqr'
 
 export default function VerifyTicketPage() {
   const [code, setCode] = useState('')
@@ -12,6 +13,13 @@ export default function VerifyTicketPage() {
   const [loading, setLoading] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const [checkingIn, setCheckingIn] = useState(false)
+  const fileInputRef = useRef(null)
+
+  const extractCode = (str) => {
+    // Smart parsing: Extract booking code (MT...) if embedded in a larger string
+    const match = str.match(/(MT\d+)/)
+    return match ? match[1] : str
+  }
 
   const handleVerify = async (e) => {
     if (e) e.preventDefault()
@@ -30,15 +38,9 @@ export default function VerifyTicketPage() {
 
   const handleScan = async (scannedData) => {
     if (scannedData && scannedData.length > 0) {
-      let scannedCode = scannedData[0].rawValue || scannedData[0]
+      const rawValue = scannedData[0].rawValue || scannedData[0]
+      const scannedCode = extractCode(rawValue)
       
-      // Smart parsing: Extract booking code (MT...) if embedded in a larger string
-      // Matches pattern like QR-MT123456789-Timestamp or just MT123456789
-      const match = scannedCode.match(/(MT\d+)/)
-      if (match) {
-        scannedCode = match[1]
-      }
-
       setCode(scannedCode)
       setShowScanner(false)
       // Automatically verify after scanning
@@ -54,6 +56,48 @@ export default function VerifyTicketPage() {
         setLoading(false)
       }
     }
+  }
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    setLoading(true)
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const context = canvas.getContext('2d', { willReadFrequently: true })
+        canvas.width = img.width
+        canvas.height = img.height
+        context.drawImage(img, 0, 0)
+        
+        try {
+          const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
+          const codeResult = jsQR(imageData.data, imageData.width, imageData.height)
+
+          if (codeResult) {
+            const extracted = extractCode(codeResult.data)
+            setCode(extracted)
+            toast.success('Đã đọc được mã QR từ ảnh')
+            // Auto verify
+            bookingApi.verifyBooking(extracted)
+              .then(res => setResult(res.data.data))
+              .catch(err => toast.error(getErrorMessage(err)))
+              .finally(() => setLoading(false))
+          } else {
+            setLoading(false)
+            toast.error('Không tìm thấy mã QR trong ảnh này')
+          }
+        } catch (err) {
+          setLoading(false)
+          toast.error('Lỗi khi xử lý ảnh')
+        }
+      }
+      img.src = event.target.result
+    }
+    reader.readAsDataURL(file)
   }
 
   const handleScanError = (error) => {
@@ -94,6 +138,21 @@ export default function VerifyTicketPage() {
             value={code}
             onChange={e => setCode(e.target.value.toUpperCase())}
           />
+          <input 
+            type="file" 
+            accept="image/*" 
+            ref={fileInputRef} 
+            className="hidden" 
+            onChange={handleImageUpload}
+          />
+          <button 
+            type="button" 
+            onClick={() => fileInputRef.current?.click()} 
+            className="btn-secondary px-4 text-xl" 
+            title="Tải ảnh QR từ thư viện"
+          >
+            🖼️
+          </button>
           <button type="button" onClick={() => setShowScanner(true)} className="btn-secondary px-4 text-xl" title="Quét QR">
             📷
           </button>
