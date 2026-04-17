@@ -57,27 +57,23 @@ export const easeOutFast = { type: 'tween', ease: 'easeOut', duration: 0.28 }
 export const pageVariants = {
   initial: {
     opacity: 0,
-    scale: 0.97,
-    y: 24,
-    filter: 'blur(8px)',
+    scale: 0.98,
+    y: 16,
   },
   animate: {
     opacity: 1,
     scale: 1,
     y: 0,
-    filter: 'blur(0px)',
     transition: {
-      duration: 0.55,
+      duration: 0.4,
       ease: [0.16, 1, 0.3, 1],
-      filter: { duration: 0.4 },
     },
   },
   exit: {
     opacity: 0,
     scale: 1.02,
-    y: -16,
-    filter: 'blur(6px)',
-    transition: { duration: 0.3, ease: [0.4, 0, 1, 1] },
+    y: -8,
+    transition: { duration: 0.25, ease: [0.4, 0, 1, 1] },
   },
 }
 
@@ -91,17 +87,17 @@ export const pageTransition = {
 
 // ─── Admin layout entrance (sidebar + main content stagger) ───
 export const adminSidebarVariants = {
-  hidden: { opacity: 0, x: -60, scale: 0.95, filter: 'blur(10px)' },
+  hidden: { opacity: 0, x: -60, scale: 0.95 },
   show: {
-    opacity: 1, x: 0, scale: 1, filter: 'blur(0px)',
+    opacity: 1, x: 0, scale: 1,
     transition: { type: 'spring', stiffness: 220, damping: 26, delay: 0.05 },
   },
 }
 
 export const adminMainVariants = {
-  hidden: { opacity: 0, x: 60, scale: 0.96, filter: 'blur(10px)' },
+  hidden: { opacity: 0, x: 60, scale: 0.96 },
   show: {
-    opacity: 1, x: 0, scale: 1, filter: 'blur(0px)',
+    opacity: 1, x: 0, scale: 1,
     transition: { type: 'spring', stiffness: 220, damping: 26, delay: 0.15 },
   },
 }
@@ -122,9 +118,9 @@ export const adminNavContainerVariants = {
 
 // ─── Dashboard stat card reveal (stagger) ───
 export const statCardVariants = {
-  hidden: { opacity: 0, y: 40, scale: 0.93, filter: 'blur(6px)' },
+  hidden: { opacity: 0, y: 40, scale: 0.93 },
   show: {
-    opacity: 1, y: 0, scale: 1, filter: 'blur(0px)',
+    opacity: 1, y: 0, scale: 1,
     transition: { type: 'spring', stiffness: 260, damping: 22 },
   },
 }
@@ -141,9 +137,9 @@ export const heroContainerVariants = {
 }
 
 export const heroItemVariants = {
-  hidden: { opacity: 0, y: 32, filter: 'blur(8px)' },
+  hidden: { opacity: 0, y: 32 },
   show: {
-    opacity: 1, y: 0, filter: 'blur(0px)',
+    opacity: 1, y: 0,
     transition: { type: 'spring', stiffness: 240, damping: 24 },
   },
 }
@@ -156,26 +152,26 @@ export const modalBackdrop = {
 }
 
 export const modalPanel = {
-  hidden: { opacity: 0, scale: 0.92, y: 24, filter: 'blur(8px)' },
+  hidden: { opacity: 0, scale: 0.92, y: 24 },
   show: {
-    opacity: 1, scale: 1, y: 0, filter: 'blur(0px)',
+    opacity: 1, scale: 1, y: 0,
     transition: { type: 'spring', stiffness: 340, damping: 26 },
   },
   exit: {
-    opacity: 0, scale: 0.96, y: 12, filter: 'blur(4px)',
+    opacity: 0, scale: 0.96, y: 12,
     transition: { duration: 0.2, ease: 'easeIn' },
   },
 }
 
 // ─── Dropdown / mobile menu ───
 export const dropdownVariants = {
-  hidden: { opacity: 0, scale: 0.94, y: -10, filter: 'blur(6px)' },
+  hidden: { opacity: 0, scale: 0.94, y: -10 },
   show: {
-    opacity: 1, scale: 1, y: 0, filter: 'blur(0px)',
+    opacity: 1, scale: 1, y: 0,
     transition: { type: 'spring', stiffness: 380, damping: 28 },
   },
   exit: {
-    opacity: 0, scale: 0.94, y: -8, filter: 'blur(4px)',
+    opacity: 0, scale: 0.94, y: -8,
     transition: { duration: 0.16, ease: 'easeIn' },
   },
 }
@@ -194,9 +190,9 @@ export const mobileMenuVariants = {
 
 // ─── Navbar entrance ───
 export const navbarVariants = {
-  hidden: { opacity: 0, y: -24, filter: 'blur(8px)' },
+  hidden: { opacity: 0, y: -24 },
   show: {
-    opacity: 1, y: 0, filter: 'blur(0px)',
+    opacity: 1, y: 0,
     transition: { type: 'spring', stiffness: 280, damping: 28, delay: 0.05 },
   },
 }

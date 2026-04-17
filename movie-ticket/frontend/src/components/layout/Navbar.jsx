@@ -22,7 +22,7 @@ export default function Navbar() {
   useEffect(() => {
     // Entrance animation
     navControls.start({
-      opacity: 1, y: 0, filter: 'blur(0px)',
+      opacity: 1, y: 0,
       transition: { type: 'spring', stiffness: 280, damping: 28, delay: 0.05 },
     })
   }, [])
@@ -56,7 +56,7 @@ export default function Navbar() {
   return (
     <motion.nav
       className="fixed top-0 left-0 right-0 z-50 border-b border-dark-800/60"
-      initial={{ opacity: 0, y: -24, filter: 'blur(8px)' }}
+      initial={{ opacity: 0, y: -24 }}
       animate={navControls}
       style={{
         backgroundColor: scrolled ? 'rgba(2,6,23,0.98)' : 'rgba(2,6,23,0.95)',

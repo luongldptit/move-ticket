@@ -26,10 +26,7 @@ const PRESETS = [
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 8 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+      <div
         className="bg-[#0f172a]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-4 min-w-[160px]"
       >
         <div className="text-[10px] font-black text-dark-400 mb-3 tracking-[0.2em] uppercase border-b border-white/5 pb-2">{label}</div>
@@ -46,7 +43,7 @@ const CustomTooltip = ({ active, payload, label }) => {
             </div>
           ))}
         </div>
-      </motion.div>
+      </div>
     );
   }
   return null;
