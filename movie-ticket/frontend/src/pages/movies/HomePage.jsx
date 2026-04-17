@@ -95,7 +95,7 @@ function TiltPoster({ movie }) {
             background: glowBackground,
           }}
         />
-        {/* Bottom gradient abc*/}
+        {/* Bottom gradient abcd*/}
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0,
           background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)',
