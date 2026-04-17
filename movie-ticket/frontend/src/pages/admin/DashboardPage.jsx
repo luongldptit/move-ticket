@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { adminApi } from '../../api/adminApi'
 import { formatPrice } from '../../utils/helpers'
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { PageLoader } from '../../components/common/Spinner'
 
 const today = new Date().toISOString().split('T')[0]
@@ -14,6 +14,30 @@ const PRESETS = [
   { label: '3 tháng', getDates: () => { const d = new Date(); const f = new Date(d.getFullYear(), d.getMonth() - 2, 1); return [f.toISOString().split('T')[0], d.toISOString().split('T')[0]] } },
   { label: 'Năm nay', getDates: () => { const d = new Date(); return [`${d.getFullYear()}-01-01`, d.toISOString().split('T')[0]] } },
 ]
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#0f172a]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-4 min-w-[160px]">
+        <div className="text-[10px] font-black text-dark-400 mb-3 tracking-[0.2em] uppercase border-b border-white/5 pb-2">{label}</div>
+        <div className="space-y-3">
+          {payload.map((entry, index) => (
+            <div key={index} className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-4 rounded-full" style={{ backgroundColor: entry.color }}></div>
+                <div className="text-[10px] font-bold text-dark-300 uppercase tracking-wider">{entry.name}</div>
+              </div>
+              <div className="text-sm font-black text-white" style={{ color: entry.color }}>
+                {entry.name === 'Doanh Thu' ? formatPrice(entry.value) : `${entry.value.toLocaleString()} Vé`}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
 
 export default function DashboardPage() {
   const [from, setFrom] = useState(defaultFrom)
@@ -193,24 +217,28 @@ export default function DashboardPage() {
               {chartData.length > 0 ? (
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="rv" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#e11d48" stopOpacity={0.5} />
                           <stop offset="95%" stopColor="#e11d48" stopOpacity={0} />
                         </linearGradient>
+                        <linearGradient id="bk" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                        </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                      <XAxis dataKey="period" tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} tickFormatter={v => new Intl.NumberFormat('vi-VN', { notation: 'compact', compactDisplay: 'short' }).format(v)} axisLine={false} tickLine={false} />
-                      <Tooltip
-                        contentStyle={{ background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', padding: '12px 16px' }}
-                        labelStyle={{ color: '#94a3b8', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}
-                        itemStyle={{ color: '#e11d48', fontWeight: 700, fontSize: '14px' }}
-                        formatter={(value) => [formatPrice(value), 'Doanh Thu']}
-                      />
-                      <Area type="monotone" dataKey="revenue" stroke="#e11d48" fill="url(#rv)" strokeWidth={3} activeDot={{ r: 6, fill: '#fff', stroke: '#e11d48', strokeWidth: 3 }} />
-                    </AreaChart>
+                      <XAxis dataKey="period" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} tickMargin={10} />
+                      
+                      <YAxis yAxisId="left" tick={{ fill: '#e11d48', fontSize: 10, fontWeight: 700 }} tickFormatter={v => new Intl.NumberFormat('vi-VN', { notation: 'compact', compactDisplay: 'short' }).format(v)} axisLine={false} tickLine={false} tickMargin={10} />
+                      <YAxis yAxisId="right" orientation="right" tick={{ fill: '#3b82f6', fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} tickMargin={10} />
+                      
+                      <Tooltip cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2, strokeDasharray: '5 5' }} content={<CustomTooltip />} />
+                      
+                      <Bar yAxisId="right" dataKey="bookings" name="Số Vé Đặt" fill="url(#bk)" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                      <Area yAxisId="left" type="monotone" dataKey="revenue" name="Doanh Thu" stroke="#e11d48" fill="url(#rv)" strokeWidth={3} activeDot={{ r: 6, fill: '#fff', stroke: '#e11d48', strokeWidth: 3, className: 'drop-shadow-[0_0_10px_rgba(225,29,72,0.8)]' }} />
+                    </ComposedChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
