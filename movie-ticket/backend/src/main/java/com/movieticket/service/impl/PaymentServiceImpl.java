@@ -86,8 +86,7 @@ public class PaymentServiceImpl implements PaymentService {
         return new PaymentService.BookingCallbackResponse(
                 booking.getBookingCode(),
                 booking.getStatus().name(),
-                booking.getQrCode()
-        );
+                booking.getQrCode());
     }
 
     @Override
@@ -103,6 +102,7 @@ public class PaymentServiceImpl implements PaymentService {
         return mapToResponse(payment, null);
     }
 
+    // hi
     private PaymentResponse mapToResponse(Payment payment, String paymentUrl) {
         return PaymentResponse.builder()
                 .id(payment.getId())
