@@ -14,15 +14,15 @@ export default function AdminLayout() {
   const navigate = useNavigate()
   
   return (
-    <div className="min-h-screen bg-[#020617] flex pt-20 px-4 sm:px-6 lg:px-8 pb-8 relative overflow-hidden">
+    <div className="h-screen bg-[#020617] flex flex-col p-4 sm:p-6 lg:p-8 relative overflow-hidden">
       {/* Background Ambience */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-600/10 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
 
-      <div className="flex w-full max-w-[1600px] mx-auto gap-8 relative z-10">
+      <div className="flex h-full w-full max-w-[1600px] mx-auto gap-8 relative z-10">
         
         {/* Floating Sidebar */}
-        <aside className="w-64 max-w-sm flex-shrink-0 flex flex-col h-[calc(100vh-8rem)] sticky top-24 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
+        <aside className="w-64 max-w-sm flex-shrink-0 flex flex-col h-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
           {/* Header */}
           <div className="p-6 border-b border-white/10">
             <div className="text-[10px] font-black text-primary-400 uppercase tracking-[0.2em] mb-1">Workstation</div>
@@ -67,7 +67,7 @@ export default function AdminLayout() {
         </aside>
 
         {/* Main Workspace Area */}
-        <main className="flex-1 min-w-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative">
+        <main className="flex-1 min-w-0 h-full overflow-y-auto scrollbar-hide bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative">
           <Outlet />
         </main>
       </div>
