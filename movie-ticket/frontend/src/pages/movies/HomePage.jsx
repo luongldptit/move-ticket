@@ -95,7 +95,7 @@ function TiltPoster({ movie }) {
             background: glowBackground,
           }}
         />
-        {/* Bottom gradient */}
+        {/* Bottom gradient abc*/}
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0,
           background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)',
@@ -136,7 +136,7 @@ function HeroBackground({ movie }) {
     return (
       <div className="absolute inset-0 z-0 overflow-hidden bg-black pointer-events-none">
         <div className="absolute top-1/2 left-1/2 w-[110vw] h-[110vh] min-w-[177vh] min-h-[56.25vw]"
-             style={{ transform: 'translate(-50%, -50%)', opacity: 0.6 }}>
+          style={{ transform: 'translate(-50%, -50%)', opacity: 0.6 }}>
           <iframe
             className="w-full h-full rounded-none"
             src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&showinfo=0&rel=0&modestbranding=1&disablekb=1`}
@@ -263,9 +263,9 @@ function ComingSoonCard({ movie }) {
             <div className="absolute bottom-0 left-0 right-0 p-3">
               <div className="text-dark-300 text-xs flex items-center gap-1">
                 <svg className="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                  <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
                 </svg>
                 {formatDate(movie.releaseDate)}
               </div>
@@ -404,7 +404,7 @@ export default function HomePage() {
       >
         {/* Background Film/Trailer */}
         <HeroBackground movie={featuredMovie} />
-        
+
         {/* Grid lines (optional texture over background) */}
         <div className="absolute inset-0 pointer-events-none z-0" style={{
           backgroundImage: 'linear-gradient(rgba(244,63,94,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(244,63,94,0.015) 1px, transparent 1px)',
