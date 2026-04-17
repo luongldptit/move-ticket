@@ -54,6 +54,7 @@ export const formatTime = (dateStr) => {
 export const BOOKING_STATUS = {
   PENDING: { label: 'Chờ thanh toán', color: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' },
   CONFIRMED: { label: 'Đã xác nhận', color: 'bg-green-500/20 text-green-400 border border-green-500/30' },
+  COMPLETED: { label: 'Đã sử dụng', color: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
   CANCELLED: { label: 'Đã hủy', color: 'bg-red-500/20 text-red-400 border border-red-500/30' },
   EXPIRED: { label: 'Hết hạn', color: 'bg-dark-500/20 text-dark-400 border border-dark-500/30' },
 }

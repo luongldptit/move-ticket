@@ -14,5 +14,6 @@ public interface BookingService {
     BookingDetailResponse getBookingById(Long id, String email);
     void cancelBooking(Long id, String email);
     BookingDetailResponse verifyBookingByCode(String code);
+    void checkInBooking(String code);
     List<BookingResponse> getBookingsByShowtime(Long showtimeId);
 }

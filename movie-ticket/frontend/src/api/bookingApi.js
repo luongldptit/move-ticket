@@ -7,5 +7,6 @@ export const bookingApi = {
   cancelBooking: (id) => axiosInstance.put(`/api/v1/bookings/${id}/cancel`),
   // Staff
   verifyBooking: (code) => axiosInstance.get(`/api/v1/bookings/verify/${code}`),
+  checkInBooking: (code) => axiosInstance.put(`/api/v1/bookings/verify/${code}/checkin`),
   getBookingsByShowtime: (showtimeId) => axiosInstance.get('/api/v1/bookings', { params: { showtimeId } }),
 }

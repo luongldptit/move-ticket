@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor @AllArgsConstructor
 public class Booking {
 
-    public enum BookingStatus { PENDING, CONFIRMED, CANCELLED, EXPIRED }
+    public enum BookingStatus { PENDING, CONFIRMED, CANCELLED, EXPIRED, COMPLETED }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

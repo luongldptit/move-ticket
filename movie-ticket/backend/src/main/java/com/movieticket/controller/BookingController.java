@@ -66,6 +66,13 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.success(bookingService.verifyBookingByCode(code)));
     }
 
+    @PutMapping("/verify/{code}/checkin")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('STAFF')")
+    public ResponseEntity<ApiResponse<Void>> checkInBooking(@PathVariable String code) {
+        bookingService.checkInBooking(code);
+        return ResponseEntity.ok(ApiResponse.success("Đã đánh dấu vé là Đã Sử Dụng (Check-in thành công)", null));
+    }
+
     @GetMapping("/showtime/{showtimeId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('STAFF')")
     public ResponseEntity<ApiResponse<?>> getBookingsByShowtime(@PathVariable Long showtimeId) {

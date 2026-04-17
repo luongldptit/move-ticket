@@ -29,6 +29,7 @@ public class BookingDetailResponse {
         private Long id;
         private String movieTitle;
         private LocalDateTime startTime;
+        private LocalDateTime endTime;
         private String roomName;
         private String cinemaName;
     }

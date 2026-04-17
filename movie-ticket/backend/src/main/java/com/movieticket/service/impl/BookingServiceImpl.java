@@ -169,6 +169,21 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
+    public void checkInBooking(String code) {
+        Booking booking = bookingRepository.findByBookingCode(code)
+                .orElseThrow(() -> new ResourceNotFoundException("Mã đặt vé không tồn tại"));
+        if (booking.getStatus() != Booking.BookingStatus.CONFIRMED) {
+            throw new BusinessException("Vé này không hợp lệ để check-in (Trạng thái hiện tại: " + booking.getStatus() + ")");
+        }
+        if (booking.getShowtime().getEndTime().isBefore(java.time.LocalDateTime.now())) {
+            throw new BusinessException("Suất chiếu đã kết thúc, không thể check-in vé này nữa");
+        }
+        booking.setStatus(Booking.BookingStatus.COMPLETED);
+        bookingRepository.save(booking);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<BookingResponse> getBookingsByShowtime(Long showtimeId) {
         return bookingRepository.findByShowtimeIdAndStatusIn(showtimeId,
@@ -236,6 +251,7 @@ public class BookingServiceImpl implements BookingService {
                 .id(st.getId())
                 .movieTitle(st.getMovie().getTitle())
                 .startTime(st.getStartTime())
+                .endTime(st.getEndTime())
                 .roomName(st.getRoom().getName())
                 .cinemaName(st.getRoom().getCinema().getName())
                 .build();
