@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { bookingApi } from '../../api/bookingApi'
 import { BOOKING_STATUS, formatPrice, formatDateTime, getErrorMessage } from '../../utils/helpers'
 import { toast } from 'react-toastify'
@@ -13,12 +13,88 @@ export default function VerifyTicketPage() {
   const [loading, setLoading] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const [checkingIn, setCheckingIn] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef(null)
 
   const extractCode = (str) => {
     // Smart parsing: Extract booking code (MT...) if embedded in a larger string
     const match = str.match(/(MT\d+)/)
     return match ? match[1] : str
+  }
+
+  // Common function to decode QR from an image file/blob
+  const decodeQRFromBlob = (blob) => {
+    setLoading(true)
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const context = canvas.getContext('2d', { willReadFrequently: true })
+        canvas.width = img.width
+        canvas.height = img.height
+        context.drawImage(img, 0, 0)
+        
+        try {
+          const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
+          const codeResult = jsQR(imageData.data, imageData.width, imageData.height)
+
+          if (codeResult) {
+            const extracted = extractCode(codeResult.data)
+            setCode(extracted)
+            toast.success('Đã nhận diện mã QR thành công')
+            // Auto verify
+            bookingApi.verifyBooking(extracted)
+              .then(res => setResult(res.data.data))
+              .catch(err => toast.error(getErrorMessage(err)))
+              .finally(() => setLoading(false))
+          } else {
+            setLoading(false)
+            toast.error('Không tìm thấy mã QR trong ảnh này')
+          }
+        } catch (err) {
+          setLoading(false)
+          toast.error('Lỗi khi xử lý ảnh')
+        }
+      }
+      img.src = event.target.result
+    }
+    reader.readAsDataURL(blob)
+  }
+
+  // Handle Global Paste (Ctrl+V)
+  useEffect(() => {
+    const handlePaste = (e) => {
+      const item = e.clipboardData.items[0]
+      if (item?.type.includes('image')) {
+        const blob = item.getAsFile()
+        decodeQRFromBlob(blob)
+      }
+    }
+    window.addEventListener('paste', handlePaste)
+    return () => window.removeEventListener('paste', handlePaste)
+  }, [])
+
+  // Handle Drag & Drop
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files[0]
+    if (file?.type.includes('image')) {
+      decodeQRFromBlob(file)
+    } else if (file) {
+      toast.warning('Vui lòng chỉ thả tệp hình ảnh')
+    }
   }
 
   const handleVerify = async (e) => {
@@ -60,44 +136,7 @@ export default function VerifyTicketPage() {
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0]
-    if (!file) return
-
-    setLoading(true)
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const img = new Image()
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        const context = canvas.getContext('2d', { willReadFrequently: true })
-        canvas.width = img.width
-        canvas.height = img.height
-        context.drawImage(img, 0, 0)
-        
-        try {
-          const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
-          const codeResult = jsQR(imageData.data, imageData.width, imageData.height)
-
-          if (codeResult) {
-            const extracted = extractCode(codeResult.data)
-            setCode(extracted)
-            toast.success('Đã đọc được mã QR từ ảnh')
-            // Auto verify
-            bookingApi.verifyBooking(extracted)
-              .then(res => setResult(res.data.data))
-              .catch(err => toast.error(getErrorMessage(err)))
-              .finally(() => setLoading(false))
-          } else {
-            setLoading(false)
-            toast.error('Không tìm thấy mã QR trong ảnh này')
-          }
-        } catch (err) {
-          setLoading(false)
-          toast.error('Lỗi khi xử lý ảnh')
-        }
-      }
-      img.src = event.target.result
-    }
-    reader.readAsDataURL(file)
+    if (file) decodeQRFromBlob(file)
   }
 
   const handleScanError = (error) => {
@@ -125,16 +164,39 @@ export default function VerifyTicketPage() {
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-16">
+    <div 
+      className="min-h-screen pt-24 pb-16 relative"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {/* Drag & Drop Overlay */}
+      <AnimatePresence>
+        {isDragging && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-primary-600/20 backdrop-blur-md border-4 border-dashed border-primary-500 m-4 rounded-3xl flex flex-col items-center justify-center pointer-events-none"
+          >
+            <div className="bg-dark-900/80 p-8 rounded-full mb-4 shadow-2xl">
+              <span className="text-6xl">📥</span>
+            </div>
+            <h2 className="text-3xl font-bold text-white">Thả ảnh vào đây</h2>
+            <p className="text-primary-200 mt-2">Hệ thống sẽ tự động quét mã QR</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="max-w-lg mx-auto px-4">
         <h1 className="text-2xl font-bold text-white mb-2">Xác nhận vé tại quầy</h1>
-        <p className="text-dark-400 mb-6">Nhập mã vé hoặc quét QR code để xác nhận</p>
+        <p className="text-dark-400 mb-6 font-medium">Nhập mã, Quét QR, Kéo-Thả hoặc Dán ảnh QR</p>
 
         <form onSubmit={handleVerify} className="flex gap-3 mb-6">
           <input
             type="text"
-            placeholder="Nhập mã vé (VD: BK20260326001)..."
-            className="input-field flex-1 font-mono"
+            placeholder="Mã vé (MT...)..."
+            className="input-field flex-1 font-mono text-lg"
             value={code}
             onChange={e => setCode(e.target.value.toUpperCase())}
           />
@@ -148,16 +210,21 @@ export default function VerifyTicketPage() {
           <button 
             type="button" 
             onClick={() => fileInputRef.current?.click()} 
-            className="btn-secondary px-4 text-xl" 
+            className="btn-secondary px-4 text-xl hover:scale-110 active:scale-95 transition-transform" 
             title="Tải ảnh QR từ thư viện"
           >
             🖼️
           </button>
-          <button type="button" onClick={() => setShowScanner(true)} className="btn-secondary px-4 text-xl" title="Quét QR">
+          <button 
+            type="button" 
+            onClick={() => setShowScanner(true)} 
+            className="btn-secondary px-4 text-xl hover:scale-110 active:scale-95 transition-transform" 
+            title="Quét QR"
+          >
             📷
           </button>
-          <button type="submit" disabled={loading} className="btn-primary px-5">
-            {loading ? '...' : 'Tra cứu'}
+          <button type="submit" disabled={loading} className="btn-primary px-5 font-bold">
+            {loading ? '...' : 'TRA CỨU'}
           </button>
         </form>
 
@@ -192,7 +259,7 @@ export default function VerifyTicketPage() {
           }
 
           return (
-            <div className={`card overflow-hidden animate-slide-up border-2 ${borderColor}`}>
+            <div className={`card overflow-hidden animate-slide-up border-2 bg-dark-900/50 backdrop-blur-sm ${borderColor}`}>
               <div className={`flex items-center gap-2 p-5 pb-3 ${iconColor}`}>
                 {icon}
                 <span className="font-bold text-lg">{title}</span>
@@ -224,7 +291,7 @@ export default function VerifyTicketPage() {
                   <span className="text-white font-bold">{seatCodes.join(', ')}</span>
                 </div>
                 <div className="flex justify-between items-center mt-2 pt-2 border-t border-dark-700/50">
-                  <span className="text-dark-400">Trạng thái</span>
+                  <span className="text-dark-400 font-medium">Trạng thái</span>
                   <span className={`badge-status ${(BOOKING_STATUS[result.status] || {}).color}`}>
                     {(BOOKING_STATUS[result.status] || {}).label || result.status}
                   </span>
@@ -236,10 +303,10 @@ export default function VerifyTicketPage() {
                   <button
                     onClick={handleCheckIn}
                     disabled={checkingIn}
-                    className="w-full btn-primary py-3 flex items-center justify-center gap-2 text-base shadow-[0_0_20px_rgba(225,29,72,0.3)] hover:shadow-[0_0_30px_rgba(225,29,72,0.5)]"
+                    className="w-full btn-primary py-3 flex items-center justify-center gap-2 text-base shadow-[0_0_20px_rgba(225,29,72,0.3)] hover:shadow-[0_0_30px_rgba(225,29,72,0.5)] transition-all font-bold"
                   >
                     {checkingIn && <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-                    {checkingIn ? 'Đang cập nhật...' : 'CHECK-IN (Sử dụng vé này)'}
+                    {checkingIn ? 'Đang cập nhật...' : 'CHECK-IN (Sử dụng vé)'}
                   </button>
                 </div>
               )}
@@ -250,7 +317,7 @@ export default function VerifyTicketPage() {
 
       <AnimatePresence>
         {showScanner && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
             <motion.div
               className="absolute inset-0 bg-black/80 backdrop-blur-sm"
               variants={modalBackdrop}
@@ -299,3 +366,4 @@ export default function VerifyTicketPage() {
     </div>
   )
 }
+
