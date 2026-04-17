@@ -48,6 +48,15 @@ export default function VerifyTicketPage() {
     }
   }
 
+  const handleScanError = (error) => {
+    console.error('Camera error:', error)
+    if (!window.isSecureContext) {
+      toast.error('Camera chỉ hoạt động trên HTTPS hoặc localhost (Secure Context)')
+    } else {
+      toast.error(`Lỗi Camera: ${error?.message || 'Vui lòng cấp quyền truy cập'}`)
+    }
+  }
+
   const handleCheckIn = async () => {
     if (!result) return
     setCheckingIn(true)
@@ -202,10 +211,10 @@ export default function VerifyTicketPage() {
               <div className="bg-black relative aspect-square w-full">
                 <Scanner 
                   onScan={handleScan}
-                  formats={['qr_code']}
+                  onError={handleScanError}
                   components={{
                     audio: false,
-                    onOff: true,
+                    onOff: false,
                     finder: true
                   }}
                   styles={{

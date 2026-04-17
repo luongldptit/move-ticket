@@ -43,8 +43,8 @@ public class Booking {
     @Column(name = "final_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal finalAmount;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 15)
+    @Convert(converter = com.movieticket.entity.converter.BookingStatusConverter.class)
+    @Column(nullable = false, length = 20, columnDefinition = "VARCHAR(20)")
     private BookingStatus status = BookingStatus.PENDING;
 
     @Column(name = "qr_code", length = 500)
