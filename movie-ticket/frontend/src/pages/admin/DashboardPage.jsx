@@ -146,7 +146,7 @@ export default function DashboardPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Revenue chart (takes 2 columns) */}
-            <div className="lg:col-span-2 bg-black/30 border border-white/5 rounded-3xl p-6 relative">
+            <div className="lg:col-span-2 bg-black/30 border border-white/5 rounded-3xl p-6 relative min-w-0">
               <h2 className="text-sm font-black uppercase tracking-widest text-white/90 mb-6">Biểu Đồ Doanh Thu</h2>
               {chartData.length > 0 ? (
                 <div className="h-[300px]">
@@ -160,12 +160,12 @@ export default function DashboardPage() {
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                       <XAxis dataKey="period" tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} tickFormatter={v => `${(v / 1e6).toFixed(0)}Tr`} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} tickFormatter={v => `${(Number(v) / 1e6).toFixed(0)}Tr`} axisLine={false} tickLine={false} />
                       <Tooltip
                         contentStyle={{ background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', padding: '12px 16px' }}
                         labelStyle={{ color: '#94a3b8', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}
-                        itemStyle={{ color: '#fff', fontWeight: 700, fontSize: '14px' }}
-                        formatter={(v, name) => [name === 'revenue' ? formatPrice(v) : v, name === 'revenue' ? 'Doanh Thu' : 'Đơn']}
+                        itemStyle={{ color: '#e11d48', fontWeight: 700, fontSize: '14px' }}
+                        formatter={(value) => [formatPrice(value), 'Doanh Thu']}
                       />
                       <Area type="monotone" dataKey="revenue" stroke="#e11d48" fill="url(#rv)" strokeWidth={3} activeDot={{ r: 6, fill: '#fff', stroke: '#e11d48', strokeWidth: 3 }} />
                     </AreaChart>
