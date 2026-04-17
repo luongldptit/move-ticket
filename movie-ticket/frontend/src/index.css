@@ -98,6 +98,7 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
@@ -108,12 +109,10 @@
 
   /* Shimmer skeleton */
   .skeleton-shimmer {
-    background: linear-gradient(
-      90deg,
-      rgba(30, 41, 59, 0.8) 25%,
-      rgba(51, 65, 85, 0.5) 50%,
-      rgba(30, 41, 59, 0.8) 75%
-    );
+    background: linear-gradient(90deg,
+        rgba(30, 41, 59, 0.8) 25%,
+        rgba(51, 65, 85, 0.5) 50%,
+        rgba(30, 41, 59, 0.8) 75%);
     background-size: 200% 100%;
     animation: shimmer 1.8s infinite linear;
   }
@@ -123,6 +122,7 @@
     @apply transition-all duration-300;
     backdrop-filter: blur(8px);
   }
+
   .glass-hover:hover {
     backdrop-filter: blur(12px);
     box-shadow: 0 20px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(244, 63, 94, 0.15);
@@ -133,15 +133,17 @@
     position: relative;
     overflow: hidden;
   }
+
   .btn-ripple::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.25) 0%, transparent 70%);
     transform: scale(0);
     opacity: 0;
     transition: transform 0.4s ease, opacity 0.4s ease;
   }
+
   .btn-ripple:active::after {
     transform: scale(2.5);
     opacity: 1;
@@ -151,7 +153,11 @@
 
 /* Respect reduced-motion preference */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+
+  *,
+  *::before,
+  *::after {
+
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
