@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { adminApi } from '../../api/adminApi'
 import { formatPrice } from '../../utils/helpers'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
@@ -55,11 +55,50 @@ export default function DashboardPage() {
     load(from, to)
   }
 
-  const chartData = (revenue?.breakdown || []).map(b => ({
-    period: b.period,
-    revenue: b.revenue,
-    bookings: b.bookings,
-  }))
+  const diffDays = Math.ceil(Math.abs(new Date(to) - new Date(from)) / (1000 * 60 * 60 * 24))
+  const isDaily = diffDays <= 31
+
+  const chartData = useMemo(() => {
+    if (!revenue?.breakdown) return []
+    
+    const map = revenue.breakdown.reduce((acc, b) => {
+      const pStr = String(b.period)
+      acc[pStr] = b
+      if (pStr.length >= 10) acc[pStr.substring(0, 10)] = b
+      if (pStr.length >= 7) acc[pStr.substring(0, 7)] = b
+      return acc
+    }, {})
+
+    const data = []
+    let curr = new Date(from)
+    const endDate = new Date(to)
+    
+    if (isDaily) {
+      while (curr <= endDate) {
+        const periodKey = curr.toISOString().split('T')[0]
+        data.push({
+          period: periodKey,
+          revenue: map[periodKey]?.revenue || 0,
+          bookings: map[periodKey]?.bookings || 0
+        })
+        curr.setDate(curr.getDate() + 1)
+      }
+    } else {
+      curr.setDate(1)
+      const endMonth = new Date(endDate)
+      endMonth.setDate(1)
+      while (curr <= endMonth) {
+        const periodKey = curr.toISOString().substring(0, 7)
+        data.push({
+          period: periodKey,
+          revenue: map[periodKey]?.revenue || 0,
+          bookings: map[periodKey]?.bookings || 0
+        })
+        curr.setMonth(curr.getMonth() + 1)
+      }
+    }
+    return data
+  }, [revenue, from, to, isDaily])
 
   return (
     <div className="flex flex-col h-full">
