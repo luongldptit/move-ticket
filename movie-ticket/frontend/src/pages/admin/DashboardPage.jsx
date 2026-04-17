@@ -1,8 +1,16 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { motion } from 'framer-motion'
 import { adminApi } from '../../api/adminApi'
 import { formatPrice } from '../../utils/helpers'
 import { ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { PageLoader } from '../../components/common/Spinner'
+import {
+  statCardVariants,
+  statCardContainerVariants,
+  fadeUp,
+  scaleIn,
+  easeOut,
+} from '../../utils/motion'
 
 const today = new Date().toISOString().split('T')[0]
 const defaultFrom = new Date(new Date().getFullYear(), new Date().getMonth() - 2, 1).toISOString().split('T')[0]
@@ -18,7 +26,12 @@ const PRESETS = [
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#0f172a]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-4 min-w-[160px]">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+        className="bg-[#0f172a]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-4 min-w-[160px]"
+      >
         <div className="text-[10px] font-black text-dark-400 mb-3 tracking-[0.2em] uppercase border-b border-white/5 pb-2">{label}</div>
         <div className="space-y-3">
           {payload.map((entry, index) => (
@@ -33,7 +46,7 @@ const CustomTooltip = ({ active, payload, label }) => {
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
     );
   }
   return null;
@@ -52,7 +65,7 @@ export default function DashboardPage() {
     setLoading(true)
     const diffDays = Math.ceil(Math.abs(new Date(t) - new Date(f)) / (1000 * 60 * 60 * 24))
     const reportType = diffDays <= 31 ? 'DAILY' : 'MONTHLY'
-    
+
     Promise.all([
       adminApi.getRevenueReport({ type: reportType, from: f, to: t }),
       adminApi.getTopMovies({ from: f, to: t, limit: 5 }),
@@ -84,7 +97,7 @@ export default function DashboardPage() {
 
   const chartData = useMemo(() => {
     if (!revenue?.breakdown) return []
-    
+
     const map = revenue.breakdown.reduce((acc, b) => {
       const pStr = String(b.period)
       acc[pStr] = b
@@ -96,7 +109,7 @@ export default function DashboardPage() {
     const data = []
     let curr = new Date(from)
     const endDate = new Date(to)
-    
+
     if (isDaily) {
       while (curr <= endDate) {
         const periodKey = curr.toISOString().split('T')[0]
@@ -127,18 +140,28 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header Area */}
-      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-10 border-b border-white/10 pb-6">
+      <motion.div
+        className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-10 border-b border-white/10 pb-6"
+        initial={{ opacity: 0, y: -20, filter: 'blur(8px)' }}
+        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      >
         <div>
           <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-dark-300 tracking-tight">Overview Dashboard</h1>
-          <p className="text-dark-400 text-sm mt-2 font-medium">Báo cáo doanh thu & hiệu suất hệ thống rạp phim</p>
+          <p className="text-dark-400 text-sm mt-2 font-medium">Báo cáo doanh thu &amp; hiệu suất hệ thống rạp phim</p>
         </div>
 
         {/* Date filter Glass Panel */}
-        <div className="flex flex-wrap items-center gap-3 bg-black/40 border border-white/5 p-2 rounded-2xl backdrop-blur-md">
+        <motion.div
+          className="flex flex-wrap items-center gap-3 bg-black/40 border border-white/5 p-2 rounded-2xl backdrop-blur-md"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.15, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
           {/* Presets */}
           <div className="flex items-center gap-1 border-r border-white/10 pr-3">
-            {PRESETS.map(p => (
-              <button
+            {PRESETS.map((p, i) => (
+              <motion.button
                 key={p.label}
                 onClick={() => handlePreset(p)}
                 className={`text-xs font-bold px-4 py-2 rounded-xl transition-all duration-300 ${
@@ -146,9 +169,14 @@ export default function DashboardPage() {
                     ? 'bg-primary-600 shadow-[0_0_15px_rgba(225,29,72,0.4)] text-white'
                     : 'text-dark-400 hover:text-white hover:bg-white/5'
                 }`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + i * 0.05, duration: 0.3 }}
               >
                 {p.label}
-              </button>
+              </motion.button>
             ))}
           </div>
 
@@ -170,12 +198,17 @@ export default function DashboardPage() {
               onChange={e => { setTo(e.target.value); setActivePreset('') }}
               className="bg-transparent border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:border-primary-500 outline-none"
             />
-            <button onClick={handleApply} className="bg-white/10 hover:bg-white/20 border border-white/10 text-white text-xs font-bold py-1.5 px-4 rounded-xl transition-all">
+            <motion.button
+              onClick={handleApply}
+              className="bg-white/10 hover:bg-white/20 border border-white/10 text-white text-xs font-bold py-1.5 px-4 rounded-xl transition-all"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               Filter
-            </button>
+            </motion.button>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {loading ? (
         <div className="flex-1 flex items-center justify-center min-h-[400px]">
@@ -183,39 +216,84 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-8">
-          {/* Top 3 Stat Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Top 3 Stat Cards — staggered */}
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            variants={statCardContainerVariants}
+            initial="hidden"
+            animate="show"
+          >
             {[
-              { label: 'TỔNG DOANH THU', value: formatPrice(revenue?.totalRevenue || 0), desc: 'Đã thanh toán thành công', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1', color: 'from-green-500 to-emerald-700', glow: 'rgba(16,185,129,0.2)' },
-              { label: 'TỔNG LƯỢT GIAO DỊCH', value: (revenue?.totalBookings || 0).toLocaleString(), desc: 'Số đơn hàng đã chốt', icon: 'M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z', color: 'from-blue-500 to-indigo-700', glow: 'rgba(59,130,246,0.2)' },
-              { label: 'TỶ LỆ LẤP ĐẦY RẠP', value: `${(occupancy?.averageOccupancyRate || 0).toFixed(1)}%`, desc: 'Tỉ suất bình quân phòng', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', color: 'from-purple-500 to-fuchsia-700', glow: 'rgba(168,85,247,0.2)' },
+              { label: 'TỔNG DOANH THU', value: formatPrice(revenue?.totalRevenue || 0), desc: 'Đã thanh toán thành công', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1', color: 'from-green-500 to-emerald-700', glow: 'rgba(16,185,129,0.2)', glowHover: 'rgba(16,185,129,0.45)', border: 'rgba(16,185,129,0.25)' },
+              { label: 'TỔNG LƯỢT GIAO DỊCH', value: (revenue?.totalBookings || 0).toLocaleString(), desc: 'Số đơn hàng đã chốt', icon: 'M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z', color: 'from-blue-500 to-indigo-700', glow: 'rgba(59,130,246,0.2)', glowHover: 'rgba(59,130,246,0.45)', border: 'rgba(59,130,246,0.25)' },
+              { label: 'TỶ LỆ LẤP ĐẦY RẠP', value: `${(occupancy?.averageOccupancyRate || 0).toFixed(1)}%`, desc: 'Tỉ suất bình quân phòng', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', color: 'from-purple-500 to-fuchsia-700', glow: 'rgba(168,85,247,0.2)', glowHover: 'rgba(168,85,247,0.45)', border: 'rgba(168,85,247,0.25)' },
             ].map(s => (
-              <div key={s.label} className="relative overflow-hidden bg-white/5 border border-white/10 rounded-3xl p-6 group">
-                <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-[50px] opacity-50 group-hover:opacity-80 transition-opacity" style={{ background: s.glow }} />
-                
+              <motion.div
+                key={s.label}
+                variants={statCardVariants}
+                className="relative overflow-hidden bg-white/5 border border-white/10 rounded-3xl p-6 group cursor-default"
+                whileHover={{
+                  scale: 1.03,
+                  y: -6,
+                  borderColor: s.border,
+                  boxShadow: `0 20px 60px ${s.glow}, 0 0 0 1px ${s.border}`,
+                  transition: { type: 'spring', stiffness: 320, damping: 22 },
+                }}
+              >
+                {/* Animated glow orb */}
+                <motion.div
+                  className="absolute top-0 right-0 w-40 h-40 rounded-full blur-[60px] pointer-events-none"
+                  style={{ background: s.glow }}
+                  animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.9, 0.5] }}
+                  transition={{ duration: 4 + Math.random() * 2, repeat: Infinity, ease: 'easeInOut' }}
+                />
+
                 <div className="flex items-center gap-4 mb-4 relative z-10">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-br ${s.color} shadow-lg`}>
+                  <motion.div
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-br ${s.color} shadow-lg`}
+                    whileHover={{ scale: 1.15, rotate: 8 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                  >
                     <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={s.icon} />
                     </svg>
-                  </div>
+                  </motion.div>
                   <div>
                     <div className="text-[10px] font-black uppercase tracking-widest text-dark-400">{s.label}</div>
                     <div className="text-xs font-semibold text-dark-300 mt-0.5">{s.desc}</div>
                   </div>
                 </div>
-                
-                <div className="text-4xl font-black text-white tracking-tighter drop-shadow-md relative z-10">{s.value}</div>
-              </div>
+
+                <motion.div
+                  className="text-4xl font-black text-white tracking-tighter drop-shadow-md relative z-10"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3, type: 'spring', stiffness: 260, damping: 20 }}
+                >
+                  {s.value}
+                </motion.div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Revenue chart (takes 2 columns) */}
-            <div className="lg:col-span-2 bg-black/30 border border-white/5 rounded-3xl p-6 relative min-w-0">
+            {/* Revenue chart */}
+            <motion.div
+              className="lg:col-span-2 bg-black/30 border border-white/5 rounded-3xl p-6 relative min-w-0"
+              variants={fadeUp}
+              initial="hidden"
+              animate="show"
+              transition={{ ...easeOut, delay: 0.35 }}
+            >
               <h2 className="text-sm font-black uppercase tracking-widest text-white/90 mb-6">Biểu Đồ Doanh Thu</h2>
               {chartData.length > 0 ? (
-                <div className="h-[300px]">
+                <motion.div
+                  className="h-[300px]"
+                  initial={{ opacity: 0, scaleY: 0.85 }}
+                  animate={{ opacity: 1, scaleY: 1 }}
+                  transition={{ delay: 0.45, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ transformOrigin: 'bottom' }}
+                >
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                       <defs>
@@ -230,24 +308,27 @@ export default function DashboardPage() {
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                       <XAxis dataKey="period" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} tickMargin={10} />
-                      
                       <YAxis yAxisId="left" tick={{ fill: '#e11d48', fontSize: 10, fontWeight: 700 }} tickFormatter={v => new Intl.NumberFormat('vi-VN', { notation: 'compact', compactDisplay: 'short' }).format(v)} axisLine={false} tickLine={false} tickMargin={10} />
                       <YAxis yAxisId="right" orientation="right" tick={{ fill: '#3b82f6', fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} tickMargin={10} />
-                      
                       <Tooltip cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2, strokeDasharray: '5 5' }} content={<CustomTooltip />} />
-                      
                       <Bar yAxisId="right" dataKey="bookings" name="Lượt Giao Dịch" fill="url(#bk)" radius={[4, 4, 0, 0]} maxBarSize={40} />
                       <Area yAxisId="left" type="monotone" dataKey="revenue" name="Doanh Thu" stroke="#e11d48" fill="url(#rv)" strokeWidth={3} activeDot={{ r: 6, fill: '#fff', stroke: '#e11d48', strokeWidth: 3, className: 'drop-shadow-[0_0_10px_rgba(225,29,72,0.8)]' }} />
                     </ComposedChart>
                   </ResponsiveContainer>
-                </div>
+                </motion.div>
               ) : (
                 <div className="flex items-center justify-center h-[300px] text-dark-500 font-bold uppercase tracking-widest text-sm border-2 border-dashed border-white/5 rounded-2xl">Không có dữ liệu trong kỳ</div>
               )}
-            </div>
+            </motion.div>
 
             {/* Top movies Table */}
-            <div className="bg-black/30 border border-white/5 rounded-3xl p-6">
+            <motion.div
+              className="bg-black/30 border border-white/5 rounded-3xl p-6"
+              variants={scaleIn}
+              initial="hidden"
+              animate="show"
+              transition={{ ...easeOut, delay: 0.4 }}
+            >
               <h2 className="text-sm font-black uppercase tracking-widest text-white/90 mb-6 flex items-center justify-between">
                 <span>Top Tác Phẩm</span>
                 <span className="text-[10px] text-dark-400 font-bold bg-white/5 px-2 py-1 rounded">DOANH THU KHỦNG CỦA KỲ</span>
@@ -255,9 +336,22 @@ export default function DashboardPage() {
               {topMovies.length === 0 ? (
                 <div className="text-center text-dark-500 py-12 border-2 border-dashed border-white/5 rounded-2xl">TRỐNG DANH SÁCH</div>
               ) : (
-                <div className="space-y-4">
-                  {topMovies.map(m => (
-                    <div key={m.movieId} className="flex gap-4 p-3 hover:bg-white/5 rounded-2xl transition-colors border border-transparent hover:border-white/5">
+                <motion.div
+                  className="space-y-4"
+                  variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.45 } } }}
+                  initial="hidden"
+                  animate="show"
+                >
+                  {topMovies.map((m, i) => (
+                    <motion.div
+                      key={m.movieId}
+                      variants={{
+                        hidden: { opacity: 0, x: 20, scale: 0.96 },
+                        show: { opacity: 1, x: 0, scale: 1, transition: { type: 'spring', stiffness: 300, damping: 24 } },
+                      }}
+                      className="flex gap-4 p-3 hover:bg-white/5 rounded-2xl transition-colors border border-transparent hover:border-white/5"
+                      whileHover={{ x: 4, transition: { type: 'spring', stiffness: 400, damping: 20 } }}
+                    >
                       <div className="relative w-12 h-16 shrink-0 rounded-xl overflow-hidden shadow-lg border border-white/10">
                         <img src={m.posterUrl || 'https://placehold.co/80x120/1e293b/94a3b8?text=?'} alt="" className="w-full h-full object-cover" />
                         <div className="absolute top-0 left-0 w-5 h-5 bg-black/80 backdrop-blur text-white flex items-center justify-center text-[10px] font-black rounded-br-lg">{m.rank}</div>
@@ -267,11 +361,11 @@ export default function DashboardPage() {
                         <div className="text-dark-400 text-[10px] font-bold tracking-widest uppercase mb-1">{m.totalTicketsSold} VÉ / {m.totalShowtimes} SUẤT</div>
                         <div className="text-primary-400 font-black text-sm">{formatPrice(m.totalRevenue)}</div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
-                </div>
+                </motion.div>
               )}
-            </div>
+            </motion.div>
           </div>
         </div>
       )}

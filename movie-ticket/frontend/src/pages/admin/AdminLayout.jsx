@@ -1,5 +1,11 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import {
+  adminSidebarVariants,
+  adminMainVariants,
+  adminNavItemVariants,
+  adminNavContainerVariants,
+} from '../../utils/motion'
 
 const navItems = [
   { to: '/admin', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z', label: 'Dashboard', end: true },
@@ -12,64 +18,108 @@ const navItems = [
 
 export default function AdminLayout() {
   const navigate = useNavigate()
-  
+
   return (
     <div className="h-screen bg-[#020617] flex flex-col p-4 sm:p-6 lg:p-8 relative overflow-hidden">
       {/* Background Ambience */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-600/10 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
+      <motion.div
+        className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-600/10 blur-[120px] rounded-full pointer-events-none"
+        animate={{ scale: [1, 1.08, 1], opacity: [0.6, 1, 0.6] }}
+        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none"
+        animate={{ scale: [1, 1.06, 1], opacity: [0.5, 0.9, 0.5] }}
+        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+      />
 
       <div className="flex h-full w-full max-w-[1600px] mx-auto gap-8 relative z-10">
-        
-        {/* Floating Sidebar */}
-        <aside className="w-64 max-w-sm flex-shrink-0 flex flex-col h-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
+
+        {/* Floating Sidebar — animated entrance */}
+        <motion.aside
+          className="w-64 max-w-sm flex-shrink-0 flex flex-col h-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden"
+          variants={adminSidebarVariants}
+          initial="hidden"
+          animate="show"
+        >
           {/* Header */}
-          <div className="p-6 border-b border-white/10">
+          <motion.div
+            className="p-6 border-b border-white/10"
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          >
             <div className="text-[10px] font-black text-primary-400 uppercase tracking-[0.2em] mb-1">Workstation</div>
             <div className="text-xl font-black text-white tracking-widest">ADMIN PANEL</div>
-          </div>
-          
-          {/* Nav */}
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-hide">
-            {navItems.map(item => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                className={({ isActive }) =>
-                  `flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 ${
-                    isActive
-                      ? 'bg-gradient-to-r from-primary-600/20 to-transparent text-primary-400 border-l-2 border-primary-500 shadow-[inset_0_0_20px_rgba(225,29,72,0.05)]'
-                      : 'text-dark-300 hover:text-white hover:bg-white/5 border-l-2 border-transparent'
-                  }`
-                }
-              >
-                <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-                </svg>
-                {item.label}
-              </NavLink>
+          </motion.div>
+
+          {/* Nav — staggered items */}
+          <motion.nav
+            className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-hide"
+            variants={adminNavContainerVariants}
+            initial="hidden"
+            animate="show"
+          >
+            {navItems.map((item) => (
+              <motion.div key={item.to} variants={adminNavItemVariants}>
+                <NavLink
+                  to={item.to}
+                  end={item.end}
+                  className={({ isActive }) =>
+                    `flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-primary-600/20 to-transparent text-primary-400 border-l-2 border-primary-500 shadow-[inset_0_0_20px_rgba(225,29,72,0.05)]'
+                        : 'text-dark-300 hover:text-white hover:bg-white/5 border-l-2 border-transparent'
+                    }`
+                  }
+                >
+                  <motion.svg
+                    className="w-5 h-5 flex-shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    whileHover={{ scale: 1.15, rotate: 5 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                  </motion.svg>
+                  {item.label}
+                </NavLink>
+              </motion.div>
             ))}
-          </nav>
+          </motion.nav>
 
           {/* Footer actions */}
-          <div className="p-4 border-t border-white/10 bg-dark-900/30">
-            <button 
-              onClick={() => navigate('/')} 
+          <motion.div
+            className="p-4 border-t border-white/10 bg-dark-900/30"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <motion.button
+              onClick={() => navigate('/')}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold text-dark-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 transition-all"
+              whileHover={{ scale: 1.02, x: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 20 }}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               VỀ TRANG CHỦ
-            </button>
-          </div>
-        </aside>
+            </motion.button>
+          </motion.div>
+        </motion.aside>
 
-        {/* Main Workspace Area */}
-        <main className="flex-1 min-w-0 h-full overflow-y-auto scrollbar-hide bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative">
+        {/* Main Workspace Area — animated entrance */}
+        <motion.main
+          className="flex-1 min-w-0 h-full overflow-y-auto scrollbar-hide bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative"
+          variants={adminMainVariants}
+          initial="hidden"
+          animate="show"
+        >
           <Outlet />
-        </main>
+        </motion.main>
       </div>
     </div>
   )

@@ -53,7 +53,35 @@ export const springBouncy = { type: 'spring', stiffness: 400, damping: 17 }
 export const easeOut = { type: 'tween', ease: 'easeOut', duration: 0.45 }
 export const easeOutFast = { type: 'tween', ease: 'easeOut', duration: 0.28 }
 
-// Page transition (wrap top-level page div — legacy, use pageVariants for AnimatedRoutes)
+// ─── WOW Page transition (cinematic: scale + blur + opacity + slide) ───
+export const pageVariants = {
+  initial: {
+    opacity: 0,
+    scale: 0.97,
+    y: 24,
+    filter: 'blur(8px)',
+  },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: {
+      duration: 0.55,
+      ease: [0.16, 1, 0.3, 1],
+      filter: { duration: 0.4 },
+    },
+  },
+  exit: {
+    opacity: 0,
+    scale: 1.02,
+    y: -16,
+    filter: 'blur(6px)',
+    transition: { duration: 0.3, ease: [0.4, 0, 1, 1] },
+  },
+}
+
+// Page transition (legacy fallback)
 export const pageTransition = {
   initial:   { opacity: 0, y: 12 },
   animate:   { opacity: 1, y: 0 },
@@ -61,11 +89,63 @@ export const pageTransition = {
   transition: { duration: 0.4, ease: 'easeOut' },
 }
 
-// ─── Page variants (used in AnimatedRoutes with AnimatePresence) ───
-export const pageVariants = {
-  initial:  { opacity: 0, y: 16 },
-  animate:  { opacity: 1, y: 0,  transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] } },
-  exit:     { opacity: 0, y: -8, transition: { duration: 0.22, ease: 'easeIn' } },
+// ─── Admin layout entrance (sidebar + main content stagger) ───
+export const adminSidebarVariants = {
+  hidden: { opacity: 0, x: -60, scale: 0.95, filter: 'blur(10px)' },
+  show: {
+    opacity: 1, x: 0, scale: 1, filter: 'blur(0px)',
+    transition: { type: 'spring', stiffness: 220, damping: 26, delay: 0.05 },
+  },
+}
+
+export const adminMainVariants = {
+  hidden: { opacity: 0, x: 60, scale: 0.96, filter: 'blur(10px)' },
+  show: {
+    opacity: 1, x: 0, scale: 1, filter: 'blur(0px)',
+    transition: { type: 'spring', stiffness: 220, damping: 26, delay: 0.15 },
+  },
+}
+
+// ─── Admin nav item (stagger inside sidebar) ───
+export const adminNavItemVariants = {
+  hidden: { opacity: 0, x: -18, scale: 0.96 },
+  show: {
+    opacity: 1, x: 0, scale: 1,
+    transition: { type: 'spring', stiffness: 320, damping: 24 },
+  },
+}
+
+export const adminNavContainerVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06, delayChildren: 0.25 } },
+}
+
+// ─── Dashboard stat card reveal (stagger) ───
+export const statCardVariants = {
+  hidden: { opacity: 0, y: 40, scale: 0.93, filter: 'blur(6px)' },
+  show: {
+    opacity: 1, y: 0, scale: 1, filter: 'blur(0px)',
+    transition: { type: 'spring', stiffness: 260, damping: 22 },
+  },
+}
+
+export const statCardContainerVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.1, delayChildren: 0.1 } },
+}
+
+// ─── Hero text reveal (cinematic stagger) ───
+export const heroContainerVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
+}
+
+export const heroItemVariants = {
+  hidden: { opacity: 0, y: 32, filter: 'blur(8px)' },
+  show: {
+    opacity: 1, y: 0, filter: 'blur(0px)',
+    transition: { type: 'spring', stiffness: 240, damping: 24 },
+  },
 }
 
 // ─── Modal variants ───
@@ -76,22 +156,49 @@ export const modalBackdrop = {
 }
 
 export const modalPanel = {
-  hidden: { opacity: 0, scale: 0.94, y: 16 },
-  show:   { opacity: 1, scale: 1,    y: 0,  transition: { type: 'spring', stiffness: 340, damping: 26 } },
-  exit:   { opacity: 0, scale: 0.96, y: 10, transition: { duration: 0.18, ease: 'easeIn' } },
+  hidden: { opacity: 0, scale: 0.92, y: 24, filter: 'blur(8px)' },
+  show: {
+    opacity: 1, scale: 1, y: 0, filter: 'blur(0px)',
+    transition: { type: 'spring', stiffness: 340, damping: 26 },
+  },
+  exit: {
+    opacity: 0, scale: 0.96, y: 12, filter: 'blur(4px)',
+    transition: { duration: 0.2, ease: 'easeIn' },
+  },
 }
 
 // ─── Dropdown / mobile menu ───
 export const dropdownVariants = {
-  hidden: { opacity: 0, scale: 0.95, y: -8 },
-  show:   { opacity: 1, scale: 1,    y: 0,  transition: { type: 'spring', stiffness: 360, damping: 28 } },
-  exit:   { opacity: 0, scale: 0.95, y: -6, transition: { duration: 0.16, ease: 'easeIn' } },
+  hidden: { opacity: 0, scale: 0.94, y: -10, filter: 'blur(6px)' },
+  show: {
+    opacity: 1, scale: 1, y: 0, filter: 'blur(0px)',
+    transition: { type: 'spring', stiffness: 380, damping: 28 },
+  },
+  exit: {
+    opacity: 0, scale: 0.94, y: -8, filter: 'blur(4px)',
+    transition: { duration: 0.16, ease: 'easeIn' },
+  },
 }
 
 export const mobileMenuVariants = {
-  hidden: { opacity: 0, height: 0,      overflow: 'hidden' },
-  show:   { opacity: 1, height: 'auto', overflow: 'hidden', transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] } },
-  exit:   { opacity: 0, height: 0,      overflow: 'hidden', transition: { duration: 0.2,  ease: 'easeIn' } },
+  hidden: { opacity: 0, height: 0, overflow: 'hidden' },
+  show: {
+    opacity: 1, height: 'auto', overflow: 'hidden',
+    transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
+  },
+  exit: {
+    opacity: 0, height: 0, overflow: 'hidden',
+    transition: { duration: 0.22, ease: 'easeIn' },
+  },
+}
+
+// ─── Navbar entrance ───
+export const navbarVariants = {
+  hidden: { opacity: 0, y: -24, filter: 'blur(8px)' },
+  show: {
+    opacity: 1, y: 0, filter: 'blur(0px)',
+    transition: { type: 'spring', stiffness: 280, damping: 28, delay: 0.05 },
+  },
 }
 
 // ─── Star rating pop ───
@@ -106,8 +213,14 @@ export const starPop = {
 // ─── Review item ───
 export const reviewItemVariants = {
   hidden: { opacity: 0, x: -16, scale: 0.98 },
-  show:   { opacity: 1, x: 0,   scale: 1,    transition: { type: 'spring', stiffness: 240, damping: 24 } },
-  exit:   { opacity: 0, x: 16,  scale: 0.96, transition: { duration: 0.2 } },
+  show: {
+    opacity: 1, x: 0, scale: 1,
+    transition: { type: 'spring', stiffness: 240, damping: 24 },
+  },
+  exit: {
+    opacity: 0, x: 16, scale: 0.96,
+    transition: { duration: 0.2 },
+  },
 }
 
 // ─── Card hover preset (spread as whileHover prop) ───
@@ -120,5 +233,18 @@ export const cardHover = {
 // ─── Checkmark SVG draw ───
 export const checkmarkDraw = {
   hidden: { pathLength: 0, opacity: 0 },
-  show:   { pathLength: 1, opacity: 1, transition: { duration: 0.55, delay: 0.3, ease: 'easeOut' } },
+  show: {
+    pathLength: 1, opacity: 1,
+    transition: { duration: 0.55, delay: 0.3, ease: 'easeOut' },
+  },
 }
+
+// ─── Floating glow orb ───
+export const orbFloat = (duration = 18) => ({
+  animate: {
+    y: [0, -28, 12, 0],
+    x: [0, 14, -10, 0],
+    scale: [1, 1.06, 0.97, 1],
+    transition: { duration, repeat: Infinity, ease: 'easeInOut' },
+  },
+})

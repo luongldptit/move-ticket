@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useAnimation } from 'framer-motion'
 import { logout } from '../../store/slices/authSlice'
 import { authApi } from '../../api/authApi'
 import { toast } from 'react-toastify'
@@ -17,6 +17,15 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const searchRef = useRef(null)
+  const navControls = useAnimation()
+
+  useEffect(() => {
+    // Entrance animation
+    navControls.start({
+      opacity: 1, y: 0, filter: 'blur(0px)',
+      transition: { type: 'spring', stiffness: 280, damping: 28, delay: 0.05 },
+    })
+  }, [])
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20)
@@ -47,12 +56,14 @@ export default function Navbar() {
   return (
     <motion.nav
       className="fixed top-0 left-0 right-0 z-50 border-b border-dark-800/60"
-      animate={{
+      initial={{ opacity: 0, y: -24, filter: 'blur(8px)' }}
+      animate={navControls}
+      style={{
         backgroundColor: scrolled ? 'rgba(2,6,23,0.98)' : 'rgba(2,6,23,0.95)',
         boxShadow: scrolled ? '0 4px 32px rgba(0,0,0,0.4)' : '0 0 0 rgba(0,0,0,0)',
+        backdropFilter: 'blur(16px)',
+        transition: 'background-color 0.3s, box-shadow 0.3s',
       }}
-      transition={{ duration: 0.3 }}
-      style={{ backgroundColor: 'rgba(2,6,23,0.95)', backdropFilter: 'blur(16px)' }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
