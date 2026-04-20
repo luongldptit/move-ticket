@@ -11,54 +11,55 @@ export default function SeatLayoutEditor({ room, onClose, onSave }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const containerRef = useRef(null)
-useEffect(() => {
-  cinemaApi.getRoomSeats(room.id).then(res => {
-    const data = res.data.data
-    setRows(data.rows || [])
 
-    // Khởi tạo config với default nếu phòng cũ chưa có
-    let initialConfig = {
-      screen: { rotateX: -15, scale: 1, mb: 16, offsetX: 0, offsetY: 0 },
-      hall: { rotateX: 38, staggerZ: 45, staggerY: -12 }
-    }
+  useEffect(() => {
+    cinemaApi.getRoomSeats(room.id).then(res => {
+      const data = res.data.data
+      setRows(data.rows || [])
 
-    if (data.config) {
-      try { 
-        const parsed = JSON.parse(data.config)
-        initialConfig = { ...initialConfig, ...parsed }
-      } catch(e) { console.error("Parse config error", e) }
-    }
-    setConfig(initialConfig)
-  }).finally(() => setLoading(false))
-}, [room.id])
+      // Khởi tạo config với default nếu phòng cũ chưa có
+      let initialConfig = {
+        screen: { rotateX: -15, scale: 1, mb: 16, offsetX: 0, offsetY: 0 },
+        hall: { rotateX: 38, staggerZ: 45, staggerY: -12 }
+      }
 
-const handleDragEnd = (seatId, e, info) => {
-  // Di chuyển 1:1 theo pixel để chính xác nhất
-  const dx = info.offset.x
-  const dy = info.offset.y
+      if (data.config) {
+        try { 
+          const parsed = JSON.parse(data.config)
+          initialConfig = { ...initialConfig, ...parsed }
+        } catch(e) { console.error("Parse config error", e) }
+      }
+      setConfig(initialConfig)
+    }).finally(() => setLoading(false))
+  }, [room.id])
 
-  setRows(prev => prev.map(row => ({
-    ...row,
-    seats: row.seats.map(s => s.id === seatId ? {
-      ...s,
-      offsetX: (s.offsetX || 0) + dx,
-      offsetY: (s.offsetY || 0) + dy
-    } : s)
-  })))
-}
+  const handleDragEnd = (seatId, e, info) => {
+    // Di chuyển 1:1 theo pixel để chính xác nhất
+    const dx = info.offset.x
+    const dy = info.offset.y
 
-const handleScreenDrag = (e, info) => {
-  const dx = info.offset.x
-  const dy = info.offset.y
-  setConfig(prev => ({
-    ...prev,
-    screen: {
-      ...(prev.screen || {}),
-      offsetX: (prev.screen?.offsetX || 0) + dx,
-      offsetY: (prev.screen?.offsetY || 0) + dy
-    }
-  }))
-}
+    setRows(prev => prev.map(row => ({
+      ...row,
+      seats: row.seats.map(s => s.id === seatId ? {
+        ...s,
+        offsetX: (s.offsetX || 0) + dx,
+        offsetY: (s.offsetY || 0) + dy
+      } : s)
+    })))
+  }
+
+  const handleScreenDrag = (e, info) => {
+    const dx = info.offset.x
+    const dy = info.offset.y
+    setConfig(prev => ({
+      ...prev,
+      screen: {
+        ...(prev.screen || {}),
+        offsetX: (prev.screen?.offsetX || 0) + dx,
+        offsetY: (prev.screen?.offsetY || 0) + dy
+      }
+    }))
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -113,13 +114,13 @@ const handleScreenDrag = (e, info) => {
       <div ref={containerRef} className="flex-1 relative bg-[#020617] overflow-auto flex flex-col items-center p-20 pt-40 cursor-grab active:cursor-grabbing">
         <div style={{ perspective: '2000px' }} className="w-full max-w-5xl relative flex flex-col items-center">
           
-          {/* Screen Handle - Now Absolute to avoid flow issues */}
+          {/* Screen Handle - Absolute positioning */}
           <motion.div 
             drag dragMomentum={false} onDragEnd={handleScreenDrag}
             className="absolute z-50 cursor-move group"
             style={{
               x: config.screen?.offsetX || 0,
-              y: (config.screen?.offsetY || 0) - 250, // Mặc định ở phía trên ghế
+              y: (config.screen?.offsetY || 0) - 250,
               width: '100%'
             }}
           >
@@ -146,12 +147,37 @@ const handleScreenDrag = (e, info) => {
               }}
               className="flex flex-col gap-8 items-center origin-bottom"
             >
-...
-                    </motion.div>
-                  ))}
+              {rows.map((row, rowIndex) => (
+                <div 
+                  key={row.rowLabel} 
+                  className="flex items-center gap-10"
+                  style={{ transform: `translateZ(${rowIndex * (config.hall?.staggerZ || 45)}px) translateY(${rowIndex * (config.hall?.staggerY || -12)}px)` }}
+                >
+                  <div className="flex gap-4">
+                    {row.seats.map(seat => (
+                      <motion.div
+                        key={seat.id}
+                        drag dragMomentum={false}
+                        onDragEnd={(e, info) => handleDragEnd(seat.id, e, info)}
+                        style={{ 
+                          x: seat.offsetX || 0, 
+                          y: seat.offsetY || 0,
+                          width: seat.type === 'COUPLE' ? 60 : 36, height: 36,
+                        }}
+                        className={`relative flex items-center justify-center text-[9px] font-black rounded-t-xl rounded-b-md border-2 cursor-move shadow-lg
+                          ${seat.type === 'VIP' ? 'bg-purple-600/20 border-purple-500 text-purple-300' : 
+                            seat.type === 'COUPLE' ? 'bg-pink-600/20 border-pink-500 text-pink-300' : 
+                            'bg-white/5 border-white/20 text-white/40'}`}
+                      >
+                        {seat.seatCode}
+                        <div className="absolute -bottom-6 opacity-0 group-hover:opacity-100 text-[6px] text-white/20 whitespace-nowrap">
+                          {Math.round(seat.offsetX || 0)},{Math.round(seat.offsetY || 0)}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
             </motion.div>
           </div>
         </div>
