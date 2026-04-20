@@ -89,45 +89,82 @@ function LegendItem({ bg, border, label }) {
 }
 
 function SeatPOVPreview({ seat }) {
-  // Determine angle based on seat number (assuming 1-20 or similar)
-  // Simple heuristic: center is roughly 8-12
+  // Trích xuất thông tin hàng và số ghế
+  const rowChar = seat.seatCode.charAt(0)
   const seatNum = parseInt(seat.seatCode.substring(1))
-  const rotationY = seatNum < 10 ? 15 : seatNum > 14 ? -15 : 0
   
+  // Tính toán góc quay ngang (Horizontal Rotation)
+  // Giả sử trung tâm là ghế số 8, dải ghế từ 1 - 16
+  const centerX = 8.5 
+  const diffX = seatNum - centerX
+  const rotationY = diffX * -4 // Ghế bên trái (số nhỏ) sẽ thấy màn hình nghiêng phải, và ngược lại
+  
+  // Tính toán độ xa (Vertical Depth)
+  // Hàng A là gần màn hình nhất (to hơn), hàng J là xa nhất (nhỏ hơn)
+  const rowOffset = rowChar.charCodeAt(0) - 65 // A=0, B=1...
+  const scale = 1.1 - (rowOffset * 0.04) // Hàng càng xa thì màn hình càng nhỏ lại
+  const blur = Math.max(0, rowOffset - 2) // Hàng quá xa sẽ hơi mờ nhẹ
+
   return (
     <motion.div
       variants={modalPanel} initial="hidden" animate="show" exit="exit"
       className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] pointer-events-none"
     >
-      <div className="bg-dark-900/90 backdrop-blur-2xl border border-white/20 p-4 rounded-[2rem] shadow-[0_40px_100px_rgba(0,0,0,0.8)] w-64 overflow-hidden">
-        <div className="text-[10px] font-black text-primary-400 uppercase tracking-widest mb-3 text-center">
-          Góc nhìn từ ghế {seat.seatCode}
+      <div className="bg-dark-900/95 backdrop-blur-3xl border border-white/20 p-5 rounded-[2.5rem] shadow-[0_50px_120px_rgba(0,0,0,0.9)] w-72 overflow-hidden ring-1 ring-white/10">
+        <div className="flex justify-between items-center mb-4">
+          <div className="text-[10px] font-black text-primary-400 uppercase tracking-widest bg-primary-500/10 py-1 px-3 rounded-full border border-primary-500/20">
+            POV: Ghế {seat.seatCode}
+          </div>
+          <div className="text-[9px] font-bold text-dark-500 uppercase">3D Simulation</div>
         </div>
         
         {/* POV Screen Simulation */}
-        <div className="relative aspect-video bg-black rounded-lg overflow-hidden border border-white/5 flex items-center justify-center">
-          <div 
+        <div className="relative aspect-video bg-[#050505] rounded-xl overflow-hidden border border-white/10 flex items-center justify-center">
+          {/* Ambient Hall Light */}
+          <div className="absolute inset-0 bg-gradient-to-b from-primary-900/5 to-transparent z-0" />
+
+          <motion.div 
             style={{ 
-              perspective: '400px',
-              transform: `rotateY(${rotationY}deg)`,
+              perspective: '800px',
               width: '100%', height: '100%'
             }}
-            className="flex items-center justify-center"
+            className="flex items-center justify-center relative z-10"
           >
-            {/* The "Screen" inside the preview */}
-            <div className="w-[85%] h-[70%] bg-gradient-to-br from-primary-500/40 via-white/10 to-primary-900/40 rounded shadow-[0_0_30px_rgba(244,63,94,0.3)] flex items-center justify-center">
-               <div className="w-20 h-10 bg-white/5 border border-white/10 rounded flex items-center justify-center">
-                  <div className="w-1 h-8 bg-primary-500/40 blur-[2px] animate-pulse" />
+            {/* The "Screen" inside the preview with Parallax & Perspective */}
+            <motion.div 
+              animate={{ 
+                rotateY: rotationY,
+                scale: scale,
+                x: -diffX * 2, // Parallax shift
+                filter: `blur(${blur}px)`
+              }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="w-[90%] h-[75%] bg-gradient-to-br from-primary-400/30 via-white/5 to-primary-950/60 rounded-sm shadow-[0_0_50px_rgba(244,63,94,0.4)] border border-white/10 flex items-center justify-center relative"
+            >
+               {/* Simulated Movie Fragment */}
+               <div className="w-[80%] h-[60%] border border-white/5 rounded-sm bg-black/40 flex items-center justify-center overflow-hidden">
+                  <motion.div 
+                    animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.6, 0.3] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                    className="w-full h-full bg-gradient-to-tr from-primary-500/20 to-transparent blur-xl"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 h-0.5 bg-primary-500/50 shadow-[0_0_10px_rgba(244,63,94,1)]" />
                </div>
-            </div>
-          </div>
+               
+               {/* Screen curvature simulation */}
+               <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />
+            </motion.div>
+          </motion.div>
           
-          {/* Ambient lighting in POV */}
-          <div className="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-primary-600/20 to-transparent" />
+          {/* Floor Reflection in POV */}
+          <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-primary-900/30 to-transparent z-20 opacity-60" />
         </div>
         
-        <div className="mt-3 text-center text-dark-400 text-[9px] font-bold italic">
-           Phản chiếu ánh sáng môi trường thực tế
+        <div className="mt-4 flex items-center justify-center gap-2">
+           <div className="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse" />
+           <div className="text-dark-400 text-[9px] font-bold uppercase tracking-tighter">
+              Góc nhìn đã được tính toán theo hệ tọa độ ghế
+           </div>
         </div>
       </div>
     </motion.div>
@@ -214,29 +251,54 @@ export default function SeatMapPage() {
               {/* Floor Reflection Effect */}
               <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-primary-900/10 to-transparent pointer-events-none z-0" />
               
-              {/* Cinematic Curved Screen with enhanced glow */}
+              {/* ─── Massive IMAX Curved Screen Redesign ─── */}
               <motion.div 
                 variants={fadeUp} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.1 }} 
-                className="mb-24 mt-2 relative z-20"
+                className="mb-32 mt-6 relative z-30"
+                style={{ perspective: '1000px' }}
               >
-                <div className="relative w-full max-w-2xl mx-auto h-16 overflow-visible flex justify-center">
-                  {/* Screen Glow Overlay */}
+                <div className="relative w-full max-w-4xl mx-auto h-32 flex flex-col items-center justify-start">
+                  
+                  {/* Screen Body with 3D Tilt */}
                   <motion.div 
-                    animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.02, 1] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute -top-10 w-[140%] h-40 bg-primary-500/10 blur-[60px] rounded-full"
-                  />
-                  
-                  {/* Curved Screen Border */}
-                  <div className="absolute top-0 w-[115%] h-40 border-t-[6px] border-primary-500/40 rounded-[50%] blur-[1px]" />
-                  <div className="absolute top-0 w-[115%] h-40 border-t-2 border-white rounded-[50%] shadow-[0_-10px_60px_rgba(244,63,94,0.8),0_0_20px_rgba(255,255,255,0.4)]" />
-                  
-                  {/* Screen Content Simulation */}
-                  <div className="absolute top-1 w-[110%] h-20 bg-gradient-to-b from-white/10 to-transparent rounded-[50%] opacity-30" />
-                  
-                  <span className="absolute top-8 text-primary-300 text-[11px] font-black tracking-[0.6em] uppercase drop-shadow-[0_0_10px_rgba(244,63,94,1)]">
-                    MÀN HÌNH CHÍNH
-                  </span>
+                    initial={{ rotateX: -20, y: -20, opacity: 0 }}
+                    animate={{ rotateX: -10, y: 0, opacity: 1 }}
+                    transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+                    className="relative w-full h-8 bg-white/5 border-t border-white/20 rounded-[50%_50%_0_0/100%_100%_0_0] shadow-[0_-20px_80px_rgba(244,63,94,0.4)] overflow-hidden"
+                    style={{ transformStyle: 'preserve-3d' }}
+                  >
+                     {/* Screen Gloss & Reflection */}
+                     <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                     <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-black/20" />
+                     
+                     {/* Dynamic Projector Light (Flicker) */}
+                     <motion.div 
+                        animate={{ opacity: [0.1, 0.3, 0.1, 0.2, 0.1] }}
+                        transition={{ duration: 5, repeat: Infinity }}
+                        className="absolute inset-0 bg-primary-500/20 blur-xl"
+                     />
+                  </motion.div>
+
+                  {/* Main Screen Surface (The "Glowing" part) */}
+                  <div className="absolute top-0 w-[110%] h-48 -translate-y-16 pointer-events-none">
+                     {/* Primary Screen Glow */}
+                     <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-primary-500/10 via-primary-500/5 to-transparent blur-[80px]" />
+                     
+                     {/* Sharp Rim Light */}
+                     <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[90%] h-1 border-t border-primary-400/50 rounded-[50%] blur-[1px] shadow-[0_0_20px_rgba(244,63,94,1)]" />
+                  </div>
+
+                  {/* Bottom Perspective Reflection on the "Floor" */}
+                  <div className="absolute -bottom-10 w-[80%] h-20 bg-primary-900/10 blur-[40px] rounded-[50%] opacity-40" />
+
+                  {/* Techy Screen Label */}
+                  <div className="absolute top-12 flex flex-col items-center gap-1">
+                    <span className="text-white/20 text-[8px] font-black tracking-[1em] uppercase">IMAX CINEMA</span>
+                    <span className="text-primary-400 text-xs font-black tracking-[0.8em] uppercase drop-shadow-[0_0_10px_rgba(244,63,94,0.8)]">
+                      MÀN HÌNH CHÍNH
+                    </span>
+                    <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-primary-500 to-transparent mt-1" />
+                  </div>
                 </div>
               </motion.div>
 
