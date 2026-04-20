@@ -11,42 +11,54 @@ export default function SeatLayoutEditor({ room, onClose, onSave }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const containerRef = useRef(null)
+useEffect(() => {
+  cinemaApi.getRoomSeats(room.id).then(res => {
+    const data = res.data.data
+    setRows(data.rows || [])
 
-  useEffect(() => {
-    cinemaApi.getRoomSeats(room.id).then(res => {
-      const data = res.data.data
-      setRows(data.rows || [])
-      if (data.config) {
-        try { setConfig(JSON.parse(data.config)) } catch(e) {}
-      }
-    }).finally(() => setLoading(false))
-  }, [room.id])
+    // Khởi tạo config với default nếu phòng cũ chưa có
+    let initialConfig = {
+      screen: { rotateX: -15, scale: 1, mb: 16, offsetX: 0, offsetY: 0 },
+      hall: { rotateX: 38, staggerZ: 45, staggerY: -12 }
+    }
 
-  const handleDragEnd = (seatId, e, info) => {
-    // Tỉ lệ pixel sang offset (tùy chỉnh cho khớp với UI)
-    const factor = 0.5 
-    const dx = info.offset.x * factor
-    const dy = info.offset.y * factor
-    
-    setRows(prev => prev.map(row => ({
-      ...row,
-      seats: row.seats.map(s => s.id === seatId ? {
-        ...s,
-        offsetX: (s.offsetX || 0) + dx,
-        offsetY: (s.offsetY || 0) + dy
-      } : s)
-    })))
-  }
+    if (data.config) {
+      try { 
+        const parsed = JSON.parse(data.config)
+        initialConfig = { ...initialConfig, ...parsed }
+      } catch(e) { console.error("Parse config error", e) }
+    }
+    setConfig(initialConfig)
+  }).finally(() => setLoading(false))
+}, [room.id])
 
-  const handleScreenDrag = (e, info) => {
-    const factor = 0.5
-    const dx = info.offset.x * factor
-    const dy = info.offset.y * factor
-    setConfig(prev => ({
-      ...prev,
-      screen: {
-        ...(prev.screen || {}),
-        offsetX: (prev.screen?.offsetX || 0) + dx,
+const handleDragEnd = (seatId, e, info) => {
+  // Di chuyển 1:1 theo pixel để chính xác nhất
+  const dx = info.offset.x
+  const dy = info.offset.y
+
+  setRows(prev => prev.map(row => ({
+    ...row,
+    seats: row.seats.map(s => s.id === seatId ? {
+      ...s,
+      offsetX: (s.offsetX || 0) + dx,
+      offsetY: (s.offsetY || 0) + dy
+    } : s)
+  })))
+}
+
+const handleScreenDrag = (e, info) => {
+  const dx = info.offset.x
+  const dy = info.offset.y
+  setConfig(prev => ({
+    ...prev,
+    screen: {
+      ...(prev.screen || {}),
+      offsetX: (prev.screen?.offsetX || 0) + dx,
+      offsetY: (prev.screen?.offsetY || 0) + dy
+    }
+  }))
+}
         offsetY: (prev.screen?.offsetY || 0) + dy
       }
     }))
