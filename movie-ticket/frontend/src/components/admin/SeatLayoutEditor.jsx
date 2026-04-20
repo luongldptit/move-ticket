@@ -31,34 +31,33 @@ export default function SeatLayoutEditor({ room, onClose, onSave }) {
       setConfig(initialConfig)
     }).finally(() => setLoading(false))
   }, [room.id])
+const handleDragEnd = (seatId, e, info) => {
+  // Di chuyển 1:1 theo pixel để chính xác nhất
+  const dx = info.offset.x
+  const dy = info.offset.y
 
-  const handleDragEnd = (seatId, e, info) => {
-    // Di chuyển 1:1 theo pixel để chính xác nhất
-    const dx = info.offset.x
-    const dy = info.offset.y
+  setRows(prev => prev.map(row => ({
+    ...row,
+    seats: row.seats.map(s => s.id === seatId ? {
+      ...s,
+      offsetX: (s.offsetX || 0) + dx,
+      offsetY: (s.offsetY || 0) + dy
+    } : s)
+  })))
+}
 
-    setRows(prev => prev.map(row => ({
-      ...row,
-      seats: row.seats.map(s => s.id === seatId ? {
-        ...s,
-        offsetX: (s.offsetX || 0) + dx,
-        offsetY: (s.offsetY || 0) + dy
-      } : s)
-    })))
-  }
-
-  const handleScreenDrag = (e, info) => {
-    const dx = info.offset.x
-    const dy = info.offset.y
-    setConfig(prev => ({
-      ...prev,
-      screen: {
-        ...(prev.screen || {}),
-        offsetX: (prev.screen?.offsetX || 0) + dx,
-        offsetY: (prev.screen?.offsetY || 0) + dy
-      }
-    }))
-  }
+const handleScreenDrag = (e, info) => {
+  const dx = info.offset.x
+  const dy = info.offset.y
+  setConfig(prev => ({
+    ...prev,
+    screen: {
+      ...(prev.screen || {}),
+      offsetX: (prev.screen?.offsetX || 0) + dx,
+      offsetY: (prev.screen?.offsetY || 0) + dy
+    }
+  }))
+}
 
   const handleSave = async () => {
     setSaving(true)

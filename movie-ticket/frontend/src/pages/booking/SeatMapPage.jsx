@@ -272,64 +272,63 @@ export default function SeatMapPage() {
             <div 
               onMouseMove={handleMouseMove}
               onMouseLeave={() => setHoveredSeat(null)}
-              className="flex-1 w-full bg-dark-950/40 backdrop-blur-md border border-white/5 rounded-[3rem] p-6 sm:p-10 pt-44 shadow-2xl relative group/hall flex flex-col items-center"
+              className="flex-1 w-full bg-dark-950/40 backdrop-blur-md border border-white/5 rounded-[3rem] p-6 sm:p-10 shadow-2xl relative group/hall flex flex-col items-center overflow-hidden"
             >
-              
               {/* Floor Reflection Effect */}
               <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-primary-900/10 to-transparent pointer-events-none z-0" />
               
-              {/* ─── Dynamic Curved Screen (Absolute to match Editor) ─── */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ 
-                  opacity: 1, 
-                  x: screenCfg.offsetX || 0,
-                  y: screenCfg.offsetY !== undefined ? screenCfg.offsetY : -150 
-                }}
-                transition={{ ...easeOut, delay: 0.1 }} 
-                className="absolute z-30 w-[90%] max-w-4xl"
-                style={{ perspective: '1500px' }}
-              >
-                <div className="relative w-full h-24 flex flex-col items-center justify-center">
-                  {/* Real Screen Surface with Curvature */}
-                  <motion.div 
+              <div style={{ perspective: '2000px' }} className="w-full max-w-5xl relative flex flex-col items-center pb-10">
+                {/* ─── Dynamic Curved Screen (Absolute to match Editor) ─── */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ 
+                    opacity: 1, 
+                    x: screenCfg.offsetX || 0,
+                    y: screenCfg.offsetY !== undefined ? screenCfg.offsetY : -150 
+                  }}
+                  transition={{ ...easeOut, delay: 0.1 }} 
+                  className="absolute z-30 w-full"
+                >
+                  <div className="relative w-full h-24 flex flex-col items-center justify-center">
+                    {/* Real Screen Surface with Curvature */}
+                    <motion.div 
+                      animate={{ 
+                          rotateX: screenCfg.rotateX !== undefined ? screenCfg.rotateX : -15, 
+                          scale: screenCfg.scale || 1 
+                      }}
+                      className="relative w-[90%] max-w-4xl h-12 bg-white/10 border-t-2 border-white/30 rounded-[50%_50%_0_0/100%_100%_0_0] shadow-[0_-20px_100px_rgba(244,63,94,0.5)] overflow-hidden"
+                      style={{ transformStyle: 'preserve-3d' }}
+                    >
+                       <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-primary-500/5 to-transparent" />
+                       <motion.div 
+                          animate={{ opacity: [0.2, 0.5, 0.2] }}
+                          transition={{ duration: 4, repeat: Infinity }}
+                          className="absolute inset-0 bg-primary-400/20 blur-2xl"
+                       />
+                    </motion.div>
+
+                    <div className="absolute top-10 flex flex-col items-center">
+                      <span className="text-primary-400 text-[10px] font-black tracking-[1.2em] uppercase drop-shadow-[0_0_15px_rgba(244,63,94,1)]">
+                         {showtime?.room?.type || 'IMAX'} SCREEN
+                      </span>
+                      <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-primary-500 to-transparent mt-2" />
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* 3D Perspective Hall Area */}
+                <div className="relative mt-20">
+                  <motion.div
+                    initial={{ rotateX: 20, scale: 0.9, y: 50 }}
                     animate={{ 
-                        rotateX: screenCfg.rotateX !== undefined ? screenCfg.rotateX : -15, 
-                        scale: screenCfg.scale || 1 
+                      rotateX: hallCfg.rotateX !== undefined ? hallCfg.rotateX : 38, 
+                      scale: 1, 
+                      y: 0 
                     }}
-                    className="relative w-full h-12 bg-white/10 border-t-2 border-white/30 rounded-[50%_50%_0_0/100%_100%_0_0] shadow-[0_-20px_100px_rgba(244,63,94,0.5)] overflow-hidden"
+                    transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex flex-col gap-6 md:gap-8 items-center origin-bottom"
                     style={{ transformStyle: 'preserve-3d' }}
                   >
-                     <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-primary-500/5 to-transparent" />
-                     <motion.div 
-                        animate={{ opacity: [0.2, 0.5, 0.2] }}
-                        transition={{ duration: 4, repeat: Infinity }}
-                        className="absolute inset-0 bg-primary-400/20 blur-2xl"
-                     />
-                  </motion.div>
-
-                  <div className="absolute top-10 flex flex-col items-center">
-                    <span className="text-primary-400 text-[10px] font-black tracking-[1.2em] uppercase drop-shadow-[0_0_15px_rgba(244,63,94,1)]">
-                       {showtime?.room?.type || 'IMAX'} SCREEN
-                    </span>
-                    <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-primary-500 to-transparent mt-2" />
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* 3D Perspective Hall Area (Margin Top to provide space for Screen) */}
-              <div style={{ perspective: '2000px' }} className="relative z-10 py-0 mt-20">
-                <motion.div
-                  initial={{ rotateX: 20, scale: 0.9, y: 50 }}
-                  animate={{ 
-                    rotateX: hallCfg.rotateX !== undefined ? hallCfg.rotateX : 38, 
-                    scale: 1, 
-                    y: 0 
-                  }}
-                  transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="flex flex-col gap-6 md:gap-8 items-center origin-bottom"
-                  style={{ transformStyle: 'preserve-3d' }}
-                >
                   <motion.div
                     variants={staggerContainer(0.04, 0.15)} initial="hidden" animate="show"
                     className="flex flex-col gap-6 items-center"
@@ -362,6 +361,7 @@ export default function SeatMapPage() {
                   </motion.div>
                 </motion.div>
               </div>
+              </div> {/* Close perspective container */}
 
               {/* Seat POV Preview Overlay follows mouse */}
               <AnimatePresence>
