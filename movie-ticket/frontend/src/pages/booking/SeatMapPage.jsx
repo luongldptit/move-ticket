@@ -227,7 +227,7 @@ export default function SeatMapPage() {
 
   // Cấu hình linh hoạt
   const cfg = roomConfig || {};
-  const screenCfg = cfg.screen || { rotateX: -15, scale: 1, mb: 16, offsetX: 0, offsetY: 0 };
+  const screenCfg = cfg.screen || { rotateX: -15, scale: 1, mb: 4, offsetX: 0, offsetY: -150 };
   const hallCfg = cfg.hall || { rotateX: 38, staggerZ: 45, staggerY: -12 };
 
   if (loading) return <PageLoader />
@@ -284,9 +284,9 @@ export default function SeatMapPage() {
                 className="mt-2 relative z-30"
                 style={{ 
                   perspective: '1500px', 
-                  marginBottom: `${screenCfg.mb || 16}rem`,
+                  marginBottom: `${screenCfg.mb !== undefined ? screenCfg.mb : 4}rem`,
                   x: screenCfg.offsetX || 0,
-                  y: screenCfg.offsetY || 0,
+                  y: screenCfg.offsetY !== undefined ? screenCfg.offsetY : -150,
                 }}
               >
                 <div className="relative w-full max-w-4xl mx-auto h-24 flex flex-col items-center justify-center">

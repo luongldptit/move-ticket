@@ -19,10 +19,9 @@ export default function SeatLayoutEditor({ room, onClose, onSave }) {
 
       // Khởi tạo config với default nếu phòng cũ chưa có
       let initialConfig = {
-        screen: { rotateX: -15, scale: 1, mb: 16, offsetX: 0, offsetY: 0 },
+        screen: { rotateX: -15, scale: 1, mb: 4, offsetX: 0, offsetY: -150 },
         hall: { rotateX: 38, staggerZ: 45, staggerY: -12 }
       }
-
       if (data.config) {
         try { 
           const parsed = JSON.parse(data.config)
@@ -120,7 +119,7 @@ export default function SeatLayoutEditor({ room, onClose, onSave }) {
             className="absolute z-50 cursor-move group"
             style={{
               x: config.screen?.offsetX || 0,
-              y: (config.screen?.offsetY || 0) - 250,
+              y: config.screen?.offsetY || -150,
               width: '100%'
             }}
           >
