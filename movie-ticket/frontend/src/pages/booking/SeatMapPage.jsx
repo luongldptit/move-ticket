@@ -46,9 +46,11 @@ function Seat({ seat, selected, onToggle, onHover }) {
       onMouseLeave={() => onHover(null)}
       title={`${seat.seatCode} · ${seat.type} · ${formatPrice(seat.price)}`}
       whileHover={!disabled ? { 
-        scale: 1.25, 
+        scale: 1.35, 
         zIndex: 50,
-        boxShadow: `0 0 25px ${cfg.border}88`,
+        boxShadow: `0 0 30px ${cfg.border}cc`,
+        borderColor: '#fff',
+        backgroundColor: cfg.bg === 'rgba(255,255,255,0.05)' ? 'rgba(255,255,255,0.2)' : cfg.bg,
       } : {}}
       whileTap={!disabled ? { scale: 0.9 } : {}}
       animate={selected ? {
@@ -293,11 +295,17 @@ export default function SeatMapPage() {
 
                   {/* Techy Screen Label */}
                   <div className="absolute top-12 flex flex-col items-center gap-1">
-                    <span className="text-white/20 text-[8px] font-black tracking-[1em] uppercase">IMAX CINEMA</span>
-                    <span className="text-primary-400 text-xs font-black tracking-[0.8em] uppercase drop-shadow-[0_0_10px_rgba(244,63,94,0.8)]">
-                      MÀN HÌNH CHÍNH
+                    <span className="text-white/20 text-[8px] font-black tracking-[1em] uppercase">
+                      {showtime?.room?.type || 'CINEMA'} ROOM
                     </span>
-                    <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-primary-500 to-transparent mt-1" />
+                    <motion.span 
+                      animate={{ opacity: [0.7, 1, 0.7] }}
+                      transition={{ duration: 3, repeat: Infinity }}
+                      className="text-primary-400 text-xs font-black tracking-[0.8em] uppercase drop-shadow-[0_0_10px_rgba(244,63,94,0.8)]"
+                    >
+                      {showtime?.room?.name || 'MÀN HÌNH CHÍNH'}
+                    </motion.span>
+                    <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-primary-500/50 to-transparent mt-1" />
                   </div>
                 </div>
               </motion.div>
