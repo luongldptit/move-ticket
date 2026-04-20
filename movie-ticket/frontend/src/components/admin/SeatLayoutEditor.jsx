@@ -59,10 +59,6 @@ const handleScreenDrag = (e, info) => {
     }
   }))
 }
-        offsetY: (prev.screen?.offsetY || 0) + dy
-      }
-    }))
-  }
 
   const handleSave = async () => {
     setSaving(true)
