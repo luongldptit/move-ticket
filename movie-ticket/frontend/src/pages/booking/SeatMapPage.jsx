@@ -94,29 +94,35 @@ function LegendItem({ bg, border, label }) {
 function SeatPOVPreview({ seat, x, y }) {
   if (!seat || !seat.seatCode) return null;
 
-  // Tính toán vị trí tương đối để tạo hiệu ứng 3D POV
-  const rowChar = seat.seatCode.charAt(0);
-  const seatNum = parseInt(seat.seatCode.substring(1)) || 1;
+  // Tách hàng (chữ) và số ghế (số) từ seatCode (VD: "A12" -> row:"A", num:12)
+  const match = seat.seatCode.match(/([A-Z]+)(\d+)/);
+  const rowChar = match ? match[1] : 'A';
+  const seatNum = match ? parseInt(match[2]) : 8;
   
-  // Giả định rạp có khoảng 15 ghế mỗi hàng để tính điểm trung tâm
-  const centerX = 8; 
+  // Tính toán góc xoay ngang (Y) dựa trên số thứ tự ghế trong hàng
+  // Giả định trung tâm rạp là ghế số 10. Ghế càng xa trung tâm càng xoay mạnh.
+  const centerX = 10; 
   const diffX = seatNum - centerX;
-  const rotationY = diffX * -3.5; // Ghế bên trái nhìn sang phải, ghế bên phải nhìn sang trái
+  const rotationY = diffX * -4.5; // Tăng độ nhạy xoay từ 3.5 lên 4.5
   
-  // Hàng càng xa (A, B, C...) thì scale màn hình càng nhỏ và hơi mờ hơn
+  // Tính toán góc ngước nhìn (X) dựa trên hàng ghế
+  // Hàng A (index 0) là gần màn hình nhất -> phải ngước lên nhiều nhất
   const rowIndex = rowChar.charCodeAt(0) - 65; 
-  const screenScale = 1.15 - (rowIndex * 0.03);
-  const screenBlur = Math.max(0, (rowIndex - 2) * 0.5);
+  const rotationX = -15 + (rowIndex * 2.5); // Hàng đầu xoay -15 độ, hàng sau giảm dần
+  
+  // Hàng càng xa thì màn hình trông càng nhỏ
+  const screenScale = 1.2 - (rowIndex * 0.04);
+  const screenBlur = Math.max(0, (rowIndex - 3) * 0.4);
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.8, y: 20 }}
+      initial={{ opacity: 0, scale: 0.8, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.8, y: 10 }}
-      style={{ x, y, left: -120, top: -210 }} // Đưa card lên trên con trỏ chuột
+      exit={{ opacity: 0, scale: 0.8, y: 5 }}
+      style={{ x, y, left: -120, top: -165 }} // Đã hạ thấp từ -210 xuống -165
       className="absolute z-[100] pointer-events-none"
     >
-      <div className="bg-slate-950/90 backdrop-blur-2xl border border-white/20 p-3 rounded-[1.5rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] w-64 overflow-hidden ring-1 ring-white/10">
+      <div className="bg-slate-950/95 backdrop-blur-2xl border border-white/20 p-3 rounded-[1.5rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] w-64 overflow-hidden ring-1 ring-white/10">
         <div className="flex justify-between items-center mb-2 px-1">
           <div className="flex flex-col">
              <span className="text-[10px] font-black text-primary-400 uppercase tracking-tighter">Góc nhìn từ ghế</span>
@@ -138,25 +144,33 @@ function SeatPOVPreview({ seat, x, y }) {
             <motion.div 
               animate={{ 
                 rotateY: rotationY,
+                rotateX: rotationX,
                 scale: screenScale,
                 filter: `blur(${screenBlur}px)`
               }}
-              transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-              className="w-[85%] h-[70%] bg-white/5 rounded-sm shadow-[0_0_40px_rgba(244,63,94,0.3)] border border-white/20 flex items-center justify-center relative overflow-hidden"
+              transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+              className="w-[85%] h-[75%] bg-white/5 rounded-sm shadow-[0_0_50px_rgba(244,63,94,0.4)] border border-white/20 flex items-center justify-center relative overflow-hidden"
             >
                {/* Giả lập hình ảnh trên màn hình */}
-               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=500&auto=format&fit=crop')] bg-cover bg-center opacity-40" />
+               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=500&auto=format&fit=crop')] bg-cover bg-center opacity-50" />
                <div className="absolute inset-0 bg-gradient-to-tr from-primary-500/20 to-transparent mix-blend-overlay" />
                <div className="w-full h-full backdrop-blur-[1px]" />
+               
+               {/* Nội dung giả lập chuyển động nhẹ */}
+               <motion.div 
+                 animate={{ opacity: [0.4, 0.7, 0.4] }}
+                 transition={{ duration: 4, repeat: Infinity }}
+                 className="absolute inset-0 bg-primary-400/10 blur-xl"
+               />
             </motion.div>
           </div>
           
-          {/* Hiệu ứng ánh sáng phòng rạp */}
+          {/* Hiệu ứng ánh sáng phòng rạp hắt từ dưới lên */}
           <div className="absolute bottom-0 inset-x-0 h-4 bg-gradient-to-t from-black to-transparent" />
         </div>
         
-        <div className="mt-2 flex justify-between items-center px-1">
-           <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Giá vé</span>
+        <div className="mt-2.5 flex justify-between items-center px-1">
+           <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Giá vé dự kiến</span>
            <span className="text-sm font-black text-primary-400">{formatPrice(seat.price)}</span>
         </div>
       </div>
