@@ -182,6 +182,7 @@ export default function SeatMapPage() {
   const [showtime, setShowtime] = useState(currentShowtime)
   const [loading, setLoading] = useState(true)
   const [hoveredSeat, setHoveredSeat] = useState(null)
+  const [roomConfig, setRoomConfig] = useState(null)
 
   // Mouse Tracking for POV Preview
   const mouseX = useMotionValue(0)
@@ -200,7 +201,11 @@ export default function SeatMapPage() {
       showtimeApi.getShowtimeSeats(showtimeId),
       !currentShowtime ? showtimeApi.getShowtimeById(showtimeId) : Promise.resolve(null),
     ]).then(([seatsRes, stRes]) => {
-      setRows(seatsRes.data.data.rows || [])
+      const data = seatsRes.data.data;
+      setRows(data.rows || [])
+      if (data.config) {
+        try { setRoomConfig(JSON.parse(data.config)) } catch(e) { console.error("Parse config error", e) }
+      }
       if (stRes) setShowtime(stRes.data.data)
     }).catch(() => navigate('/movies')).finally(() => setLoading(false))
   }, [showtimeId])
@@ -219,6 +224,11 @@ export default function SeatMapPage() {
     if (selectedSeats.length === 0) { toast.warn('Vui lòng chọn ít nhất 1 ghế'); return }
     navigate('/booking/confirm')
   }
+
+  // Cấu hình linh hoạt
+  const cfg = roomConfig || {};
+  const screenCfg = cfg.screen || { rotateX: -15, scale: 1, mb: 16, offsetX: 0, offsetY: 0 };
+  const hallCfg = cfg.hall || { rotateX: 38, staggerZ: 45, staggerY: -12 };
 
   if (loading) return <PageLoader />
 
@@ -268,18 +278,23 @@ export default function SeatMapPage() {
               {/* Floor Reflection Effect */}
               <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-primary-900/10 to-transparent pointer-events-none z-0" />
               
-              {/* ─── Massive IMAX Curved Screen Redesign ─── */}
+              {/* ─── Dynamic Curved Screen Redesign ─── */}
               <motion.div 
                 variants={fadeUp} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.1 }} 
-                className="mb-16 mt-2 relative z-30"
-                style={{ perspective: '1500px' }}
+                className="mt-2 relative z-30"
+                style={{ 
+                  perspective: '1500px', 
+                  marginBottom: `${screenCfg.mb || 16}rem`,
+                  x: screenCfg.offsetX || 0,
+                  y: screenCfg.offsetY || 0,
+                }}
               >
                 <div className="relative w-full max-w-4xl mx-auto h-24 flex flex-col items-center justify-center">
                   
                   {/* Real Screen Surface with Curvature */}
                   <motion.div 
                     initial={{ rotateX: -30, scale: 0.9, opacity: 0 }}
-                    animate={{ rotateX: -15, scale: 1, opacity: 1 }}
+                    animate={{ rotateX: screenCfg.rotateX !== undefined ? screenCfg.rotateX : -15, scale: screenCfg.scale || 1, opacity: 1 }}
                     transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
                     className="relative w-full h-12 bg-white/10 border-t-2 border-white/30 rounded-[50%_50%_0_0/100%_100%_0_0] shadow-[0_-20px_100px_rgba(244,63,94,0.5)] overflow-hidden"
                     style={{ transformStyle: 'preserve-3d' }}
@@ -294,7 +309,7 @@ export default function SeatMapPage() {
 
                   <div className="absolute top-10 flex flex-col items-center">
                     <span className="text-primary-400 text-[10px] font-black tracking-[1.2em] uppercase drop-shadow-[0_0_15px_rgba(244,63,94,1)]">
-                       IMAX SCREEN
+                       {showtime?.room?.type || 'IMAX'} SCREEN
                     </span>
                     <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-primary-500 to-transparent mt-2" />
                   </div>
@@ -306,7 +321,7 @@ export default function SeatMapPage() {
                 <motion.div
                   initial={{ rotateX: 20, scale: 0.9, y: 50 }}
                   animate={{ 
-                    rotateX: 38, // Tăng độ nghiêng mặt sàn để tạo độ dốc rạp
+                    rotateX: hallCfg.rotateX !== undefined ? hallCfg.rotateX : 38, 
                     scale: 1, 
                     y: 0 
                   }}
@@ -324,20 +339,20 @@ export default function SeatMapPage() {
                         variants={staggerItem} 
                         className="flex items-center gap-10"
                         style={{ 
-                            // Stadium Seating: Hàng sau nằm CAO hơn và XA hơn hàng trước
-                            transform: `translateZ(${rowIndex * 45}px) translateY(${rowIndex * -12}px)` 
+                            transform: `translateZ(${rowIndex * (hallCfg.staggerZ || 45)}px) translateY(${rowIndex * (hallCfg.staggerY || -12)}px)` 
                         }}
                       >
                         <div className="w-8 text-white/20 text-xs font-black text-right shrink-0">{row.rowLabel}</div>
                         <div className="flex gap-3">
                           {(row.seats || []).map(seat => (
-                            <Seat
-                              key={seat.id}
-                              seat={seat}
-                              selected={!!selectedSeats.find(s => s.id === seat.id)}
-                              onToggle={handleToggle}
-                              onHover={setHoveredSeat}
-                            />
+                            <div key={seat.id} style={{ transform: `translate3d(${seat.offsetX || 0}px, ${seat.offsetY || 0}px, ${seat.offsetZ || 0}px)` }}>
+                                <Seat
+                                seat={seat}
+                                selected={!!selectedSeats.find(s => s.id === seat.id)}
+                                onToggle={handleToggle}
+                                onHover={setHoveredSeat}
+                                />
+                            </div>
                           ))}
                         </div>
                         <div className="w-8 text-white/20 text-xs font-black text-left shrink-0">{row.rowLabel}</div>

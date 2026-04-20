@@ -39,12 +39,15 @@ export default function SeatLayoutEditor({ room, onClose, onSave }) {
   }
 
   const handleScreenDrag = (e, info) => {
-    const dy = info.offset.y * 0.1
+    const factor = 0.5
+    const dx = info.offset.x * factor
+    const dy = info.offset.y * factor
     setConfig(prev => ({
       ...prev,
       screen: {
         ...(prev.screen || {}),
-        rotateX: (prev.screen?.rotateX || -15) + dy
+        offsetX: (prev.screen?.offsetX || 0) + dx,
+        offsetY: (prev.screen?.offsetY || 0) + dy
       }
     }))
   }
@@ -52,8 +55,14 @@ export default function SeatLayoutEditor({ room, onClose, onSave }) {
   const handleSave = async () => {
     setSaving(true)
     try {
-      // 1. Save room config
-      await cinemaApi.updateRoom(room.id, { config: JSON.stringify(config) })
+      // 1. Save room config (bao gồm cả các trường bắt buộc để thỏa mãn validation của BE)
+      await cinemaApi.updateRoom(room.id, { 
+        config: JSON.stringify(config),
+        name: room.name,
+        cinemaId: room.cinema?.id || room.cinemaId,
+        type: room.type,
+        isActive: room.isActive
+      })
       
       // 2. Save all seat offsets
       const seatUpdates = rows.flatMap(r => r.seats.map(s => ({
@@ -98,11 +107,15 @@ export default function SeatLayoutEditor({ room, onClose, onSave }) {
           
           {/* Screen Handle */}
           <motion.div 
-            drag="y" dragMomentum={false} onDragEnd={handleScreenDrag}
-            className="mb-32 relative cursor-ns-resize group"
+            drag dragMomentum={false} onDragEnd={handleScreenDrag}
+            className="mb-32 relative cursor-move group"
+            style={{
+              x: config.screen?.offsetX || 0,
+              y: config.screen?.offsetY || 0
+            }}
           >
             <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary-600 text-[8px] font-black text-white px-2 py-1 rounded-md whitespace-nowrap">
-              KÉO ĐỂ CHỈNH ĐỘ NGHIÊNG MÀN HÌNH
+              KÉO ĐỂ DI CHUYỂN MÀN HÌNH
             </div>
             <div 
               className="w-full h-12 bg-white/10 border-t-2 border-white/30 rounded-[50%_50%_0_0/100%_100%_0_0] shadow-[0_-20px_100px_rgba(244,63,94,0.3)] flex items-center justify-center"
