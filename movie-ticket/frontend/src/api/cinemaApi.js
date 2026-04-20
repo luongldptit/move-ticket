@@ -14,4 +14,5 @@ export const cinemaApi = {
   updateRoom: (id, data) => axiosInstance.put(`/api/v1/rooms/${id}`, data),
   createSeats: (data) => axiosInstance.post('/api/v1/rooms/seats/batch', data),  // ← BE path
   updateSeat: (id, data) => axiosInstance.put(`/api/v1/rooms/seats/${id}`, data),
+  updateSeatsBatch: (data) => axiosInstance.put('/api/v1/rooms/seats/batch', data),
 }

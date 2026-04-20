@@ -64,7 +64,14 @@ public class RoomController {
     @PutMapping("/seats/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<SeatResponse>> updateSeat(
-            @PathVariable Long id, @Valid @RequestBody SeatUpdateRequest request) {
+            @PathVariable Long id, @RequestBody SeatUpdateRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Cập nhật ghế thành công", seatService.updateSeat(id, request)));
     }
-}
+
+    @PutMapping("/seats/batch")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> updateSeatsBatch(@RequestBody List<SeatBatchUpdateRequest> request) {
+        seatService.updateSeatsBatch(request);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật hàng loạt ghế thành công", null));
+    }
+    }

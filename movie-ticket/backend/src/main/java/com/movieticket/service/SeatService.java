@@ -8,5 +8,6 @@ import com.movieticket.dto.response.SeatResponse;
 public interface SeatService {
     int createSeatsBatch(SeatBatchRequest request);
     SeatResponse updateSeat(Long id, SeatUpdateRequest request);
+    void updateSeatsBatch(List<SeatBatchUpdateRequest> requests);
     SeatMapResponse getSeatStatusByShowtime(Long showtimeId);
 }

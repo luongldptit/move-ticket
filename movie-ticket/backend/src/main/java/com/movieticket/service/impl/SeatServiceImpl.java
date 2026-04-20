@@ -72,6 +72,22 @@ public class SeatServiceImpl implements SeatService {
     }
 
     @Override
+    @Transactional
+    public void updateSeatsBatch(List<SeatBatchUpdateRequest> requests) {
+        if (requests == null || requests.isEmpty()) return;
+        for (SeatBatchUpdateRequest req : requests) {
+            seatRepository.findById(req.getId()).ifPresent(seat -> {
+                if (req.getOffsetX() != null) seat.setOffsetX(req.getOffsetX());
+                if (req.getOffsetY() != null) seat.setOffsetY(req.getOffsetY());
+                if (req.getOffsetZ() != null) seat.setOffsetZ(req.getOffsetZ());
+                if (req.getType() != null) seat.setType(Seat.SeatType.valueOf(req.getType()));
+                if (req.getIsActive() != null) seat.setActive(req.getIsActive());
+                seatRepository.save(seat);
+            });
+        }
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public SeatMapResponse getSeatStatusByShowtime(Long showtimeId) {
         Showtime showtime = showtimeRepository.findById(showtimeId)

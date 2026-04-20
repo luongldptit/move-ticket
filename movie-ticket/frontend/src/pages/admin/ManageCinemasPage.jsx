@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { cinemaApi } from '../../api/cinemaApi'
 import Modal from '../../components/common/Modal'
+import SeatLayoutEditor from '../../components/admin/SeatLayoutEditor'
 import { getErrorMessage } from '../../utils/helpers'
 import { toast } from 'react-toastify'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -12,6 +13,9 @@ export default function ManageCinemasPage() {
   const [selectedCinema, setSelectedCinema] = useState(null)
   const [tab, setTab] = useState('cinemas')
   const [loading, setLoading] = useState(true)
+
+  // Visual layout editor
+  const [visualEditorRoom, setVisualEditorRoom] = useState(null)
 
   // Cinema form
   const [cinemaModal, setCinemaModal] = useState(false)
@@ -232,6 +236,10 @@ export default function ManageCinemasPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
+                  <button onClick={() => setVisualEditorRoom(r)}
+                    className="px-5 py-2.5 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 text-[10px] font-black uppercase tracking-widest border border-orange-500/20 transition-all">
+                    Bố cục 3D
+                  </button>
                   <button onClick={() => { 
                     setEditRoom(r); 
                     setRoomForm({ 
@@ -407,6 +415,15 @@ export default function ManageCinemasPage() {
           ))}
         </div>
       </Modal>
+
+      {/* Visual Layout Editor Overlay */}
+      {visualEditorRoom && (
+        <SeatLayoutEditor 
+          room={visualEditorRoom} 
+          onClose={() => setVisualEditorRoom(null)} 
+          onSave={reloadRooms}
+        />
+      )}
     </div>
   )
 }
