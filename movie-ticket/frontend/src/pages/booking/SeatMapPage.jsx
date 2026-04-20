@@ -108,19 +108,25 @@ function SeatPOVPreview({ seat, x, y, config }) {
   const screenOffsetX = screenCfg.offsetX || 0;
   const baseScreenTilt = screenCfg.rotateX !== undefined ? screenCfg.rotateX : -15;
 
-  // Hiệu chỉnh góc nhìn dựa trên vị trí màn hình (kéo màn hình ra xa/lên cao thì góc ngước thay đổi)
-  const verticalAngleAdj = (screenOffsetY + 150) * 0.05; 
-  const horizontalAngleAdj = screenOffsetX * 0.02;
+  // Tính toán tọa độ không gian thực tế của ghế và màn hình
+  // Giả định mỗi ghế cách nhau ~40px, mỗi hàng cách nhau ~45px
+  const seatActualX = (diffX * 40) + (seat.offsetX || 0);
+  const seatActualY = (rowIndex * 45) + (seat.offsetY || 0);
 
-  // Góc quay Y (ngang): Phụ thuộc độ lệch tâm và vị trí X của màn hình
-  const rotationY = (diffX * -6) + horizontalAngleAdj; 
+  // Độ lệch tương đối giữa vị trí ghế và vị trí màn hình
+  const relativeX = seatActualX - screenOffsetX;
+  const relativeY = seatActualY - screenOffsetY;
+
+  // Góc quay Y (ngang): Phụ thuộc vào khoảng cách X giữa ghế và màn hình
+  // Ghế bên trái màn hình (relativeX < 0) -> góc quay dương (nhìn sang phải)
+  const rotationY = relativeX * -0.18; 
   
-  // Góc quay X (dọc): Phụ thuộc độ nghiêng gốc của màn, vị trí Y của màn và hàng ghế
-  const rotationX = (baseScreenTilt - 7) + (rowIndex * 3.8) + verticalAngleAdj; 
+  // Góc quay X (dọc): Phụ thuộc độ nghiêng gốc của màn và độ cao tương đối
+  const rotationX = (baseScreenTilt - 5) + (relativeY * 0.04); 
   
-  // Hiệu ứng cong màn hình (Curvature)
-  const distFromCenter = Math.abs(diffX);
-  const screenScale = (1.25 - (rowIndex * 0.05)) * (1 + (distFromCenter * 0.015));
+  // Hiệu ứng cong màn hình (Curvature) và khoảng cách
+  const distFromCenter = Math.abs(relativeX);
+  const screenScale = Math.max(0.7, (1.25 - (relativeY * 0.0008)) * (1 + (distFromCenter * 0.0002)));
 
   return (
     <motion.div
