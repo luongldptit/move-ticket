@@ -14,4 +14,5 @@ public class RoomResponse {
     @JsonProperty("isActive")
     private Boolean isActive;
     private CinemaResponse cinema;
+    private String config;
 }

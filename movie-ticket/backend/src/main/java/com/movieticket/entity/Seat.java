@@ -35,4 +35,13 @@ public class Seat {
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
+
+    @Column(name = "offset_x")
+    private Double offsetX = 0.0;
+
+    @Column(name = "offset_y")
+    private Double offsetY = 0.0;
+
+    @Column(name = "offset_z")
+    private Double offsetZ = 0.0;
 }

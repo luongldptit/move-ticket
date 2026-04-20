@@ -91,71 +91,82 @@ function LegendItem({ bg, border, label }) {
   )
 }
 
-function SeatPOVPreview({ seat, x, y }) {
+function SeatPOVPreview({ seat, x, y, config }) {
   if (!seat || !seat.seatCode) return null;
 
   const match = seat.seatCode.match(/([A-Z]+)(\d+)/);
   const rowChar = match ? match[1] : 'A';
-  const seatNum = match ? parseInt(match[2]) : 1;
+  const seatNum = match ? parseInt(match[2]) : 8;
   
   const rowIndex = rowChar.charCodeAt(0) - 65; 
-  const centerX = 8; // Điểm giữa hàng ghế (thường là ghế 8-10)
+  const totalSeatsInRow = 16; 
+  const centerX = (totalSeatsInRow + 1) / 2;
   const diffX = seatNum - centerX;
   
-  // Tăng độ nhạy POV để thấy sự khác biệt rõ rệt giữa các ghế sát nhau
-  const rotationY = diffX * -5.5; 
-  const rotationX = -18 + (rowIndex * 3.5); // Độ nghiêng theo hàng mạnh hơn
-  const screenScale = 1.15 - (rowIndex * 0.05);
-  const screenBlur = Math.max(0, (rowIndex - 4) * 0.4);
+  // Lấy params từ config hoặc dùng default
+  const povCfg = config?.pov || { rotationYMult: -6, rotationXBase: -22, rotationXMult: 3.8 };
+
+  // Góc quay Y (ngang): Ghế biên nhìn vào tâm màn hình
+  const rotationY = diffX * (povCfg.rotationYMult || -6); 
+  
+  // Góc quay X (dọc): Hàng đầu ngước lên, hàng cuối nhìn ngang
+  const rotationX = (povCfg.rotationXBase || -22) + (rowIndex * (povCfg.rotationXMult || 3.8)); 
+  
+  // Hiệu ứng cong màn hình (Curvature)
+  const distFromCenter = Math.abs(diffX);
+  const screenScale = (1.25 - (rowIndex * 0.05)) * (1 + (distFromCenter * 0.015));
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.4 }}
-      animate={{ opacity: 1, scale: 1 }}
+      initial={{ opacity: 0, scale: 0.4, rotateX: 20 }}
+      animate={{ opacity: 1, scale: 1, rotateX: 0 }}
       exit={{ opacity: 0, scale: 0.4 }}
-      style={{ x, y, left: 15, top: -110 }} // Căn giữa Card theo chiều dọc với con trỏ chuột
+      style={{ x, y, left: 20, top: -125 }}
       className="absolute z-[100] pointer-events-none"
     >
-      <div className="bg-slate-900/95 backdrop-blur-3xl border border-white/20 p-3 rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.9)] w-64 overflow-hidden ring-1 ring-white/10">
-        <div className="flex justify-between items-center mb-2 px-1">
-          <div className="flex flex-col">
-             <span className="text-[10px] font-black text-primary-500 uppercase tracking-widest">Góc nhìn POV</span>
-             <span className="text-xl font-black text-white leading-none">{seat.seatCode}</span>
+      <div className="bg-slate-950/95 backdrop-blur-3xl border border-white/20 p-4 rounded-[2rem] shadow-[0_40px_80px_rgba(0,0,0,1)] w-72 overflow-hidden ring-1 ring-white/20">
+        <div className="flex justify-between items-end mb-3 px-1">
+          <div>
+             <div className="text-[10px] font-black text-primary-500 uppercase tracking-[0.2em] mb-0.5">Perspective View</div>
+             <div className="text-2xl font-black text-white italic tracking-tighter">GATE {seat.seatCode}</div>
           </div>
-          <div className="text-[9px] font-black text-slate-400 bg-white/5 px-2 py-1 rounded-md border border-white/10">
+          <div className="bg-white/10 px-2 py-1 rounded text-[9px] font-bold text-slate-300 border border-white/10 uppercase">
             {seat.type}
           </div>
         </div>
         
-        {/* POV Screen Simulation */}
-        <div className="relative aspect-video bg-black rounded-xl overflow-hidden border border-white/10 flex items-center justify-center">
-          <div className="absolute inset-0 bg-gradient-to-b from-primary-900/20 to-transparent z-0" />
+        {/* POV Screen with IMAX Curvature Simulation */}
+        <div className="relative aspect-video bg-black rounded-xl overflow-hidden border border-white/5 flex items-center justify-center shadow-inner">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary-900/10 via-transparent to-black/60 z-0" />
 
-          <div style={{ perspective: '1200px' }} className="w-full h-full flex items-center justify-center">
+          <div style={{ perspective: '800px' }} className="w-full h-full flex items-center justify-center">
             <motion.div 
               animate={{ 
                 rotateY: rotationY,
                 rotateX: rotationX,
                 scale: screenScale,
-                filter: `blur(${screenBlur}px)`
               }}
-              transition={{ type: 'spring', stiffness: 150, damping: 25 }}
-              className="w-[92%] h-[80%] bg-zinc-900 rounded-sm shadow-[0_0_50px_rgba(244,63,94,0.4)] border border-white/10 relative overflow-hidden"
+              transition={{ type: 'spring', stiffness: 80, damping: 15 }}
+              className="w-[95%] h-[82%] bg-zinc-900 rounded-[5px] shadow-[0_0_120px_rgba(244,63,94,0.45)] relative overflow-hidden"
+              style={{ transformStyle: 'preserve-3d' }}
             >
-               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=500&auto=format&fit=crop')] bg-cover bg-center opacity-60" />
-               <div className="absolute inset-0 bg-gradient-to-tr from-primary-600/30 to-transparent" />
+               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=500&auto=format&fit=crop')] bg-cover bg-center opacity-75" />
+               <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-black/50" />
+               
+               <motion.div 
+                 animate={{ opacity: [0.1, 0.3, 0.1, 0.2, 0.1] }}
+                 transition={{ duration: 0.1, repeat: Infinity }}
+                 className="absolute inset-0 bg-primary-400/10 blur-3xl"
+               />
             </motion.div>
           </div>
 
-          {/* Foreground seat backs for depth */}
-          <div className="absolute -bottom-1 w-full flex justify-around px-4 opacity-30">
-             {[1,2,3,4].map(i => <div key={i} className="w-10 h-6 bg-black rounded-t-xl" />)}
-          </div>
+          <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_50px_rgba(0,0,0,0.9)]" />
         </div>
         
-        <div className="mt-3 flex justify-between items-center px-1">
-           <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Giá vé</span>
-           <span className="text-base font-black text-primary-400">{formatPrice(seat.price)}</span>
+        <div className="mt-4 flex justify-between items-center border-t border-white/10 pt-3">
+           <span className="text-[11px] text-slate-500 font-black uppercase tracking-widest">Premium Ticket</span>
+           <span className="text-lg font-black text-primary-400">{formatPrice(seat.price)}</span>
         </div>
       </div>
     </motion.div>
@@ -260,90 +271,64 @@ export default function SeatMapPage() {
               {/* ─── Massive IMAX Curved Screen Redesign ─── */}
               <motion.div 
                 variants={fadeUp} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.1 }} 
-                className="mb-8 mt-2 relative z-30"
-                style={{ perspective: '1000px' }}
+                className="mb-16 mt-2 relative z-30"
+                style={{ perspective: '1500px' }}
               >
-                <div className="relative w-full max-w-4xl mx-auto h-32 flex flex-col items-center justify-start">
+                <div className="relative w-full max-w-4xl mx-auto h-24 flex flex-col items-center justify-center">
                   
-                  {/* Screen Body with 3D Tilt */}
+                  {/* Real Screen Surface with Curvature */}
                   <motion.div 
-                    initial={{ rotateX: -20, y: -20, opacity: 0 }}
-                    animate={{ rotateX: -10, y: 0, opacity: 1 }}
+                    initial={{ rotateX: -30, scale: 0.9, opacity: 0 }}
+                    animate={{ rotateX: -15, scale: 1, opacity: 1 }}
                     transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="relative w-full h-8 bg-white/5 border-t border-white/20 rounded-[50%_50%_0_0/100%_100%_0_0] shadow-[0_-20px_80px_rgba(244,63,94,0.4)] overflow-hidden"
+                    className="relative w-full h-12 bg-white/10 border-t-2 border-white/30 rounded-[50%_50%_0_0/100%_100%_0_0] shadow-[0_-20px_100px_rgba(244,63,94,0.5)] overflow-hidden"
                     style={{ transformStyle: 'preserve-3d' }}
                   >
-                     {/* Screen Gloss & Reflection */}
-                     <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-                     <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-black/20" />
-                     
-                     {/* Dynamic Projector Light (Flicker) */}
+                     <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-primary-500/5 to-transparent" />
                      <motion.div 
-                        animate={{ opacity: [0.1, 0.3, 0.1, 0.2, 0.1] }}
-                        transition={{ duration: 5, repeat: Infinity }}
-                        className="absolute inset-0 bg-primary-500/20 blur-xl"
+                        animate={{ opacity: [0.2, 0.5, 0.2] }}
+                        transition={{ duration: 4, repeat: Infinity }}
+                        className="absolute inset-0 bg-primary-400/20 blur-2xl"
                      />
                   </motion.div>
 
-                  {/* Main Screen Surface (The "Glowing" part) */}
-                  <div className="absolute top-0 w-[110%] h-48 -translate-y-16 pointer-events-none">
-                     {/* Primary Screen Glow */}
-                     <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-primary-500/10 via-primary-500/5 to-transparent blur-[80px]" />
-                     
-                     {/* Sharp Rim Light */}
-                     <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[90%] h-1 border-t border-primary-400/50 rounded-[50%] blur-[1px] shadow-[0_0_20px_rgba(244,63,94,1)]" />
-                  </div>
-
-                  {/* Bottom Perspective Reflection on the "Floor" */}
-                  <div className="absolute -bottom-10 w-[80%] h-20 bg-primary-900/10 blur-[40px] rounded-[50%] opacity-40" />
-
-                  {/* Techy Screen Label */}
-                  <div className="absolute top-12 flex flex-col items-center gap-1">
-                    <span className="text-white/20 text-[8px] font-black tracking-[1em] uppercase">
-                      {showtime?.room?.type || 'CINEMA'} ROOM
+                  <div className="absolute top-10 flex flex-col items-center">
+                    <span className="text-primary-400 text-[10px] font-black tracking-[1.2em] uppercase drop-shadow-[0_0_15px_rgba(244,63,94,1)]">
+                       IMAX SCREEN
                     </span>
-                    <motion.span 
-                      animate={{ opacity: [0.7, 1, 0.7] }}
-                      transition={{ duration: 3, repeat: Infinity }}
-                      className="text-primary-400 text-xs font-black tracking-[0.8em] uppercase drop-shadow-[0_0_10px_rgba(244,63,94,0.8)]"
-                    >
-                      {showtime?.room?.name || 'MÀN HÌNH CHÍNH'}
-                    </motion.span>
-                    <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-primary-500/50 to-transparent mt-1" />
+                    <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-primary-500 to-transparent mt-2" />
                   </div>
                 </div>
               </motion.div>
 
-              {/* 3D Perspective Wrapper */}
-              <div style={{ perspective: '1200px' }} className="relative z-10 py-0">
+              {/* 3D Perspective Hall with Stadium Seating */}
+              <div style={{ perspective: '2000px' }} className="relative z-10 py-0">
                 <motion.div
-                  initial={{ rotateX: 10, scale: 0.95, y: 30 }}
+                  initial={{ rotateX: 20, scale: 0.9, y: 50 }}
                   animate={{ 
-                    rotateX: window.innerWidth < 768 ? 10 : 25, 
+                    rotateX: 38, // Tăng độ nghiêng mặt sàn để tạo độ dốc rạp
                     scale: 1, 
-                    y: -20 
+                    y: 0 
                   }}
                   transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="flex flex-col gap-4 md:gap-5 items-center origin-bottom"
+                  className="flex flex-col gap-6 md:gap-8 items-center origin-bottom"
                   style={{ transformStyle: 'preserve-3d' }}
                 >
                   <motion.div
                     variants={staggerContainer(0.04, 0.15)} initial="hidden" animate="show"
-                    className="flex flex-col gap-5 items-center"
+                    className="flex flex-col gap-6 items-center"
                   >
                     {rows.map((row, rowIndex) => (
                       <motion.div 
                         key={row.rowLabel} 
                         variants={staggerItem} 
-                        className="flex items-center gap-8"
-                        style={{ transform: `translateZ(${rowIndex * 4}px)` }} // Slight depth per row
+                        className="flex items-center gap-10"
+                        style={{ 
+                            // Stadium Seating: Hàng sau nằm CAO hơn và XA hơn hàng trước
+                            transform: `translateZ(${rowIndex * 45}px) translateY(${rowIndex * -12}px)` 
+                        }}
                       >
-                        {/* Tên hàng ghế */}
-                        <div className="w-8 text-dark-500 text-sm font-black text-right shrink-0 opacity-40">
-                          {row.rowLabel}
-                        </div>
-                        
-                        {/* Danh sách ghế */}
+                        <div className="w-8 text-white/20 text-xs font-black text-right shrink-0">{row.rowLabel}</div>
                         <div className="flex gap-3">
                           {(row.seats || []).map(seat => (
                             <Seat
@@ -355,11 +340,7 @@ export default function SeatMapPage() {
                             />
                           ))}
                         </div>
-
-                        {/* Tên hàng ghế (Phải) */}
-                        <div className="w-8 text-dark-500 text-sm font-black text-left shrink-0 opacity-40">
-                          {row.rowLabel}
-                        </div>
+                        <div className="w-8 text-white/20 text-xs font-black text-left shrink-0">{row.rowLabel}</div>
                       </motion.div>
                     ))}
                   </motion.div>

@@ -15,4 +15,5 @@ public class RoomRequest {
     private String type = "2D";
     private Integer totalSeats = 0;
     private Boolean isActive = true;
+    private String config;
 }

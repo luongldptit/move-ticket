@@ -16,4 +16,7 @@ public class SeatResponse {
     private Boolean isActive;
     private String seatStatus; // AVAILABLE, BOOKED, HELD — only for showtime seat map
     private BigDecimal price;  // only for showtime seat map
+    private Double offsetX;
+    private Double offsetY;
+    private Double offsetZ;
 }

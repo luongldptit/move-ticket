@@ -57,6 +57,9 @@ public class Room {
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
 
+    @Column(name = "config", columnDefinition = "TEXT")
+    private String config; // JSON storage for 3D UI parameters
+
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Seat> seats;
 }

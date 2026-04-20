@@ -10,6 +10,7 @@ import java.util.List;
 public class SeatMapResponse {
     private Integer roomId;
     private String roomName;
+    private String config;
     private List<SeatRowResponse> rows;
 
     @Data

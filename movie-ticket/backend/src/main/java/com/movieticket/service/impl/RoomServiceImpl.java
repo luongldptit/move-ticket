@@ -35,7 +35,7 @@ public class RoomServiceImpl implements RoomService {
             return RoomResponse.builder()
                     .id(room.getId()).name(room.getName()).type(room.getType().toDisplayName())
                     .totalSeats(room.getTotalSeats()).isActive(room.isActive())
-                    .cinema(cinemaResponse).build();
+                    .cinema(cinemaResponse).config(room.getConfig()).build();
         }).collect(Collectors.toList());
     }
 
@@ -50,7 +50,7 @@ public class RoomServiceImpl implements RoomService {
         return RoomResponse.builder()
                 .id(room.getId()).name(room.getName()).type(room.getType().toDisplayName())
                 .totalSeats(room.getTotalSeats()).isActive(room.isActive())
-                .cinema(cinemaResponse).build();
+                .cinema(cinemaResponse).config(room.getConfig()).build();
     }
 
     @Override
@@ -67,11 +67,12 @@ public class RoomServiceImpl implements RoomService {
                 .type(Room.RoomType.fromDisplayName(request.getType()))
                 .totalSeats(request.getTotalSeats() != null ? request.getTotalSeats() : 0)
                 .isActive(true)
+                .config(request.getConfig())
                 .build();
         room = roomRepository.save(room);
         return RoomResponse.builder()
                 .id(room.getId()).name(room.getName()).type(room.getType().toDisplayName())
-                .totalSeats(room.getTotalSeats()).isActive(true).build();
+                .totalSeats(room.getTotalSeats()).isActive(true).config(room.getConfig()).build();
     }
 
     @Override
@@ -82,9 +83,10 @@ public class RoomServiceImpl implements RoomService {
         if (request.getName() != null) room.setName(request.getName());
         if (request.getType() != null) room.setType(Room.RoomType.fromDisplayName(request.getType()));
         if (request.getIsActive() != null) room.setActive(request.getIsActive());
+        if (request.getConfig() != null) room.setConfig(request.getConfig());
         return RoomResponse.builder()
                 .id(room.getId()).name(room.getName()).type(room.getType().toDisplayName())
-                .totalSeats(room.getTotalSeats()).isActive(room.isActive()).build();
+                .totalSeats(room.getTotalSeats()).isActive(room.isActive()).config(room.getConfig()).build();
     }
 
     @Override
@@ -92,19 +94,23 @@ public class RoomServiceImpl implements RoomService {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phòng chiếu với id: " + roomId));
         List<Seat> seats = seatRepository.findByRoomIdOrderByRowLabelAscSeatNumberAsc(roomId);
-        return buildSeatMap(room.getId(), room.getName(), seats, null, null, null);
+        return buildSeatMap(room.getId(), room.getName(), seats, null, null, null, room.getConfig());
     }
 
     public static SeatMapResponse buildSeatMap(Integer roomId, String roomName,
                                                List<Seat> seats, Set<Long> bookedIds,
                                                Set<Long> heldIds,
-                                               Map<Long, java.math.BigDecimal> priceMap) {
+                                               Map<Long, java.math.BigDecimal> priceMap,
+                                               String roomConfig) {
         Map<String, List<SeatResponse>> grouped = new LinkedHashMap<>();
         for (Seat seat : seats) {
             String row = String.valueOf(seat.getRowLabel());
             SeatResponse.SeatResponseBuilder builder = SeatResponse.builder()
                     .id(seat.getId()).seatCode(seat.getSeatCode())
-                    .type(seat.getType().name()).isActive(seat.isActive());
+                    .type(seat.getType().name()).isActive(seat.isActive())
+                    .offsetX(seat.getOffsetX())
+                    .offsetY(seat.getOffsetY())
+                    .offsetZ(seat.getOffsetZ());
             if (bookedIds != null) {
                 String status;
                 if (bookedIds.contains(seat.getId())) status = "BOOKED";
@@ -119,6 +125,6 @@ public class RoomServiceImpl implements RoomService {
                 .map(e -> SeatMapResponse.SeatRowResponse.builder()
                         .rowLabel(e.getKey()).seats(e.getValue()).build())
                 .collect(Collectors.toList());
-        return SeatMapResponse.builder().roomId(roomId).roomName(roomName).rows(rows).build();
+        return SeatMapResponse.builder().roomId(roomId).roomName(roomName).rows(rows).config(roomConfig).build();
     }
 }
