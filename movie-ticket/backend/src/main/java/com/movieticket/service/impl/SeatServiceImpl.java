@@ -88,7 +88,7 @@ public class SeatServiceImpl implements SeatService {
         }
 
         SeatMapResponse seatMap = RoomServiceImpl.buildSeatMap(
-                room.getId(), room.getName(), seats, bookedIds, null, priceMap);
+                room.getId(), room.getName(), seats, bookedIds, null, priceMap, room.getConfig());
         // Wrap with showtime id
         return SeatMapResponse.builder()
                 .roomId(room.getId())
