@@ -108,28 +108,37 @@ function SeatPOVPreview({ seat, x, y, config }) {
   const screenOffsetX = screenCfg.offsetX || 0;
   const baseScreenTilt = screenCfg.rotateX !== undefined ? screenCfg.rotateX : -15;
 
-  // Tính toán tọa độ không gian thực tế của ghế và màn hình
-  // Giả định mỗi ghế cách nhau ~40px, mỗi hàng cách nhau ~45px
-  const seatActualX = (diffX * 40) + (seat.offsetX || 0);
-  const seatActualY = (rowIndex * 45) + (seat.offsetY || 0);
-
-  // Tính toán khoảng cách và góc nhìn vật lý
-  const dx = seatActualX - screenOffsetX;
-  const depth = seatActualY - screenOffsetY;
-
-  // Đảo ngược dấu để sửa lỗi ngược góc nhìn theo phản hồi người dùng
-  const rotationY = dx * 0.14; 
+  // 1. Chuyển đổi vị trí Seat và Screen sang hệ tọa độ không gian (Pixel-based)
+  // Mỗi ghế ~40px ngang, mỗi hàng ~50px dọc
+  const seatX = (diffX * 40) + (seat.offsetX || 0);
+  const seatY = (rowIndex * 55) + (seat.offsetY || 0);
   
-  // Góc xoay dọc đảo ngược: hàng đầu sẽ nghiêng màn hình theo hướng khác
-  const rotationX = (baseScreenTilt - 5) - Math.max(0, (550 - depth) * 0.07); 
+  // 2. Tính toán vector độ lệch giữa mắt người ngồi và tâm màn hình
+  const dx = seatX - screenOffsetX;
+  const dy = seatY - screenOffsetY;
+  const viewDistance = 600; // Khoảng cách ảo từ mắt tới màn hình (điểm tiêu cự)
+
+  // 3. Thuật toán "Look-At": Tính toán góc xoay chính xác để màn hình hướng về phía mắt
+  // Sử dụng Atan2 để tính góc theo Radian rồi chuyển sang Degree
+  const radToDeg = 180 / Math.PI;
   
-  // Hiệu ứng scale dựa trên khoảng cách
-  const screenScale = Math.max(0.6, 1.35 - (depth * 0.0013));
+  // rotationY: Xoay quanh trục đứng (nhìn trái/phải)
+  // Nếu ngồi trái (dx < 0), màn hình phải xoay sang phải (angle dương trong CSS)
+  const rotationY = Math.atan2(dx, viewDistance) * radToDeg;
+  
+  // rotationX: Xoay quanh trục ngang (nhìn lên/xuống)
+  // Kết hợp độ nghiêng vật lý của màn hình và góc ngước của mắt
+  const viewAngleX = Math.atan2(dy, viewDistance) * radToDeg;
+  const rotationX = baseScreenTilt + viewAngleX;
+  
+  // 4. Tính toán tỉ lệ thu nhỏ theo quy luật xa gần (Perspective Scale)
+  const distance = Math.sqrt(dx*dx + dy*dy + viewDistance*viewDistance);
+  const screenScale = Math.max(0.5, (viewDistance / distance) * 1.5);
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.4, rotateX: 20 }}
-      animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+      initial={{ opacity: 0, scale: 0.4 }}
+      animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.4 }}
       style={{ x, y, left: 20, top: -125 }}
       className="absolute z-[100] pointer-events-none"
@@ -137,7 +146,7 @@ function SeatPOVPreview({ seat, x, y, config }) {
       <div className="bg-slate-950/95 backdrop-blur-3xl border border-white/20 p-4 rounded-[2rem] shadow-[0_40px_80px_rgba(0,0,0,1)] w-72 overflow-hidden ring-1 ring-white/20">
         <div className="flex justify-between items-end mb-3 px-1">
           <div>
-             <div className="text-[10px] font-black text-primary-500 uppercase tracking-[0.2em] mb-0.5">Perspective View</div>
+             <div className="text-[10px] font-black text-primary-500 uppercase tracking-[0.2em] mb-0.5">3D Perspective</div>
              <div className="text-2xl font-black text-white italic tracking-tighter">GATE {seat.seatCode}</div>
           </div>
           <div className="bg-white/10 px-2 py-1 rounded text-[9px] font-bold text-slate-300 border border-white/10 uppercase">
@@ -145,33 +154,33 @@ function SeatPOVPreview({ seat, x, y, config }) {
           </div>
         </div>
         
-        {/* POV Screen with IMAX Curvature Simulation */}
+        {/* POV Screen with Hyper-Realistic Perspective */}
         <div className="relative aspect-video bg-black rounded-xl overflow-hidden border border-white/5 flex items-center justify-center shadow-inner">
           <div className="absolute inset-0 bg-gradient-to-b from-primary-900/10 via-transparent to-black/60 z-0" />
 
-          <div style={{ perspective: '800px' }} className="w-full h-full flex items-center justify-center">
+          <div style={{ perspective: '1000px' }} className="w-full h-full flex items-center justify-center">
             <motion.div 
               animate={{ 
-                rotateY: rotationY,
+                rotateY: -rotationY, // Đảo dấu để màn hình hướng vào mắt
                 rotateX: rotationX,
                 scale: screenScale,
               }}
-              transition={{ type: 'spring', stiffness: 80, damping: 15 }}
-              className="w-[95%] h-[82%] bg-zinc-900 rounded-[5px] shadow-[0_0_120px_rgba(244,63,94,0.45)] relative overflow-hidden"
+              transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+              className="w-[95%] h-[85%] bg-zinc-900 rounded-[2px] shadow-[0_0_120px_rgba(244,63,94,0.4)] relative overflow-hidden"
               style={{ transformStyle: 'preserve-3d' }}
             >
-               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=500&auto=format&fit=crop')] bg-cover bg-center opacity-75" />
-               <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-black/50" />
+               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=500&auto=format&fit=crop')] bg-cover bg-center opacity-80" />
+               <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60 mix-blend-multiply" />
                
                <motion.div 
-                 animate={{ opacity: [0.1, 0.3, 0.1, 0.2, 0.1] }}
-                 transition={{ duration: 0.1, repeat: Infinity }}
-                 className="absolute inset-0 bg-primary-400/10 blur-3xl"
+                 animate={{ opacity: [0.1, 0.2, 0.1] }}
+                 transition={{ duration: 0.15, repeat: Infinity }}
+                 className="absolute inset-0 bg-primary-400/5 blur-3xl"
                />
             </motion.div>
           </div>
 
-          <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_50px_rgba(0,0,0,0.9)]" />
+          <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_60px_rgba(0,0,0,1)]" />
         </div>
         
         <div className="mt-4 flex justify-between items-center border-t border-white/10 pt-3">
