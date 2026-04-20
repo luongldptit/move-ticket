@@ -104,60 +104,62 @@ function SeatPOVPreview({ seat, x, y, config }) {
   const sY = screenCfg.offsetY !== undefined ? screenCfg.offsetY : -150;
   const sTilt = screenCfg.rotateX !== undefined ? screenCfg.rotateX : -15;
 
-  // 1. Hệ tọa độ 3D ảo (Màn hình ở Z=0)
-  const seatX = (seatNum - 8.5) * 40 + (seat.offsetX || 0);
-  const seatY = 250 + (seat.offsetY || 0); 
-  const seatZ = rowIndex * 70 + 400; 
-
-  const dx = sX - seatX;
-  const dy = sY - seatY;
-  const dz = -seatZ; 
+  // 1. Toạ độ ảo của ghế so với tâm màn hình (Gốc toạ độ 0,0 là tâm màn hình)
+  const seatX = (seatNum - 8.5) * 40 + (seat.offsetX || 0) - sX;
+  const seatY = 150 + (seat.offsetY || 0) - sY; 
+  const seatZ = rowIndex * 75 + 550; 
 
   const radToDeg = 180 / Math.PI;
-  const rotationY = Math.atan2(dx, -dz) * radToDeg;
-  const rotationX = sTilt - (Math.atan2(dy, -dz) * radToDeg);
+
+  // 2. Tính toán góc xoay Look-At (Màn hình xoay để hướng về phía ghế)
+  // Góc ngang: Nếu ghế ở bên trái (seatX < 0), màn hình xoay trái (rotateY âm)
+  const rotationY = Math.atan2(seatX, seatZ) * radToDeg;
+  // Góc dọc: Nếu ghế ở dưới thấp (seatY > 0), màn hình nghiêng xuống (rotateX dương)
+  const viewAngleX = Math.atan2(seatY, seatZ) * radToDeg;
+  const rotationX = (sTilt * 0.7) + (viewAngleX * 0.9); 
   
-  const dist3D = Math.sqrt(dx*dx + dy*dy + dz*dz);
-  const screenScale = Math.max(0.4, (500 / dist3D) * 1.5);
+  // 3. Perspective Scale
+  const dist3D = Math.sqrt(seatX*seatX + seatY*seatY + seatZ*seatZ);
+  const screenScale = Math.max(0.5, (600 / dist3D) * 1.4);
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.5 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.5 }}
-      style={{ x, y, left: 30, top: -140 }}
+      initial={{ opacity: 0, scale: 0.8, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.8, y: 5 }}
+      style={{ x, y, left: 35, top: -150 }}
       className="absolute z-[100] pointer-events-none"
     >
-      <div className="bg-slate-950/95 backdrop-blur-3xl border border-white/20 p-5 rounded-[2.5rem] shadow-[0_40px_100px_rgba(0,0,0,1)] w-80 overflow-hidden ring-1 ring-white/20">
+      <div className="bg-slate-950/98 backdrop-blur-3xl border border-white/20 p-5 rounded-[2.8rem] shadow-[0_60px_150px_rgba(0,0,0,1)] w-80 overflow-hidden ring-1 ring-white/20">
         <div className="flex justify-between items-start mb-4 px-2">
-          <div>
-             <div className="text-[10px] font-black text-primary-500 uppercase tracking-[0.3em] mb-1">Perspective POV</div>
-             <div className="text-3xl font-black text-white italic tracking-tighter leading-none">{seat.seatCode}</div>
+          <div className="flex flex-col">
+             <span className="text-[9px] font-black text-primary-500 uppercase tracking-[0.4em] mb-1">Perspective View</span>
+             <span className="text-3xl font-black text-white italic tracking-tighter leading-none">{seat.seatCode}</span>
           </div>
-          <div className="bg-primary-500/20 px-3 py-1.5 rounded-xl text-[10px] font-black text-primary-400 border border-primary-500/30 uppercase">
+          <div className="bg-white/5 px-3 py-1.5 rounded-2xl text-[9px] font-black text-slate-400 border border-white/10 uppercase">
             {seat.type}
           </div>
         </div>
         
-        <div className="relative aspect-video bg-black rounded-[1.8rem] overflow-hidden border border-white/5 shadow-2xl flex items-center justify-center">
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=800&auto=format&fit=crop')] bg-cover bg-center opacity-20 grayscale" />
+        <div className="relative aspect-video bg-[#050505] rounded-[2rem] overflow-hidden border border-white/5 shadow-2xl flex items-center justify-center">
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=800&auto=format&fit=crop')] bg-cover bg-center opacity-10 grayscale" />
           
           <div style={{ perspective: '1200px', width: '100%', height: '100%' }} className="flex items-center justify-center">
             <motion.div 
               animate={{ 
-                rotateY: -rotationY, 
+                rotateY: rotationY, 
                 rotateX: rotationX,
                 scale: screenScale,
               }}
-              transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-              className="w-[90%] h-[85%] bg-zinc-900 rounded-[2px] shadow-[0_0_120px_rgba(244,63,94,0.4)] relative overflow-hidden"
-              style={{ transformStyle: 'preserve-3d' }}
+              transition={{ type: 'spring', stiffness: 80, damping: 16 }}
+              className="w-[92%] h-[82%] bg-zinc-900 rounded-[3px] shadow-[0_0_120px_rgba(244,63,94,0.4)] relative overflow-hidden"
+              style={{ transformStyle: 'preserve-3d', transformOrigin: 'center center' }}
             >
-               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=500&auto=format&fit=crop')] bg-cover bg-center opacity-85" />
-               <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60 mix-blend-multiply" />
+               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=500&auto=format&fit=crop')] bg-cover bg-center opacity-90" />
+               <div className="absolute inset-0 bg-gradient-to-tr from-black/80 via-transparent to-black/20" />
                
                <motion.div 
-                 animate={{ opacity: [0.05, 0.1, 0.05] }}
+                 animate={{ opacity: [0.05, 0.15, 0.05] }}
                  transition={{ duration: 0.1, repeat: Infinity }}
                  className="absolute inset-0 bg-white/5 blur-3xl"
                />
@@ -166,9 +168,9 @@ function SeatPOVPreview({ seat, x, y, config }) {
           <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_100px_rgba(0,0,0,1)]" />
         </div>
         
-        <div className="mt-5 flex justify-between items-center border-t border-white/10 pt-4 px-2">
-           <span className="text-xs text-slate-500 font-bold uppercase tracking-widest">Vé hạng sang</span>
-           <span className="text-xl font-black text-primary-400">{formatPrice(seat.price)}</span>
+        <div className="mt-5 flex justify-between items-center border-t border-white/5 pt-4 px-2">
+           <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">Price Category</span>
+           <span className="text-xl font-black text-primary-400 drop-shadow-[0_0_10px_rgba(244,63,94,0.3)]">{formatPrice(seat.price)}</span>
         </div>
       </div>
     </motion.div>
@@ -251,7 +253,7 @@ export default function SeatMapPage() {
             className="flex flex-wrap items-center gap-6 lg:gap-12 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl py-4 px-6 md:px-10 mb-10 shadow-2xl"
           >
             {[
-              { label: 'Phóng sự',   val: showtime.movie?.title || showtime.movieTitle, highlight: true },
+              { label: 'Phim',       val: showtime.movie?.title || showtime.movieTitle, highlight: true },
               { label: 'Suất chiếu', val: `${formatTime(showtime.startTime)} · ${formatDate(showtime.startTime)}` },
               { label: 'Phòng rạp',  val: `${showtime.room?.name} - ${showtime.cinema?.name || showtime.cinemaName}` },
             ].map((item, i) => (
@@ -379,7 +381,7 @@ export default function SeatMapPage() {
               >
                 <LegendItem bg="rgba(255,255,255,0.05)" border="rgba(255,255,255,0.2)" label="Trống" />
                 <LegendItem bg="rgba(15,23,42,0.6)" border="rgba(51,65,85,0.8)" label="Đã đặt" />
-                <LegendItem bg="rgba(139,92,246,0.2)" border="#8b5cf6" label="Khế VIP" />
+                <LegendItem bg="rgba(139,92,246,0.2)" border="#8b5cf6" label="Ghế VIP" />
                 <LegendItem bg="rgba(236,72,153,0.2)" border="#ec4899" label="Couple" />
                 <LegendItem bg="rgba(225,29,72,0.9)" border="#fb7185" label="Đang chọn" />
               </motion.div>
