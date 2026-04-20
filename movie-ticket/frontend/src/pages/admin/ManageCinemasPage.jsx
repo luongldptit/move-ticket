@@ -20,7 +20,8 @@ export default function ManageCinemasPage() {
 
   // Room form
   const [roomModal, setRoomModal] = useState(false)
-  const [roomForm, setRoomForm] = useState({ cinemaId: '', name: '', type: '2D', totalSeats: '' })
+  const [editRoom, setEditRoom] = useState(null)
+  const [roomForm, setRoomForm] = useState({ cinemaId: '', name: '', type: '2D', totalSeats: '', config: '' })
 
   // Seat batch form
   const [seatModal, setSeatModal] = useState(false)
@@ -72,8 +73,10 @@ export default function ManageCinemasPage() {
   const handleSaveRoom = async (e) => {
     e.preventDefault()
     try {
-      await cinemaApi.createRoom({ ...roomForm, cinemaId: parseInt(roomForm.cinemaId), totalSeats: parseInt(roomForm.totalSeats) || 0 })
-      toast.success('Thêm phòng thành công')
+      const data = { ...roomForm, cinemaId: parseInt(roomForm.cinemaId), totalSeats: parseInt(roomForm.totalSeats) || 0 }
+      if (editRoom) await cinemaApi.updateRoom(editRoom.id, data)
+      else await cinemaApi.createRoom(data)
+      toast.success('Lưu phòng thành công')
       setRoomModal(false)
       reloadRooms()
     } catch (err) { toast.error(getErrorMessage(err)) }
@@ -229,6 +232,20 @@ export default function ManageCinemasPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
+                  <button onClick={() => { 
+                    setEditRoom(r); 
+                    setRoomForm({ 
+                      cinemaId: r.cinema?.id || '', 
+                      name: r.name, 
+                      type: r.type, 
+                      totalSeats: r.totalSeats,
+                      config: r.config || ''
+                    }); 
+                    setRoomModal(true) 
+                  }}
+                    className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-dark-300 hover:text-white transition-all">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2.5 2.5 0 113.536 3.536L12 21.232H8.5V17.732L17.586 8.314z" /></svg>
+                  </button>
                   {r.totalSeats > 0 ? (
                     <button onClick={() => handleViewSeats(r)} className="px-5 py-2.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest transition-all">Sơ đồ ghế</button>
                   ) : (
@@ -254,7 +271,7 @@ export default function ManageCinemasPage() {
       </Modal>
 
       {/* Room Modal */}
-      <Modal isOpen={roomModal} onClose={() => setRoomModal(false)} title="THIẾT LẬP PHÒNG CHIẾU" size="md">
+      <Modal isOpen={roomModal} onClose={() => setRoomModal(false)} title={editRoom ? "CẬP NHẬT PHÒNG CHIẾU" : "THIẾT LẬP PHÒNG CHIẾU"} size="md">
         <form onSubmit={handleSaveRoom} className="space-y-6">
           <div>
             <label className="text-[10px] font-black text-dark-400 uppercase tracking-widest mb-2 block">Trực thuộc Rạp *</label>
@@ -275,7 +292,16 @@ export default function ManageCinemasPage() {
               ))}
             </div>
           </div>
-          <button type="submit" className="w-full bg-primary-600 hover:bg-primary-500 text-white font-black text-xs py-4 rounded-2xl shadow-xl shadow-primary-900/20 transition-all active:scale-95 uppercase tracking-[0.2em]">Tạo Phòng Ngay</button>
+          <div>
+            <label className="text-[10px] font-black text-dark-400 uppercase tracking-widest mb-2 block">Cấu hình 3D (JSON)</label>
+            <textarea 
+              placeholder='{"screen": {"rotateX": -15, "scale": 1, "mb": 16}, "hall": {"rotateX": 38, "staggerZ": 45, "staggerY": -12}}'
+              className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 font-mono text-xs" 
+              rows={5}
+              value={roomForm.config} onChange={e => setRoomForm({ ...roomForm, config: e.target.value })} 
+            />
+          </div>
+          <button type="submit" className="w-full bg-primary-600 hover:bg-primary-500 text-white font-black text-xs py-4 rounded-2xl shadow-xl shadow-primary-900/20 transition-all active:scale-95 uppercase tracking-[0.2em]">{editRoom ? 'Lưu Thay Đổi' : 'Tạo Phòng Ngay'}</button>
         </form>
       </Modal>
 
@@ -332,21 +358,42 @@ export default function ManageCinemasPage() {
               <div className="flex flex-wrap gap-2.5 justify-center">
                 {row.seats.map(seat => (
                   <div key={seat.id}
-                    className={`relative border rounded-2xl px-3 py-2.5 transition-all group overflow-hidden
+                    className={`relative border rounded-2xl px-3 py-2.5 transition-all group overflow-hidden w-36
                       ${SEAT_TYPE_COLORS[seat.type] ?? SEAT_TYPE_COLORS.STANDARD}
                       ${!seat.isActive ? 'opacity-30 grayscale' : ''}`}>
                     <div className="text-white font-black text-xs text-center mb-1.5">{seat.seatCode}</div>
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1.5">
                       <select
-                        className="bg-transparent border-none text-[8px] font-black uppercase p-0 cursor-pointer focus:outline-none appearance-none text-center hover:text-white transition-colors"
+                        className="bg-dark-900/50 border-none text-[8px] font-black uppercase p-1 rounded-md cursor-pointer focus:outline-none appearance-none text-center hover:text-white transition-colors"
                         value={seat.type}
                         disabled={savingSeatId === seat.id}
                         onChange={e => handleUpdateSeat(seat.id, 'type', e.target.value)}
                       >
                         {['STANDARD', 'VIP', 'COUPLE'].map(t => <option key={t} value={t} className="bg-dark-900">{t}</option>)}
                       </select>
+                      
+                      {/* Offset configuration */}
+                      <div className="grid grid-cols-3 gap-1">
+                        {[
+                          { l: 'X', f: 'offsetX' },
+                          { l: 'Y', f: 'offsetY' },
+                          { l: 'Z', f: 'offsetZ' }
+                        ].map(off => (
+                          <div key={off.f} className="flex flex-col items-center">
+                            <span className="text-[7px] font-bold text-dark-500">{off.l}</span>
+                            <input 
+                              type="number" step="0.5"
+                              className="w-full bg-dark-900/50 text-[8px] font-black text-center rounded px-0.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                              value={seat[off.f] || 0}
+                              onBlur={e => handleUpdateSeat(seat.id, off.f, parseFloat(e.target.value))}
+                              onKeyDown={e => e.key === 'Enter' && handleUpdateSeat(seat.id, off.f, parseFloat(e.target.value))}
+                            />
+                          </div>
+                        ))}
+                      </div>
+
                       <button
-                        className={`text-[9px] font-black uppercase w-full py-1 mt-1 rounded-lg transition-all ${seat.isActive ? 'bg-green-500/20 text-green-400 hover:bg-rose-500 hover:text-white' : 'bg-rose-500/20 text-rose-400 hover:bg-green-500 hover:text-white'}`}
+                        className={`text-[9px] font-black uppercase w-full py-1 mt-0.5 rounded-lg transition-all ${seat.isActive ? 'bg-green-500/20 text-green-400 hover:bg-rose-500 hover:text-white' : 'bg-rose-500/20 text-rose-400 hover:bg-green-500 hover:text-white'}`}
                         disabled={savingSeatId === seat.id}
                         onClick={() => handleUpdateSeat(seat.id, 'isActive', !seat.isActive)}
                       >

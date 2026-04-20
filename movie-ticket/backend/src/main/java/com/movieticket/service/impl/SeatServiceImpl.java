@@ -61,10 +61,14 @@ public class SeatServiceImpl implements SeatService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ghế với id: " + id));
         if (request.getType() != null) seat.setType(Seat.SeatType.valueOf(request.getType()));
         if (request.getIsActive() != null) seat.setActive(request.getIsActive());
+        if (request.getOffsetX() != null) seat.setOffsetX(request.getOffsetX());
+        if (request.getOffsetY() != null) seat.setOffsetY(request.getOffsetY());
+        if (request.getOffsetZ() != null) seat.setOffsetZ(request.getOffsetZ());
         seatRepository.save(seat);
         return SeatResponse.builder()
                 .id(seat.getId()).seatCode(seat.getSeatCode())
-                .type(seat.getType().name()).isActive(seat.isActive()).build();
+                .type(seat.getType().name()).isActive(seat.isActive())
+                .offsetX(seat.getOffsetX()).offsetY(seat.getOffsetY()).offsetZ(seat.getOffsetZ()).build();
     }
 
     @Override
