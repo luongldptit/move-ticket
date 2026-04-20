@@ -272,31 +272,31 @@ export default function SeatMapPage() {
             <div 
               onMouseMove={handleMouseMove}
               onMouseLeave={() => setHoveredSeat(null)}
-              className="flex-1 w-full bg-dark-950/40 backdrop-blur-md border border-white/5 rounded-[3rem] p-6 sm:p-10 shadow-2xl relative group/hall"
+              className="flex-1 w-full bg-dark-950/40 backdrop-blur-md border border-white/5 rounded-[3rem] p-6 sm:p-10 pt-44 shadow-2xl relative group/hall flex flex-col items-center"
             >
               
               {/* Floor Reflection Effect */}
               <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-primary-900/10 to-transparent pointer-events-none z-0" />
               
-              {/* ─── Dynamic Curved Screen Redesign ─── */}
+              {/* ─── Dynamic Curved Screen (Absolute to match Editor) ─── */}
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: screenCfg.offsetY !== undefined ? screenCfg.offsetY : -150 }}
-                transition={{ ...easeOut, delay: 0.1 }} 
-                className="mt-2 relative z-30"
-                style={{ 
-                  perspective: '1500px', 
-                  marginBottom: `${screenCfg.mb !== undefined ? screenCfg.mb : 4}rem`,
+                animate={{ 
+                  opacity: 1, 
                   x: screenCfg.offsetX || 0,
+                  y: screenCfg.offsetY !== undefined ? screenCfg.offsetY : -150 
                 }}
+                transition={{ ...easeOut, delay: 0.1 }} 
+                className="absolute z-30 w-[90%] max-w-4xl"
+                style={{ perspective: '1500px' }}
               >
-                <div className="relative w-full max-w-4xl mx-auto h-24 flex flex-col items-center justify-center">
-                  
+                <div className="relative w-full h-24 flex flex-col items-center justify-center">
                   {/* Real Screen Surface with Curvature */}
                   <motion.div 
-                    initial={{ rotateX: -30, scale: 0.9, opacity: 0 }}
-                    animate={{ rotateX: screenCfg.rotateX !== undefined ? screenCfg.rotateX : -15, scale: screenCfg.scale || 1, opacity: 1 }}
-                    transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+                    animate={{ 
+                        rotateX: screenCfg.rotateX !== undefined ? screenCfg.rotateX : -15, 
+                        scale: screenCfg.scale || 1 
+                    }}
                     className="relative w-full h-12 bg-white/10 border-t-2 border-white/30 rounded-[50%_50%_0_0/100%_100%_0_0] shadow-[0_-20px_100px_rgba(244,63,94,0.5)] overflow-hidden"
                     style={{ transformStyle: 'preserve-3d' }}
                   >
@@ -317,8 +317,8 @@ export default function SeatMapPage() {
                 </div>
               </motion.div>
 
-              {/* 3D Perspective Hall with Stadium Seating */}
-              <div style={{ perspective: '2000px' }} className="relative z-10 py-0">
+              {/* 3D Perspective Hall Area (Margin Top to provide space for Screen) */}
+              <div style={{ perspective: '2000px' }} className="relative z-10 py-0 mt-20">
                 <motion.div
                   initial={{ rotateX: 20, scale: 0.9, y: 50 }}
                   animate={{ 
