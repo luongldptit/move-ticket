@@ -116,10 +116,10 @@ function SeatPOVPreview({ seat, x, y }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.8, y: 10 }}
+      initial={{ opacity: 0, scale: 0.5, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.8, y: 5 }}
-      style={{ x, y, left: -120, top: -165 }} // Đã hạ thấp từ -210 xuống -165
+      exit={{ opacity: 0, scale: 0.5, y: 5 }}
+      style={{ x, y, left: 25, top: 25 }} // Hiển thị ngay sát dưới bên phải con trỏ chuột
       className="absolute z-[100] pointer-events-none"
     >
       <div className="bg-slate-950/95 backdrop-blur-2xl border border-white/20 p-3 rounded-[1.5rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] w-64 overflow-hidden ring-1 ring-white/10">
