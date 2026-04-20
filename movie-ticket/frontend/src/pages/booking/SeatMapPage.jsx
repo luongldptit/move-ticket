@@ -248,7 +248,7 @@ export default function SeatMapPage() {
               {/* ─── Massive IMAX Curved Screen Redesign ─── */}
               <motion.div 
                 variants={fadeUp} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.1 }} 
-                className="mb-32 mt-6 relative z-30"
+                className="mb-8 mt-2 relative z-30"
                 style={{ perspective: '1000px' }}
               >
                 <div className="relative w-full max-w-4xl mx-auto h-32 flex flex-col items-center justify-start">
@@ -303,13 +303,13 @@ export default function SeatMapPage() {
               </motion.div>
 
               {/* 3D Perspective Wrapper */}
-              <div style={{ perspective: '1200px' }} className="relative z-10 py-10">
+              <div style={{ perspective: '1200px' }} className="relative z-10 py-0">
                 <motion.div
                   initial={{ rotateX: 10, scale: 0.95, y: 30 }}
                   animate={{ 
                     rotateX: window.innerWidth < 768 ? 10 : 25, 
                     scale: 1, 
-                    y: 0 
+                    y: -20 
                   }}
                   transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
                   className="flex flex-col gap-4 md:gap-5 items-center origin-bottom"
