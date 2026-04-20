@@ -115,6 +115,7 @@ public class SeatServiceImpl implements SeatService {
                 .roomId(room.getId())
                 .roomName(room.getName())
                 .rows(seatMap.getRows())
+                .config(seatMap.getConfig())
                 .build();
     }
 }
