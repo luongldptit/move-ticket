@@ -8,6 +8,7 @@ import { PageLoader } from '../../components/common/Spinner'
 import { formatPrice, formatTime, formatDate } from '../../utils/helpers'
 import { fadeUp, fadeIn, fadeRight, staggerContainer, staggerItem, spring, easeOut, modalPanel } from '../../utils/motion'
 import { toast } from 'react-toastify'
+import { useMotionValue, useSpring } from 'framer-motion'
 
 /* ─── Seat style configs ─── */
 const SEAT_CFG = {
@@ -90,83 +91,60 @@ function LegendItem({ bg, border, label }) {
   )
 }
 
-function SeatPOVPreview({ seat }) {
+function SeatPOVPreview({ seat, x, y }) {
   // Trích xuất thông tin hàng và số ghế
   const rowChar = seat.seatCode.charAt(0)
   const seatNum = parseInt(seat.seatCode.substring(1))
   
   // Tính toán góc quay ngang (Horizontal Rotation)
-  // Giả sử trung tâm là ghế số 8, dải ghế từ 1 - 16
   const centerX = 8.5 
   const diffX = seatNum - centerX
-  const rotationY = diffX * -4 // Ghế bên trái (số nhỏ) sẽ thấy màn hình nghiêng phải, và ngược lại
+  const rotationY = diffX * -4 
   
-  // Tính toán độ xa (Vertical Depth)
-  // Hàng A là gần màn hình nhất (to hơn), hàng J là xa nhất (nhỏ hơn)
-  const rowOffset = rowChar.charCodeAt(0) - 65 // A=0, B=1...
-  const scale = 1.1 - (rowOffset * 0.04) // Hàng càng xa thì màn hình càng nhỏ lại
-  const blur = Math.max(0, rowOffset - 2) // Hàng quá xa sẽ hơi mờ nhẹ
+  const rowOffset = rowChar.charCodeAt(0) - 65 
+  const scale = 1.1 - (rowOffset * 0.04) 
+  const blur = Math.max(0, rowOffset - 2)
 
   return (
     <motion.div
       variants={modalPanel} initial="hidden" animate="show" exit="exit"
-      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] pointer-events-none"
+      style={{ x, y, left: 20, top: 20 }}
+      className="absolute z-[100] pointer-events-none"
     >
-      <div className="bg-dark-900/95 backdrop-blur-3xl border border-white/20 p-5 rounded-[2.5rem] shadow-[0_50px_120px_rgba(0,0,0,0.9)] w-72 overflow-hidden ring-1 ring-white/10">
-        <div className="flex justify-between items-center mb-4">
-          <div className="text-[10px] font-black text-primary-400 uppercase tracking-widest bg-primary-500/10 py-1 px-3 rounded-full border border-primary-500/20">
-            POV: Ghế {seat.seatCode}
+      <div className="bg-dark-900/95 backdrop-blur-3xl border border-white/20 p-4 rounded-[2rem] shadow-[0_50px_120px_rgba(0,0,0,0.9)] w-60 overflow-hidden ring-1 ring-white/10">
+        <div className="flex justify-between items-center mb-3">
+          <div className="text-[9px] font-black text-primary-400 uppercase tracking-widest bg-primary-500/10 py-0.5 px-2 rounded-full border border-primary-500/20">
+            POV: {seat.seatCode}
           </div>
-          <div className="text-[9px] font-bold text-dark-500 uppercase">3D Simulation</div>
         </div>
         
         {/* POV Screen Simulation */}
         <div className="relative aspect-video bg-[#050505] rounded-xl overflow-hidden border border-white/10 flex items-center justify-center">
-          {/* Ambient Hall Light */}
           <div className="absolute inset-0 bg-gradient-to-b from-primary-900/5 to-transparent z-0" />
 
           <motion.div 
-            style={{ 
-              perspective: '800px',
-              width: '100%', height: '100%'
-            }}
+            style={{ perspective: '800px', width: '100%', height: '100%' }}
             className="flex items-center justify-center relative z-10"
           >
-            {/* The "Screen" inside the preview with Parallax & Perspective */}
             <motion.div 
               animate={{ 
                 rotateY: rotationY,
                 scale: scale,
-                x: -diffX * 2, // Parallax shift
+                x: -diffX * 2,
                 filter: `blur(${blur}px)`
               }}
               transition={{ duration: 0.5, ease: "easeOut" }}
               className="w-[90%] h-[75%] bg-gradient-to-br from-primary-400/30 via-white/5 to-primary-950/60 rounded-sm shadow-[0_0_50px_rgba(244,63,94,0.4)] border border-white/10 flex items-center justify-center relative"
             >
-               {/* Simulated Movie Fragment */}
                <div className="w-[80%] h-[60%] border border-white/5 rounded-sm bg-black/40 flex items-center justify-center overflow-hidden">
                   <motion.div 
                     animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.6, 0.3] }}
                     transition={{ duration: 3, repeat: Infinity }}
                     className="w-full h-full bg-gradient-to-tr from-primary-500/20 to-transparent blur-xl"
                   />
-                  <div className="absolute inset-x-0 bottom-0 h-0.5 bg-primary-500/50 shadow-[0_0_10px_rgba(244,63,94,1)]" />
                </div>
-               
-               {/* Screen curvature simulation */}
-               <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />
             </motion.div>
           </motion.div>
-          
-          {/* Floor Reflection in POV */}
-          <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-primary-900/30 to-transparent z-20 opacity-60" />
-        </div>
-        
-        <div className="mt-4 flex items-center justify-center gap-2">
-           <div className="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse" />
-           <div className="text-dark-400 text-[9px] font-bold uppercase tracking-tighter">
-              Góc nhìn đã được tính toán theo hệ tọa độ ghế
-           </div>
         </div>
       </div>
     </motion.div>
@@ -182,6 +160,18 @@ export default function SeatMapPage() {
   const [showtime, setShowtime] = useState(currentShowtime)
   const [loading, setLoading] = useState(true)
   const [hoveredSeat, setHoveredSeat] = useState(null)
+
+  // Mouse Tracking for POV Preview
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+  const springX = useSpring(mouseX, { damping: 25, stiffness: 150 })
+  const springY = useSpring(mouseY, { damping: 25, stiffness: 150 })
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    mouseX.set(e.clientX - rect.left)
+    mouseY.set(e.clientY - rect.top)
+  }
 
   useEffect(() => {
     Promise.all([
@@ -247,8 +237,10 @@ export default function SeatMapPage() {
         {/* Cấu trúc Layout Chính */}
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
 
-            {/* ─── BÊN TRÁI: Sơ đồ ghế ─── */}
-            <div className="flex-1 w-full bg-dark-950/40 backdrop-blur-md border border-white/5 rounded-[3rem] p-6 sm:p-10 shadow-2xl overflow-hidden relative group/hall">
+            <div 
+              onMouseMove={handleMouseMove}
+              className="flex-1 w-full bg-dark-950/40 backdrop-blur-md border border-white/5 rounded-[3rem] p-6 sm:p-10 shadow-2xl overflow-hidden relative group/hall"
+            >
               
               {/* Floor Reflection Effect */}
               <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-primary-900/10 to-transparent pointer-events-none z-0" />
@@ -362,10 +354,10 @@ export default function SeatMapPage() {
                 </motion.div>
               </div>
 
-              {/* Seat POV Preview Overlay */}
+              {/* Seat POV Preview Overlay follows mouse */}
               <AnimatePresence>
                 {hoveredSeat && (
-                  <SeatPOVPreview seat={hoveredSeat} />
+                  <SeatPOVPreview seat={hoveredSeat} x={springX} y={springY} />
                 )}
               </AnimatePresence>
 
