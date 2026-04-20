@@ -117,16 +117,20 @@ function SeatPOVPreview({ seat, x, y, config }) {
   const relativeX = seatActualX - screenOffsetX;
   const relativeY = seatActualY - screenOffsetY;
 
-  // Góc quay Y (ngang): Phụ thuộc vào khoảng cách X giữa ghế và màn hình
-  // Ghế bên trái màn hình (relativeX < 0) -> góc quay dương (nhìn sang phải)
-  const rotationY = relativeX * -0.18; 
+  // Góc quay Y (ngang): 
+  // Ngồi bên trái (relativeX < 0) -> Phải thấy cạnh trái màn hình GẦN hơn.
+  // Trong CSS, rotateY âm sẽ đưa cạnh trái về phía người xem.
+  const rotationY = relativeX * 0.12; 
   
-  // Góc quay X (dọc): Phụ thuộc độ nghiêng gốc của màn và độ cao tương đối
-  const rotationX = (baseScreenTilt - 5) + (relativeY * 0.04); 
+  // Góc quay X (dọc):
+  // Ngồi càng gần (relativeY nhỏ) -> Càng phải ngước nhìn lên cao.
+  // Nhìn ngước lên một mặt phẳng đứng -> Cạnh trên mặt phẳng phải xa mắt hơn cạnh dưới.
+  // Trong CSS, rotateX dương sẽ làm đỉnh màn hình ngửa ra xa.
+  const rotationX = (baseScreenTilt + 10) - (relativeY * 0.05); 
   
   // Hiệu ứng cong màn hình (Curvature) và khoảng cách
   const distFromCenter = Math.abs(relativeX);
-  const screenScale = Math.max(0.7, (1.25 - (relativeY * 0.0008)) * (1 + (distFromCenter * 0.0002)));
+  const screenScale = Math.max(0.6, (1.3 - (relativeY * 0.001)) * (1 + (distFromCenter * 0.0003)));
 
   return (
     <motion.div
