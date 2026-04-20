@@ -2,6 +2,7 @@ package com.movieticket.controller;
 
 import com.movieticket.dto.request.RoomRequest;
 import com.movieticket.dto.request.SeatBatchRequest;
+import com.movieticket.dto.request.SeatBatchUpdateRequest;
 import com.movieticket.dto.request.SeatUpdateRequest;
 import com.movieticket.dto.response.*;
 import com.movieticket.service.RoomService;

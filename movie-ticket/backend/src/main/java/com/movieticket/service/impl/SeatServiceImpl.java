@@ -1,6 +1,7 @@
 package com.movieticket.service.impl;
 
 import com.movieticket.dto.request.SeatBatchRequest;
+import com.movieticket.dto.request.SeatBatchUpdateRequest;
 import com.movieticket.dto.request.SeatUpdateRequest;
 import com.movieticket.dto.response.SeatMapResponse;
 import com.movieticket.dto.response.SeatResponse;
