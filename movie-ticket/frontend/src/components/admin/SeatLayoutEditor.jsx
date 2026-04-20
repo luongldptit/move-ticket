@@ -110,69 +110,50 @@ const handleScreenDrag = (e, info) => {
       </div>
 
       {/* Editor Area */}
-      <div ref={containerRef} className="flex-1 relative bg-[#020617] overflow-auto flex items-center justify-center p-20 cursor-grab active:cursor-grabbing">
-        <div style={{ perspective: '2000px' }} className="w-full max-w-5xl">
+      <div ref={containerRef} className="flex-1 relative bg-[#020617] overflow-auto flex flex-col items-center p-20 pt-40 cursor-grab active:cursor-grabbing">
+        <div style={{ perspective: '2000px' }} className="w-full max-w-5xl relative flex flex-col items-center">
           
-          {/* Screen Handle */}
+          {/* Screen Handle - Now Absolute to avoid flow issues */}
           <motion.div 
             drag dragMomentum={false} onDragEnd={handleScreenDrag}
-            className="mb-32 relative cursor-move group"
+            className="absolute z-50 cursor-move group"
             style={{
               x: config.screen?.offsetX || 0,
-              y: config.screen?.offsetY || 0
+              y: (config.screen?.offsetY || 0) - 250, // Mặc định ở phía trên ghế
+              width: '100%'
             }}
           >
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary-600 text-[8px] font-black text-white px-2 py-1 rounded-md whitespace-nowrap">
-              KÉO ĐỂ DI CHUYỂN MÀN HÌNH
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary-600 text-[9px] font-black text-white px-3 py-1.5 rounded-full shadow-xl whitespace-nowrap z-[60]">
+              KÉO ĐỂ DI CHUYỂN MÀN HÌNH (X, Y)
             </div>
+            
+            {/* Real Screen Surface */}
             <div 
-              className="w-full h-12 bg-white/10 border-t-2 border-white/30 rounded-[50%_50%_0_0/100%_100%_0_0] shadow-[0_-20px_100px_rgba(244,63,94,0.3)] flex items-center justify-center"
+              className="w-full h-14 bg-white/10 border-t-2 border-white/40 rounded-[50%_50%_0_0/100%_100%_0_0] shadow-[0_-20px_100px_rgba(244,63,94,0.4)] flex items-center justify-center relative overflow-hidden"
               style={{ transform: `rotateX(${config.screen?.rotateX || -15}deg) scale(${config.screen?.scale || 1})` }}
             >
-              <span className="text-white/20 text-[10px] font-black tracking-[1em]">IMAX SCREEN</span>
+               <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-transparent" />
+               <span className="text-white/30 text-[11px] font-black tracking-[1.5em] drop-shadow-lg">IMAX SCREEN</span>
             </div>
           </motion.div>
 
-          {/* Seats Hall */}
-          <motion.div 
-            style={{ 
-              rotateX: config.hall?.rotateX || 38,
-              transformStyle: 'preserve-3d'
-            }}
-            className="flex flex-col gap-8 items-center origin-bottom"
-          >
-            {rows.map((row, rowIndex) => (
-              <div 
-                key={row.rowLabel} 
-                className="flex items-center gap-10"
-                style={{ transform: `translateZ(${rowIndex * (config.hall?.staggerZ || 45)}px) translateY(${rowIndex * (config.hall?.staggerY || -12)}px)` }}
-              >
-                <div className="flex gap-4">
-                  {row.seats.map(seat => (
-                    <motion.div
-                      key={seat.id}
-                      drag dragMomentum={false}
-                      onDragEnd={(e, info) => handleDragEnd(seat.id, e, info)}
-                      style={{ 
-                        x: seat.offsetX || 0, 
-                        y: seat.offsetY || 0,
-                        width: seat.type === 'COUPLE' ? 60 : 36, height: 36,
-                      }}
-                      className={`relative flex items-center justify-center text-[9px] font-black rounded-t-xl rounded-b-md border-2 cursor-move shadow-lg
-                        ${seat.type === 'VIP' ? 'bg-purple-600/20 border-purple-500 text-purple-300' : 
-                          seat.type === 'COUPLE' ? 'bg-pink-600/20 border-pink-500 text-pink-300' : 
-                          'bg-white/5 border-white/20 text-white/40'}`}
-                    >
-                      {seat.seatCode}
-                      <div className="absolute -bottom-6 opacity-0 group-hover:opacity-100 text-[6px] text-white/20 whitespace-nowrap">
-                        {Math.round(seat.offsetX || 0)},{Math.round(seat.offsetY || 0)}
-                      </div>
+          {/* Seats Hall Area */}
+          <div className="relative mt-20"> 
+            <motion.div 
+              style={{ 
+                rotateX: config.hall?.rotateX || 38,
+                transformStyle: 'preserve-3d'
+              }}
+              className="flex flex-col gap-8 items-center origin-bottom"
+            >
+...
                     </motion.div>
                   ))}
                 </div>
               </div>
             ))}
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
       </div>
 
