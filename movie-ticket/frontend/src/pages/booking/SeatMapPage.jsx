@@ -103,14 +103,20 @@ function SeatPOVPreview({ seat, x, y, config }) {
   const centerX = (totalSeatsInRow + 1) / 2;
   const diffX = seatNum - centerX;
   
-  // Lấy params từ config hoặc dùng default
-  const povCfg = config?.pov || { rotationYMult: -6, rotationXBase: -22, rotationXMult: 3.8 };
+  const screenCfg = config?.screen || { rotateX: -15, scale: 1, mb: 4, offsetX: 0, offsetY: -150 };
+  const screenOffsetY = screenCfg.offsetY !== undefined ? screenCfg.offsetY : -150;
+  const screenOffsetX = screenCfg.offsetX || 0;
+  const baseScreenTilt = screenCfg.rotateX !== undefined ? screenCfg.rotateX : -15;
 
-  // Góc quay Y (ngang): Ghế biên nhìn vào tâm màn hình
-  const rotationY = diffX * (povCfg.rotationYMult || -6); 
+  // Hiệu chỉnh góc nhìn dựa trên vị trí màn hình (kéo màn hình ra xa/lên cao thì góc ngước thay đổi)
+  const verticalAngleAdj = (screenOffsetY + 150) * 0.05; 
+  const horizontalAngleAdj = screenOffsetX * 0.02;
+
+  // Góc quay Y (ngang): Phụ thuộc độ lệch tâm và vị trí X của màn hình
+  const rotationY = (diffX * -6) + horizontalAngleAdj; 
   
-  // Góc quay X (dọc): Hàng đầu ngước lên, hàng cuối nhìn ngang
-  const rotationX = (povCfg.rotationXBase || -22) + (rowIndex * (povCfg.rotationXMult || 3.8)); 
+  // Góc quay X (dọc): Phụ thuộc độ nghiêng gốc của màn, vị trí Y của màn và hàng ghế
+  const rotationX = (baseScreenTilt - 7) + (rowIndex * 3.8) + verticalAngleAdj; 
   
   // Hiệu ứng cong màn hình (Curvature)
   const distFromCenter = Math.abs(diffX);
