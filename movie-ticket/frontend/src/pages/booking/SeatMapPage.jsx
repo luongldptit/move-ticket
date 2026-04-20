@@ -96,46 +96,42 @@ function SeatPOVPreview({ seat, x, y }) {
 
   const match = seat.seatCode.match(/([A-Z]+)(\d+)/);
   const rowChar = match ? match[1] : 'A';
-  const seatNum = match ? parseInt(match[2]) : 8;
+  const seatNum = match ? parseInt(match[2]) : 1;
   
   const rowIndex = rowChar.charCodeAt(0) - 65; 
-  const centerX = 10; 
+  const centerX = 8; // Điểm giữa hàng ghế (thường là ghế 8-10)
   const diffX = seatNum - centerX;
   
-  // POV Logic tinh tế hơn
-  const rotationY = diffX * -4; 
-  const rotationX = -12 + (rowIndex * 2); // Hàng đầu ngước lên (-12), hàng cuối nhìn thẳng/hơi xuống
-  const screenScale = 1.1 - (rowIndex * 0.045); // Hàng cuối màn hình nhỏ hơn hẳn
-  const screenBlur = Math.max(0, (rowIndex - 4) * 0.3);
-
-  // Vị trí adaptive: Nếu ở hàng ghế sau (index > 5), hiển thị card PHÍA TRÊN chuột để không bị che
-  const isBackRow = rowIndex > 5;
-  const topOffset = isBackRow ? -230 : 25; 
+  // Tăng độ nhạy POV để thấy sự khác biệt rõ rệt giữa các ghế sát nhau
+  const rotationY = diffX * -5.5; 
+  const rotationX = -18 + (rowIndex * 3.5); // Độ nghiêng theo hàng mạnh hơn
+  const screenScale = 1.15 - (rowIndex * 0.05);
+  const screenBlur = Math.max(0, (rowIndex - 4) * 0.4);
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.6, y: isBackRow ? 20 : -20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.6, y: isBackRow ? 10 : -10 }}
-      style={{ x, y, left: 20, top: topOffset }}
+      initial={{ opacity: 0, scale: 0.4 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.4 }}
+      style={{ x, y, left: 15, top: -110 }} // Căn giữa Card theo chiều dọc với con trỏ chuột
       className="absolute z-[100] pointer-events-none"
     >
-      <div className="bg-slate-900/95 backdrop-blur-3xl border border-white/20 p-3 rounded-[1.8rem] shadow-[0_30px_70px_rgba(0,0,0,0.8)] w-64 overflow-hidden ring-1 ring-white/10">
-        <div className="flex justify-between items-center mb-2.5 px-1">
+      <div className="bg-slate-900/95 backdrop-blur-3xl border border-white/20 p-3 rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.9)] w-64 overflow-hidden ring-1 ring-white/10">
+        <div className="flex justify-between items-center mb-2 px-1">
           <div className="flex flex-col">
-             <span className="text-[9px] font-black text-primary-500 uppercase tracking-[0.2em]">POV Preview</span>
-             <span className="text-xl font-black text-white leading-none">Ghế {seat.seatCode}</span>
+             <span className="text-[10px] font-black text-primary-500 uppercase tracking-widest">Góc nhìn POV</span>
+             <span className="text-xl font-black text-white leading-none">{seat.seatCode}</span>
           </div>
-          <div className="px-2 py-1 bg-primary-500/10 border border-primary-500/20 rounded-lg text-[10px] font-black text-primary-400 uppercase">
+          <div className="text-[9px] font-black text-slate-400 bg-white/5 px-2 py-1 rounded-md border border-white/10">
             {seat.type}
           </div>
         </div>
         
         {/* POV Screen Simulation */}
-        <div className="relative aspect-video bg-[#020202] rounded-2xl overflow-hidden border border-white/5 shadow-inner flex items-center justify-center">
-          <div className="absolute inset-0 bg-gradient-to-b from-primary-900/10 via-transparent to-black/40 z-0" />
+        <div className="relative aspect-video bg-black rounded-xl overflow-hidden border border-white/10 flex items-center justify-center">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary-900/20 to-transparent z-0" />
 
-          <div style={{ perspective: '1000px' }} className="w-full h-full flex items-center justify-center">
+          <div style={{ perspective: '1200px' }} className="w-full h-full flex items-center justify-center">
             <motion.div 
               animate={{ 
                 rotateY: rotationY,
@@ -143,35 +139,23 @@ function SeatPOVPreview({ seat, x, y }) {
                 scale: screenScale,
                 filter: `blur(${screenBlur}px)`
               }}
-              transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-              className="w-[90%] h-[75%] bg-zinc-900 rounded-sm shadow-[0_0_60px_rgba(244,63,94,0.35)] border border-white/10 relative overflow-hidden"
+              transition={{ type: 'spring', stiffness: 150, damping: 25 }}
+              className="w-[92%] h-[80%] bg-zinc-900 rounded-sm shadow-[0_0_50px_rgba(244,63,94,0.4)] border border-white/10 relative overflow-hidden"
             >
-               {/* Movie Content Simulation */}
                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=500&auto=format&fit=crop')] bg-cover bg-center opacity-60" />
-               <div className="absolute inset-0 bg-gradient-to-tr from-primary-600/20 to-transparent mix-blend-screen" />
-               
-               {/* Projector flickering light */}
-               <motion.div 
-                 animate={{ opacity: [0.3, 0.5, 0.3, 0.6, 0.3] }}
-                 transition={{ duration: 0.5, repeat: Infinity, repeatType: "mirror" }}
-                 className="absolute inset-0 bg-white/5"
-               />
+               <div className="absolute inset-0 bg-gradient-to-tr from-primary-600/30 to-transparent" />
             </motion.div>
           </div>
 
-          {/* Seat Silhouette (Giả lập bóng lưng ghế phía trước) */}
-          {rowIndex < 10 && (
-            <div className="absolute -bottom-2 w-full flex justify-around px-4 opacity-40 pointer-events-none">
-                {[1, 2, 3].map(i => (
-                    <div key={i} className="w-12 h-8 bg-black rounded-t-2xl border-t border-white/10" />
-                ))}
-            </div>
-          )}
+          {/* Foreground seat backs for depth */}
+          <div className="absolute -bottom-1 w-full flex justify-around px-4 opacity-30">
+             {[1,2,3,4].map(i => <div key={i} className="w-10 h-6 bg-black rounded-t-xl" />)}
+          </div>
         </div>
         
-        <div className="mt-3 pt-2 border-t border-white/5 flex justify-between items-center px-1">
-           <span className="text-[10px] text-slate-500 font-bold uppercase">Giá vé Niêm yết</span>
-           <span className="text-base font-black text-white">{formatPrice(seat.price)}</span>
+        <div className="mt-3 flex justify-between items-center px-1">
+           <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Giá vé</span>
+           <span className="text-base font-black text-primary-400">{formatPrice(seat.price)}</span>
         </div>
       </div>
     </motion.div>
