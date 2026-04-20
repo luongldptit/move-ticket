@@ -280,13 +280,14 @@ export default function SeatMapPage() {
               
               {/* ─── Dynamic Curved Screen Redesign ─── */}
               <motion.div 
-                variants={fadeUp} initial="hidden" animate="show" transition={{ ...easeOut, delay: 0.1 }} 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: screenCfg.offsetY !== undefined ? screenCfg.offsetY : -150 }}
+                transition={{ ...easeOut, delay: 0.1 }} 
                 className="mt-2 relative z-30"
                 style={{ 
                   perspective: '1500px', 
                   marginBottom: `${screenCfg.mb !== undefined ? screenCfg.mb : 4}rem`,
                   x: screenCfg.offsetX || 0,
-                  y: screenCfg.offsetY !== undefined ? screenCfg.offsetY : -150,
                 }}
               >
                 <div className="relative w-full max-w-4xl mx-auto h-24 flex flex-col items-center justify-center">
