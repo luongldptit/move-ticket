@@ -239,7 +239,7 @@ export default function SeatMapPage() {
 
             <div 
               onMouseMove={handleMouseMove}
-              className="flex-1 w-full bg-dark-950/40 backdrop-blur-md border border-white/5 rounded-[3rem] p-6 sm:p-10 shadow-2xl overflow-hidden relative group/hall"
+              className="flex-1 w-full bg-dark-950/40 backdrop-blur-md border border-white/5 rounded-[3rem] p-6 sm:p-10 shadow-2xl relative group/hall"
             >
               
               {/* Floor Reflection Effect */}
