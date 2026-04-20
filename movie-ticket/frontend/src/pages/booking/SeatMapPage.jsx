@@ -277,7 +277,7 @@ export default function SeatMapPage() {
               {/* Floor Reflection Effect */}
               <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-primary-900/10 to-transparent pointer-events-none z-0" />
               
-              <div style={{ perspective: '2000px' }} className="w-full max-w-5xl relative flex flex-col items-center pb-10">
+              <div style={{ perspective: '2000px' }} className="w-full max-w-5xl relative flex flex-col items-center pt-40 pb-10">
                 {/* ─── Dynamic Curved Screen (Absolute to match Editor) ─── */}
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
