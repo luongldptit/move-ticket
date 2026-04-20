@@ -97,95 +97,78 @@ function SeatPOVPreview({ seat, x, y, config }) {
   const match = seat.seatCode.match(/([A-Z]+)(\d+)/);
   const rowChar = match ? match[1] : 'A';
   const seatNum = match ? parseInt(match[2]) : 8;
-  
   const rowIndex = rowChar.charCodeAt(0) - 65; 
-  const totalSeatsInRow = 16; 
-  const centerX = (totalSeatsInRow + 1) / 2;
-  const diffX = seatNum - centerX;
   
-  const screenCfg = config?.screen || { rotateX: -15, scale: 1, mb: 4, offsetX: 0, offsetY: -150 };
-  const screenOffsetY = screenCfg.offsetY !== undefined ? screenCfg.offsetY : -150;
-  const screenOffsetX = screenCfg.offsetX || 0;
-  const baseScreenTilt = screenCfg.rotateX !== undefined ? screenCfg.rotateX : -15;
+  const screenCfg = config?.screen || { rotateX: -15, scale: 1, offsetX: 0, offsetY: -150 };
+  const sX = screenCfg.offsetX || 0;
+  const sY = screenCfg.offsetY !== undefined ? screenCfg.offsetY : -150;
+  const sTilt = screenCfg.rotateX !== undefined ? screenCfg.rotateX : -15;
 
-  // 1. Chuyển đổi vị trí Seat và Screen sang hệ tọa độ không gian (Pixel-based)
-  // Mỗi ghế ~40px ngang, mỗi hàng ~50px dọc
-  const seatX = (diffX * 40) + (seat.offsetX || 0);
-  const seatY = (rowIndex * 55) + (seat.offsetY || 0);
-  
-  // 2. Tính toán vector độ lệch giữa mắt người ngồi và tâm màn hình
-  const dx = seatX - screenOffsetX;
-  const dy = seatY - screenOffsetY;
-  const viewDistance = 600; // Khoảng cách ảo từ mắt tới màn hình (điểm tiêu cự)
+  // 1. Hệ tọa độ 3D ảo (Màn hình ở Z=0)
+  const seatX = (seatNum - 8.5) * 40 + (seat.offsetX || 0);
+  const seatY = 250 + (seat.offsetY || 0); 
+  const seatZ = rowIndex * 70 + 400; 
 
-  // 3. Thuật toán "Look-At": Tính toán góc xoay chính xác để màn hình hướng về phía mắt
-  // Sử dụng Atan2 để tính góc theo Radian rồi chuyển sang Degree
+  const dx = sX - seatX;
+  const dy = sY - seatY;
+  const dz = -seatZ; 
+
   const radToDeg = 180 / Math.PI;
+  const rotationY = Math.atan2(dx, -dz) * radToDeg;
+  const rotationX = sTilt - (Math.atan2(dy, -dz) * radToDeg);
   
-  // rotationY: Xoay quanh trục đứng (nhìn trái/phải)
-  // Nếu ngồi trái (dx < 0), màn hình phải xoay sang phải (angle dương trong CSS)
-  const rotationY = Math.atan2(dx, viewDistance) * radToDeg;
-  
-  // rotationX: Xoay quanh trục ngang (nhìn lên/xuống)
-  // Kết hợp độ nghiêng vật lý của màn hình và góc ngước của mắt
-  const viewAngleX = Math.atan2(dy, viewDistance) * radToDeg;
-  const rotationX = baseScreenTilt + viewAngleX;
-  
-  // 4. Tính toán tỉ lệ thu nhỏ theo quy luật xa gần (Perspective Scale)
-  const distance = Math.sqrt(dx*dx + dy*dy + viewDistance*viewDistance);
-  const screenScale = Math.max(0.5, (viewDistance / distance) * 1.5);
+  const dist3D = Math.sqrt(dx*dx + dy*dy + dz*dz);
+  const screenScale = Math.max(0.4, (500 / dist3D) * 1.5);
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.4 }}
+      initial={{ opacity: 0, scale: 0.5 }}
       animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.4 }}
-      style={{ x, y, left: 20, top: -125 }}
+      exit={{ opacity: 0, scale: 0.5 }}
+      style={{ x, y, left: 30, top: -140 }}
       className="absolute z-[100] pointer-events-none"
     >
-      <div className="bg-slate-950/95 backdrop-blur-3xl border border-white/20 p-4 rounded-[2rem] shadow-[0_40px_80px_rgba(0,0,0,1)] w-72 overflow-hidden ring-1 ring-white/20">
-        <div className="flex justify-between items-end mb-3 px-1">
+      <div className="bg-slate-950/95 backdrop-blur-3xl border border-white/20 p-5 rounded-[2.5rem] shadow-[0_40px_100px_rgba(0,0,0,1)] w-80 overflow-hidden ring-1 ring-white/20">
+        <div className="flex justify-between items-start mb-4 px-2">
           <div>
-             <div className="text-[10px] font-black text-primary-500 uppercase tracking-[0.2em] mb-0.5">3D Perspective</div>
-             <div className="text-2xl font-black text-white italic tracking-tighter">GATE {seat.seatCode}</div>
+             <div className="text-[10px] font-black text-primary-500 uppercase tracking-[0.3em] mb-1">Perspective POV</div>
+             <div className="text-3xl font-black text-white italic tracking-tighter leading-none">{seat.seatCode}</div>
           </div>
-          <div className="bg-white/10 px-2 py-1 rounded text-[9px] font-bold text-slate-300 border border-white/10 uppercase">
+          <div className="bg-primary-500/20 px-3 py-1.5 rounded-xl text-[10px] font-black text-primary-400 border border-primary-500/30 uppercase">
             {seat.type}
           </div>
         </div>
         
-        {/* POV Screen with Hyper-Realistic Perspective */}
-        <div className="relative aspect-video bg-black rounded-xl overflow-hidden border border-white/5 flex items-center justify-center shadow-inner">
-          <div className="absolute inset-0 bg-gradient-to-b from-primary-900/10 via-transparent to-black/60 z-0" />
-
-          <div style={{ perspective: '1000px' }} className="w-full h-full flex items-center justify-center">
+        <div className="relative aspect-video bg-black rounded-[1.8rem] overflow-hidden border border-white/5 shadow-2xl flex items-center justify-center">
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=800&auto=format&fit=crop')] bg-cover bg-center opacity-20 grayscale" />
+          
+          <div style={{ perspective: '1200px', width: '100%', height: '100%' }} className="flex items-center justify-center">
             <motion.div 
               animate={{ 
-                rotateY: -rotationY, // Đảo dấu để màn hình hướng vào mắt
+                rotateY: -rotationY, 
                 rotateX: rotationX,
                 scale: screenScale,
               }}
               transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-              className="w-[95%] h-[85%] bg-zinc-900 rounded-[2px] shadow-[0_0_120px_rgba(244,63,94,0.4)] relative overflow-hidden"
+              className="w-[90%] h-[85%] bg-zinc-900 rounded-[2px] shadow-[0_0_120px_rgba(244,63,94,0.4)] relative overflow-hidden"
               style={{ transformStyle: 'preserve-3d' }}
             >
-               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=500&auto=format&fit=crop')] bg-cover bg-center opacity-80" />
+               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=500&auto=format&fit=crop')] bg-cover bg-center opacity-85" />
                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60 mix-blend-multiply" />
                
                <motion.div 
-                 animate={{ opacity: [0.1, 0.2, 0.1] }}
-                 transition={{ duration: 0.15, repeat: Infinity }}
-                 className="absolute inset-0 bg-primary-400/5 blur-3xl"
+                 animate={{ opacity: [0.05, 0.1, 0.05] }}
+                 transition={{ duration: 0.1, repeat: Infinity }}
+                 className="absolute inset-0 bg-white/5 blur-3xl"
                />
             </motion.div>
           </div>
-
-          <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_60px_rgba(0,0,0,1)]" />
+          <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_100px_rgba(0,0,0,1)]" />
         </div>
         
-        <div className="mt-4 flex justify-between items-center border-t border-white/10 pt-3">
-           <span className="text-[11px] text-slate-500 font-black uppercase tracking-widest">Premium Ticket</span>
-           <span className="text-lg font-black text-primary-400">{formatPrice(seat.price)}</span>
+        <div className="mt-5 flex justify-between items-center border-t border-white/10 pt-4 px-2">
+           <span className="text-xs text-slate-500 font-bold uppercase tracking-widest">Vé hạng sang</span>
+           <span className="text-xl font-black text-primary-400">{formatPrice(seat.price)}</span>
         </div>
       </div>
     </motion.div>
