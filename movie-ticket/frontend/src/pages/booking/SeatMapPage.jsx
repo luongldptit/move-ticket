@@ -108,7 +108,7 @@ function SeatPOVPreview({ seat, x, y }) {
   return (
     <motion.div
       variants={modalPanel} initial="hidden" animate="show" exit="exit"
-      style={{ x, y, left: 20, top: 20 }}
+      style={{ x, y, left: -120, top: -160 }}
       className="absolute z-[100] pointer-events-none"
     >
       <div className="bg-dark-900/95 backdrop-blur-3xl border border-white/20 p-4 rounded-[2rem] shadow-[0_50px_120px_rgba(0,0,0,0.9)] w-60 overflow-hidden ring-1 ring-white/10">
