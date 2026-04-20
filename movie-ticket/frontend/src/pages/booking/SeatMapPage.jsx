@@ -113,22 +113,15 @@ function SeatPOVPreview({ seat, x, y, config }) {
   const seatActualX = (diffX * 40) + (seat.offsetX || 0);
   const seatActualY = (rowIndex * 45) + (seat.offsetY || 0);
 
-  // Độ lệch tương đối giữa vị trí ghế và vị trí màn hình
-  const relativeX = seatActualX - screenOffsetX;
-  const relativeY = seatActualY - screenOffsetY;
-
   // Tính toán khoảng cách và góc nhìn vật lý
   const dx = seatActualX - screenOffsetX;
   const depth = seatActualY - screenOffsetY;
 
-  // Góc quay Y (ngang): 
-  // Ngồi bên TRÁI (dx < 0) -> Cạnh TRÁI màn hình gần viewer hơn -> rotateY PHẢI DƯƠNG
-  const rotationY = dx * -0.14; 
+  // Đảo ngược dấu để sửa lỗi ngược góc nhìn theo phản hồi người dùng
+  const rotationY = dx * 0.14; 
   
-  // Góc quay X (dọc):
-  // Ngồi HÀNG ĐẦU (depth nhỏ) -> Phải ngước nhìn LÊN cao.
-  // Từ điểm nhìn thấp nhìn lên mặt phẳng đứng -> Cạnh DƯỚI gần mắt hơn cạnh TRÊN -> rotateX PHẢI DƯƠNG
-  const rotationX = (baseScreenTilt + 5) + Math.max(0, (550 - depth) * 0.07); 
+  // Góc xoay dọc đảo ngược: hàng đầu sẽ nghiêng màn hình theo hướng khác
+  const rotationX = (baseScreenTilt - 5) - Math.max(0, (550 - depth) * 0.07); 
   
   // Hiệu ứng scale dựa trên khoảng cách
   const screenScale = Math.max(0.6, 1.35 - (depth * 0.0013));
